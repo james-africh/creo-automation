@@ -1,9 +1,5 @@
 
 const path = require('path');
-//DATABASE INFORMATION (TABLE NAMES)
-const DB = require('../config/db.js');
-const querySql = DB.querySql;
-const Promise = require('bluebird');
 
 //Excel Connection
 const Excel = require('exceljs');
@@ -21,6 +17,7 @@ let connectOptions = {
     },
     json: true // Automatically stringifies the body to JSON
 };
+
 reqPromise(connectOptions)
     .then(reqConnectBody => {
         // get the sessionId
@@ -65,53 +62,21 @@ function creo(sessionId, functionData) {
 exports = {};
 module.exports = exports;
 
-//Submittal GET request
-exports.submittal = function(req, res) {
-    let profilePic;
-    querySql("SELECT * FROM users WHERE id = ?", req.user.id)
-        .then(rows => {
-            profilePic = '/public/uploads/' + rows[0].profilePic;
-            return null
-        })
-        .then(() => {
-            res.locals = {title: 'Mechanical Submittals'};
-            res.render('MechEng/SubmittalME', {
-                profilePic: profilePic
-            });
-        })
-        .catch(err => {
-            console.log('there was an error:' + err)
-        });
-};
-
 //Initial PDF-DXF-BIN BOM GET request
 exports.pdfDxfBinBom = function(req, res) {
-    let profilePic;
     let workingDir;
     let outputDir;
-    querySql("SELECT * FROM users WHERE id = ?", req.user.id)
-        .then(rows => {
-            profilePic = '/public/uploads/' + rows[0].profilePic;
-            return null
-        })
-        .then(() => {
-            res.locals = {title: 'PDF-DXF-BIN BOM'};
-            res.render('MechEng/pdfDxfBinBom', {
-                profilePic: profilePic,
-                asmList: [],
-                workingDir: workingDir,
-                outputDir: outputDir,
-                sortedCheckedDwgs: []
-            });
-        })
-        .catch(err => {
-            console.log('there was an error:' + err)
-        });
+    res.locals = {title: 'PDF-DXF-BIN BOM'};
+    res.render('MechEng/pdfDxfBinBom', {
+        asmList: [],
+        workingDir: workingDir,
+        outputDir: outputDir,
+        sortedCheckedDwgs: []
+    });
 };
 
 //Set Working Directory POST request
 exports.setWD = function(req, res) {
-    let profilePic;
     let workingDir = req.body.CREO_workingDir;
     let outputDir = workingDir + '/_outputDir';
     let topLevelAsmList = [];
@@ -245,16 +210,11 @@ exports.setWD = function(req, res) {
                     topLevelAsmList.push(asmList[i])
                 }
             }
-            return querySql("SELECT * FROM users WHERE id = ?", req.user.id)
-        })
-        .then(rows => {
-            profilePic = '/public/uploads/' + rows[0].profilePic;
-            return null
+            return null;
         })
         .then(() => {
             res.locals = {title: 'PDF-DXF-BIN BOM'};
             res.render('MechEng/pdfDxfBinBom', {
-                profilePic: profilePic,
                 workingDir: workingDir,
                 outputDir: outputDir,
                 asmList: topLevelAsmList,
@@ -277,7 +237,6 @@ exports.loadDesign = function(req, res) {
     let includeArray = req.body.includeInExportCheck;
     let asms = [];
     let lineups = [];
-    let profilePic;
     let partBinInfo = [];
     let binBoms = [];
     let layoutBoms = [];
@@ -1426,10 +1385,6 @@ exports.loadDesign = function(req, res) {
         })
         .then(async function (sortedCheckedDwgs) {
             await checkFlats(sessionId, sortedCheckedDwgs);
-            return await querySql("SELECT * FROM users WHERE id = ?", req.user.id)
-        })
-        .then(rows => {
-            profilePic = '/public/uploads/' + rows[0].profilePic;
             return null
         })
         .then(() => {
@@ -1441,7 +1396,6 @@ exports.loadDesign = function(req, res) {
             //render the main PDF-DXF-BIN BOM page (happens AFTER the CreoSON requests above finish)
             res.locals = {title: 'PDF-DXF-BIN BOM'};
             res.render('MechEng/loadDesign', {
-                profilePic: profilePic,
                 workingDir: workingDir,
                 outputDir: outputDir,
                 drawingList: [],
@@ -2662,15 +2616,12 @@ exports.generateDrawings = function(req, res) {
     req.setTimeout(0); //no timeout
     //initialize variables
     let workingDir = req.body.CREO_workingDir;
-    let outputDir = req.body.CREO_outputDir;
+    let outputDir = workingDir + '/_outputDir';
     let drawingCount = req.body.drawingCount;
     let drawingNames = req.body.drawingName;
     let pdfs = req.body.pdfCheck;
     let dxfs = req.body.dxfCheck;
-    //let binBoms = req.body.binBomCheck;
     let drawings = [];
-    //let sessionId;
-    let profilePic;
 
     //create the drawings JSON array from the .drw files in the working directory
     for (let i = 0; i < drawingCount - 1; i++) {
@@ -2803,12 +2754,9 @@ exports.generateDrawings = function(req, res) {
         return {openedDRWs, exportedPDFs, exportedDXFs}
     }
 
-        //execute the async open and export PDF_DXF_BINBOM function declared above
-        openAndExport_PDF_DXF_BINBOM(sessionId, drawings).then(({openedDRWs, exportedPDFs, exportedDXFs}) => {
-            return querySql("SELECT * FROM users WHERE id = ?", req.user.id)
-        })
-        .then(rows => {
-            profilePic = '/public/uploads/' + rows[0].profilePic;
+    //execute the async open and export PDF_DXF_BINBOM function declared above
+    openAndExport_PDF_DXF_BINBOM(sessionId, drawings)
+        .then(({openedDRWs, exportedPDFs, exportedDXFs}) => {
             return null
         })
         .then(() => {

@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimal-ui">
     <title><%= title %></title>
     <meta content="Quote Detail" name="SAI-APS-Portal" />
-    <link rel="shortcut icon" href="/public/assets/images/SAILogo.jpg">
+    <link rel="shortcut icon" href="/public/assets/images/SAI-Logo.JPG">
     <link rel="stylesheet" href="/public/plugins/morris/morris.css">
 
     <link href="/public/plugins/RWD-Table-Patterns/dist/css/rwd-table.min.css" rel="stylesheet" type="text/css" media="screen" />
@@ -25,32 +25,97 @@
     <link href="/public/assets/css/metismenu.min.css" rel="stylesheet" type="text/css">
     <link href="/public/assets/css/icons.css" rel="stylesheet" type="text/css">
     <link href="/public/assets/css/style.css" rel="stylesheet" type="text/css">
-    <!-- Full Calendar -->
-    <link href="/public/plugins/fullcalendar/css/fullcalendar.min.css" rel="stylesheet">
+    <style>
+        .icon-success {
+            color: #00C851;
+        }
+        .icon-danger {
+            color: #ff4444;
+        }
+    </style>
 </head>
 
 <body>
+<div id="wrapper">
+    <!-- Top Bar Start -->
+    <div class="topbar">
 
-        <div class="wrapper-page">
+        <!-- LOGO -->
+        <div class="topbar-left" style="background-color: white;">
+            <a href="./" class="logo">
+                        <span>
+                            <img src="/public/assets/images/SAI-Logo.JPG" alt="" height="67">
+                        </span>
+                <i>
+                    <img src="/public/assets/images/SAI-Logo.JPG" alt="" height="22">
+                </i>
+            </a>
+        </div>
 
-            <div class="card">
-                <div class="card-block">
+        <nav class="navbar-custom">
+            <ul class="navbar-right d-flex list-inline float-right mb-0">
+                <li class="dropdown notification-list d-none d-sm-block">
+                    <form role="search" class="app-search">
+                        <div class="form-group mb-0">
+                            <input type="text" class="form-control" placeholder="Search..">
+                            <button type="submit"><i class="fa fa-search"></i></button>
+                        </div>
+                    </form>
+                </li>
+            </ul>
 
-                    <div class="ex-page-content text-center">
-                        <h1 class="text-dark">500</h1>
-                        <h4 class="">Internal Server Error</h4><br>
+            <ul class="list-inline menu-left mb-0">
+                <li class="float-left">
+                    <button class="button-menu-mobile open-left waves-effect">
+                        <i class="mdi mdi-menu"></i>
+                    </button>
+                </li>
+            </ul>
 
-                        <a class="btn btn-info mb-5 waves-effect waves-light" href="/"><i class="mdi mdi-home"></i> Back to Dashboard</a>
-                    </div>
+        </nav>
 
-                </div>
+    </div>
+    <!-- Top Bar End -->
+
+    <!-- ========== Left Sidebar Start ========== -->
+    <div class="left side-menu">
+        <div class="slimscroll-menu" id="remove-scroll">
+
+            <!--- Sidemenu -->
+            <div id="sidebar-menu">
+                <!-- Left Menu Start -->
+                <ul class="metismenu" id="side-menu">
+                    <li class="menu-title">CREO Automation</li>
+                    <li>
+                        <a href="../PDF-DXF-BIN_BOM" class="waves-effect">
+                            <i class="mdi mdi-content-duplicate"></i> <span> PDF / DXF / BIN BOM </span>
+                        </a>
+                    </li>
+                </ul>
+
             </div>
-
-            <div class="m-t-40 text-center">
-                <p>© 2018 Lexa. Crafted with <i class="mdi mdi-heart text-danger"></i> by Themesbrand</p>
-            </div>
+            <!-- Sidebar -->
+            <div class="clearfix"></div>
 
         </div>
+        <!-- Sidebar -left -->
+
+    </div>
+    <!-- Left Sidebar End -->
+
+    <div class="content-page">
+        <!-- Content Start -->
+
+
+    </div>
+
+</div> <!-- content-page -->
+<footer class="footer">
+    © 2019 SAI, Advanced Power Solutions Inc.
+</footer>
+</div> <!-- wrapper -->
+
+
 <!-- Responsive-table-->
 <script src="/public/plugins/RWD-Table-Patterns/dist/js/rwd-table.min.js"></script>
 <script>
@@ -84,16 +149,8 @@
 <script src="/public/assets/pages/form-advanced.js"></script>
 <script src="/public/assets/js/breakerDragDrop.js"></script>
 <script src="/public/assets/js/app.js"></script>
-<!--Full calendar-->
-<script src="/public/plugins/jquery-ui/jquery-ui.min.js"></script>
-<script src="/public/plugins/moment/moment.js"></script>
-<script src="/public/plugins/fullcalendar/js/fullcalendar.min.js"></script>
-<script src="/public/assets/pages/calendar-init.js"></script>
+<script src="/public/assets/js/pdfDxfBinBomCheck.js"></script>
 
-
-
-<!-- Creoson -->
-<script src="/creoson/creoConnect.js"></script>
 
 </body>
 </html>

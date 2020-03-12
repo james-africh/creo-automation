@@ -43,7 +43,7 @@
 
         <!-- LOGO -->
         <div class="topbar-left" style="background-color: white;">
-            <a href="" class="logo">
+            <a href="../" class="logo">
                         <span>
                             <img src="/public/assets/images/SAI-Logo.JPG" alt="" height="67">
                         </span>
@@ -63,69 +63,6 @@
                         </div>
                     </form>
                 </li>
-
-                <li class="dropdown notification-list">
-                    <a class="nav-link dropdown-toggle arrow-none waves-effect" data-toggle="dropdown" href="#" role="button" aria-haspopup="false" aria-expanded="false">
-                        <i class="ti-bell noti-icon"></i>
-                        <span class="badge badge-pill badge-danger noti-icon-badge">3</span>
-                    </a>
-                    <div class="dropdown-menu dropdown-menu-right dropdown-menu-lg">
-                        <!-- item-->
-                        <h6 class="dropdown-item-text">
-                            Notifications (258)
-                        </h6>
-                        <div class="slimscroll notification-item-list">
-                            <!-- item-->
-                            <a href="javascript:void(0);" class="dropdown-item notify-item active">
-                                <div class="notify-icon bg-success"><i class="mdi mdi-cart-outline"></i></div>
-                                <p class="notify-details">Your order is placed<span class="text-muted">Dummy text of the printing and typesetting industry.</span></p>
-                            </a>
-                            <!-- item-->
-                            <a href="javascript:void(0);" class="dropdown-item notify-item">
-                                <div class="notify-icon bg-warning"><i class="mdi mdi-message"></i></div>
-                                <p class="notify-details">New Message received<span class="text-muted">You have 87 unread messages</span></p>
-                            </a>
-                            <!-- item-->
-                            <a href="javascript:void(0);" class="dropdown-item notify-item">
-                                <div class="notify-icon bg-info"><i class="mdi mdi-martini"></i></div>
-                                <p class="notify-details">Your item is shipped<span class="text-muted">It is a long established fact that a reader will</span></p>
-                            </a>
-                            <!-- item-->
-                            <a href="javascript:void(0);" class="dropdown-item notify-item">
-                                <div class="notify-icon bg-primary"><i class="mdi mdi-cart-outline"></i></div>
-                                <p class="notify-details">Your order is placed<span class="text-muted">Dummy text of the printing and typesetting industry.</span></p>
-                            </a>
-                            <!-- item-->
-                            <a href="javascript:void(0);" class="dropdown-item notify-item">
-                                <div class="notify-icon bg-danger"><i class="mdi mdi-message"></i></div>
-                                <p class="notify-details">New Message received<span class="text-muted">You have 87 unread messages</span></p>
-                            </a>
-                        </div>
-                        <!-- All-->
-                        <a href="javascript:void(0);" class="dropdown-item text-center text-primary">
-                            View all <i class="fi-arrow-right"></i>
-                        </a>
-                    </div>
-                </li>
-                <li class="dropdown notification-list">
-                    <div class="dropdown notification-list nav-pro-img">
-                        <a class="dropdown-toggle nav-link arrow-none waves-effect nav-user" data-toggle="dropdown" href="#" role="button" aria-haspopup="false" aria-expanded="false">
-                            <!--<img src="/public/assets/images/users/user-4.jpg" alt="user" class="rounded-circle">-->
-                            <% if(profilePic != null){ %>
-                                <img src="<%= profilePic %>" alt="Profile Picture" class="rounded-circle">
-                            <% } else{ %>
-                                <img src="/public/uploads/default.jpg" alt="Profile Picture" class="rounded-circle">
-                            <% } %>
-                        </a>
-                        <div class="dropdown-menu dropdown-menu-right profile-dropdown ">
-                            <!-- item-->
-                            <a class="dropdown-item" href="/userProfile"><i class="mdi mdi-account-circle m-r-5"></i> Profile</a>
-                            <div class="dropdown-divider"></div>
-                            <a class="dropdown-item text-danger" href="/logout"><i class="mdi mdi-power text-danger"></i> Logout</a>
-                        </div>
-                    </div>
-                </li>
-
             </ul>
 
             <ul class="list-inline menu-left mb-0">
@@ -149,86 +86,11 @@
             <div id="sidebar-menu">
                 <!-- Left Menu Start -->
                 <ul class="metismenu" id="side-menu">
-                    <li class="menu-title">Main</li>
+                    <li class="menu-title">CREO Automation</li>
                     <li>
-                        <a href="../dashboard" class="waves-effect">
-                            <i class="mdi mdi-view-dashboard"></i><span class="badge badge-primary badge-pill float-right">2</span> <span> Dashboard </span>
+                        <a href="../PDF-DXF-BIN_BOM" class="waves-effect">
+                            <i class="mdi mdi-content-duplicate"></i> <span> PDF / DXF / BIN BOM </span>
                         </a>
-                    </li>
-                    <li>
-                        <a href="../calendar" class="waves-effect"><i class="mdi mdi-calendar-check"></i><span> Calendar </span></a>
-                    </li>
-
-                    <li>
-                        <a href="javascript:void(0);" class="waves-effect"><i class="mdi mdi-email-outline"></i><span> Email <span class="float-right menu-arrow"><i class="mdi mdi-chevron-right"></i></span> </span></a>
-                        <ul class="submenu collapse">
-                            <li><a href="../email-inbox">Inbox</a></li>
-                            <li><a href="../email-read">Email Read</a></li>
-                            <li><a href="../email-compose">Email Compose</a></li>
-                        </ul>
-                    </li>
-
-                    <li class="menu-title">Portals</li>
-
-                    <li>
-                        <a href="javascript:void(0);" class="waves-effect"><i class="mdi mdi-calculator"></i> <span> Application Eng. <span class="float-right menu-arrow"><i class="mdi mdi-chevron-right"></i></span> </span> </a>
-                        <ul class="submenu collapse">
-                            <li><a href="../newQuote">New Quote</a></li>
-                            <li><a>Pricing Update</a></li>
-                            <li><a>Re-release Quote</a></li>
-                            <li><a>Order Entry</a></li>
-                        </ul>
-                    </li>
-                    <li>
-                        <a href="javascript:void(0);" class="waves-effect"><i class="mdi mdi-voice"></i> <span> Project Management <span class="float-right menu-arrow"><i class="mdi mdi-chevron-right"></i></span> </span> </a>
-                        <ul class="submenu collapse">
-                            <li><a>Projects and Customers</a></li>
-                            <li><a>Delivery Milestones</a></li>
-                            <li><a>Tasks</a></li>
-                            <li><a>BOM's</a></li>
-                            <li><a>Change Orders</a></li>
-                        </ul>
-                    </li>
-                    <li>
-                        <a href="javascript:void(0);" class="waves-effect"><i class="mdi mdi-math-compass"></i> <span> Mechanical Eng. <span class="float-right menu-arrow"><i class="mdi mdi-chevron-right"></i></span> </span> </a>
-                        <ul class="submenu collapse">
-                            <li><a href="../submittal">Submittals</a></li>
-                            <li><a href="../PDF-DXF-BIN_BOM">PDF-DXF-BIN BOM</a></li>
-                            <li><a>Design</a></li>
-                            <li><a>Tasks</a></li>
-                            <li><a href="../MBOM">BOM's</a></li>
-                            <li><a>Releases</a></li>
-                            <li><a>Issue Log</a></li>
-                        </ul>
-                    </li>
-                    <li>
-                        <a href="javascript:void(0);" class="waves-effect"><i class="mdi mdi-flash"></i> <span> Electrical Eng. <span class="float-right menu-arrow"><i class="mdi mdi-chevron-right"></i></span> </span> </a>
-                        <ul class="submenu collapse">
-                            <li><a>Submittals</a></li>
-                            <li><a>Design</a></li>
-                            <li><a>Tasks</a></li>
-                            <li><a>BOM's</a></li>
-                            <li><a>Releases</a></li>
-                            <li><a>Issue Log</a></li>
-                        </ul>
-                    </li>
-                    <li>
-                        <a href="javascript:void(0);" class="waves-effect"><i class="mdi mdi-cash-usd"></i> <span> Purchasing <span class="float-right menu-arrow"><i class="mdi mdi-chevron-right"></i></span> </span> </a>
-                        <ul class="submenu collapse">
-                            <li><a>Vendors</a></li>
-                            <li><a>BOM's</a></li>
-                            <li><a>Ordering</a></li>
-                            <li><a>Tracking</a></li>
-                        </ul>
-                    </li>
-                    <li>
-                        <a href="javascript:void(0);" class="waves-effect"><i class="mdi mdi-wrench"></i> <span> Production <span class="float-right menu-arrow"><i class="mdi mdi-chevron-right"></i></span> </span> </a>
-                        <ul class="submenu collapse">
-                            <li><a>Releases</a></li>
-                            <li><a>Delivery Milestones</a></li>
-                            <li><a>Tasks</a></li>
-                            <li><a>Issue Log</a></li>
-                        </ul>
                     </li>
                 </ul>
 

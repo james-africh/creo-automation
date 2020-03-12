@@ -1,31 +1,21 @@
 const creosonController = require('../controllers/creosonController.js');
 
 
-module.exports = function(app, passport) {
-
-    //Submittal GET request
-    app.get('/submittal', isLoggedIn, creosonController.submittal);
+module.exports = function(app) {
 
     //PDF, DXF, BIN BOM Script GET request
-    app.get('/PDF-DXF-BIN_BOM', isLoggedIn, creosonController.pdfDxfBinBom);
+    app.get('/PDF-DXF-BIN_BOM', creosonController.pdfDxfBinBom);
 
     //Set Working Directory POST request
-    app.post('/setWD', isLoggedIn, creosonController.setWD);
+    app.post('/setWD', creosonController.setWD);
 
     //Load Drawings from current working directory
-    app.post('/loadDesign', isLoggedIn, creosonController.loadDesign);
+    app.post('/loadDesign', creosonController.loadDesign);
 
     //Generate Drawings POST request
-    app.post('/generateDrawings', isLoggedIn, creosonController.generateDrawings);
+    app.post('/generateDrawings', creosonController.generateDrawings);
 
     //Generate BIN BOMS POST request
-    app.post('/generateBinBoms', isLoggedIn, creosonController.generateBinBoms);
+    app.post('/generateBinBoms', creosonController.generateBinBoms);
 
-
-    function isLoggedIn(req, res, next) {
-        if (req.isAuthenticated())
-            return next();
-
-        res.redirect('/login');
-    }
 };
