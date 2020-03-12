@@ -177,6 +177,17 @@
                                                             </table>
                                                         </div>
                                                     </div>
+                                                    <div class="row justify-content-center">
+                                                        <div class="col-sm-4">
+                                                            <input id="genButton" type="button" value="Generate All" class="btn btn-lg btn-outline-success waves-effect waves-light" onclick="document.getElementById('drawingAndBinBomForm').action = '../generateAll';document.getElementById('drawingAndBinBomForm').submit();" style="margin-bottom:1%;" />
+                                                        </div>
+                                                        <div class="col-sm-4">
+                                                            <input id="genButton" type="button" value="Generate BIN BOMs" class="btn btn-lg btn-outline-success waves-effect waves-light" onclick="document.getElementById('drawingAndBinBomForm').action = '../generateBinBoms';document.getElementById('drawingAndBinBomForm').submit();" style="margin-bottom:1%;" />
+                                                        </div>
+                                                        <div class="col-sm-4">
+                                                            <input id="genButton" type="button" value="Generate Drawings" class="btn btn-lg btn-outline-success waves-effect waves-light" onclick="document.getElementById('drawingAndBinBomForm').action = '../generateDrawings';document.getElementById('drawingAndBinBomForm').submit();" style="margin-bottom:1%;" />
+                                                        </div>
+                                                    </div>
                                                 <% } %>
                                             </div>
                                         </div>
@@ -184,16 +195,17 @@
                                 </div>
                             <% } %>
 
+
                             <% if (sortedCheckedDwgs.length != 0 && binBoms.length != 0) { %>
+                                <form id="drawingAndBinBomForm" class="drawingAndBinBomForm" action="" method="POST">
                                 <div class="row" style="margin-top:2.5%;">
                                     <div class="col-sm-6">
                                         <div class="card m-b-20">
                                             <div class="card-body">
                                                 <h4 class="mt-0 header-title">BIN BOMs</h4>
-                                                <form id="binBomForm" class="binBomForm" action="" method="POST">
                                                     <input type="text" name="CREO_workingDir" class="form-control" value="<%= workingDir %>" hidden="hidden" required/>
                                                     <input type="text" name="CREO_outputDir" class="form-control" value="<%= outputDir %>" hidden="hidden" required/>
-                                                    <input id="genButton" type="submit" value="Generate" class="btn btn-lg btn-outline-success waves-effect waves-light" onclick="this.form.action='./generateBinBoms'" style="margin-bottom:1%;" />
+                                                    <!--<input id="genButton" type="submit" value="Generate" class="btn btn-lg btn-outline-success waves-effect waves-light" onclick="this.form.action='./generateBinBoms'" style="margin-bottom:1%;" />-->
 
                                                     <% let currentLayoutBom = 0; %>
                                                     <% for (let layoutBom of layoutBoms) { %>
@@ -831,7 +843,7 @@
                                                             <% } %>
                                                         <% } %>
                                                     <% } %>
-                                                </form>
+                                                <!--</form>-->
                                             </div>
                                         </div>
                                     </div>
@@ -840,10 +852,7 @@
                                         <div class="card m-b-20">
                                             <div class="card-body">
                                                 <h4 class="mt-0 header-title">Drawings</h4>
-                                                <form id="drawingForm" class="drawingForm" action="" method="POST">
-                                                    <input type="text" name="CREO_workingDir" class="form-control" value="<%= workingDir %>" hidden="hidden" required/>
-                                                    <input type="text" name="CREO_outputDir" class="form-control" value="<%= outputDir %>" hidden="hidden" required/>
-                                                    <input id="genButton" type="submit" value="Generate" class="btn btn-lg btn-outline-success waves-effect waves-light" onclick="this.form.action='./generateDrawings'" style="margin-bottom:1%;" />
+                                                    <!--<input id="genButton" type="submit" value="Generate" class="btn btn-lg btn-outline-success waves-effect waves-light" onclick="this.form.action='./generateDrawings'" style="margin-bottom:1%;" />-->
                                                     <div class="checkBoxes">
                                                         <div class="row justify-content-center">
                                                                 <div class="form-check" style="margin-left:5%">
@@ -902,13 +911,12 @@
                                                         </div>
                                                     </div>
                                                     <input type="text" value="<%=sortedCheckedDwgs.length%>" name="drawingCount" hidden="hidden" />
-                                                </form>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
+                                </form>
                             <% } %>
-
                         </div>
                     </div>
                 </div>

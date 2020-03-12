@@ -68,6 +68,7 @@ exports.pdfDxfBinBom = function(req, res) {
     let outputDir;
     res.locals = {title: 'PDF-DXF-BIN BOM'};
     res.render('MechEng/pdfDxfBinBom', {
+        message: null,
         asmList: [],
         workingDir: workingDir,
         outputDir: outputDir,
@@ -77,11 +78,12 @@ exports.pdfDxfBinBom = function(req, res) {
 
 //Set Working Directory POST request
 exports.setWD = function(req, res) {
+    let message = null;
     let workingDir = req.body.CREO_workingDir;
     let outputDir = workingDir + '/_outputDir';
     let topLevelAsmList = [];
 
-    async function cd() {
+    async function cdAndCreateOutputDir() {
         let dir = await creo(sessionId, {
             command: "creo",
             function: "pwd",
@@ -104,7 +106,7 @@ exports.setWD = function(req, res) {
                     "dirname": "_outputDir"
                 }
             });
-            if (!innerDirs.data ) {
+            if (!innerDirs.data) {
                 await creo(sessionId, {
                     command: "creo",
                     function: "mkdir",
@@ -140,6 +142,8 @@ exports.setWD = function(req, res) {
                         "dirname": "_outputDir\\NAMEPLATES"
                     }
                 });
+            } else {
+                message = "_outputDir already exists within the working directory. Please remove before continuing.";
             }
 
         } else {
@@ -187,13 +191,15 @@ exports.setWD = function(req, res) {
                         "dirname": "_outputDir\\NAMEPLATES"
                     }
                 });
+            } else {
+                message = "_outputDir already exists within the working directory. Please remove before continuing."
             }
 
         }
         return null
     }
 
-    cd()
+    cdAndCreateOutputDir()
         .then(async function() {
             return await creo(sessionId, {
                 command: "creo",
@@ -213,13 +219,25 @@ exports.setWD = function(req, res) {
             return null;
         })
         .then(() => {
-            res.locals = {title: 'PDF-DXF-BIN BOM'};
-            res.render('MechEng/pdfDxfBinBom', {
-                workingDir: workingDir,
-                outputDir: outputDir,
-                asmList: topLevelAsmList,
-                sortedCheckedDwgs: []
-            });
+            if (message == null) {
+                res.locals = {title: 'PDF-DXF-BIN BOM'};
+                res.render('MechEng/pdfDxfBinBom', {
+                    message: null,
+                    workingDir: workingDir,
+                    outputDir: outputDir,
+                    asmList: topLevelAsmList,
+                    sortedCheckedDwgs: []
+                });
+            } else {
+                res.locals = {title: 'PDF-DXF-BIN BOM'};
+                res.render('MechEng/pdfDxfBinBom', {
+                    message: message,
+                    workingDir: workingDir,
+                    outputDir: undefined,
+                    asmList: [],
+                    sortedCheckedDwgs: []
+                });
+            }
         })
         .catch(err => {
             console.log(err);
@@ -1406,6 +1424,1401 @@ exports.loadDesign = function(req, res) {
                 binBoms: binBoms,
                 layoutBoms: layoutBoms
             });
+        })
+        .catch(err => {
+            console.log(err);
+        });
+};
+
+
+
+exports.generateAll = function(req, res) {
+    req.setTimeout(0); //no timeout
+    //initialize variables
+    let workingDir = req.body.CREO_workingDir;
+    let outputDir = workingDir + '/_outputDir';
+
+    let drawingCount = req.body.drawingCount;
+    let drawingNames = req.body.drawingName;
+    let pdfs = req.body.pdfCheck;
+    let dxfs = req.body.dxfCheck;
+    let drawings = [];
+
+    async function exportSheet1PDF(sessionId, drawing) {
+        await creo(sessionId, {
+            command: "file",
+            function: "open",
+            data: {
+                "file": drawing.name,
+                "display": true,
+                "activate": true
+            }
+        });
+        let curSheetPDF = await creo(sessionId, {
+            command: "drawing",
+            function: "get_cur_sheet",
+            data: {}
+        });
+
+        if (curSheetPDF.data.sheet != 1) {
+            await creo(sessionId, {
+                command: "drawing",
+                function: "select_sheet",
+                data: {
+                    "drawing": drawing.name,
+                    "sheet": 1
+                }
+            });
+        }
+
+        return await creo(sessionId, {
+            command: "interface",
+            function: "mapkey",
+            data: {
+                "script": "~ Activate `main_dlg_cur` `switcher_lay_buttons_lay_ph.page_0` 1;\n" +
+                    "~ Trail `UI Desktop` `UI Desktop` `SmartTabs` `selectButton \n" +
+                    "main_dlg_cur@switcher_lay_buttons_lay page_0 0`;\n" +
+                    "~ Close `main_dlg_cur` `appl_casc`;~ Command `ProCmdExportPreview` ;\n" +
+                    "~ Activate `main_dlg_cur` `switcher_lay_buttons_lay_ph.page_0` 1;\n" +
+                    "~ Trail `UI Desktop` `UI Desktop` `SmartTabs` `selectButton \n" +
+                    "main_dlg_cur@switcher_lay_buttons_lay page_0 0`;\n" +
+                    "~ Command `ProCmdDwgPubSettings` ;~ Activate `intf_profile` `OkPshBtn`;\n" +
+                    "~ Command `ProCmdDwgPubExport` ;~ Activate `file_saveas` `Current Dir`;\n" +
+                    "~ Select `file_saveas` `ph_list.Filelist` 1 `_outputDir`;\n" +
+                    "~ Activate `file_saveas` `ph_list.Filelist` 1 `_outputDir`;\n" +
+                    "~ Select `file_saveas` `ph_list.Filelist` 1 `PDF`;\n" +
+                    "~ Activate `file_saveas` `ph_list.Filelist` 1 `PDF`;\n" +
+                    "~ Activate `file_saveas` `OK`;~ Command `ProCmdDwgPubCloseExportPvw`;"
+            }
+        });
+    }
+
+    async function exportSheet1DXF(sessionId, drawing) {
+        await creo(sessionId, {
+            command: "file",
+            function: "open",
+            data: {
+                "file": drawing.name,
+                "display": true,
+                "activate": true
+            }
+        });
+        await creo(sessionId, {
+            command: "drawing",
+            function: "select_sheet",
+            data: {
+                "drawing": drawing.name,
+                "sheet": 1
+            }
+        });
+
+        let scaleDXF = await creo(sessionId, {
+            command: "drawing",
+            function: "get_sheet_scale",
+            data: {
+                "drawing": drawing.name,
+                "sheet": 1
+            }
+        });
+        if (scaleDXF.data.scale != 1) {
+            await creo(sessionId, {
+                command: "drawing",
+                function: "scale_sheet",
+                data: {
+                    "drawing": drawing.name,
+                    "sheet": 1,
+                    "scale": 1
+                }
+            })
+        }
+
+        return await creo(sessionId, {
+            command: "interface",
+            function: "export_file",
+            data: {
+                "file": drawing.name,
+                "type": "DXF",
+                "dirname":path.join(outputDir, "DXF"),
+                "filename": drawing.name.slice(0, drawing.name.length - 4) + ".dxf"
+            }
+        });
+    }
+
+    async function exportSheet2DXF(sessionId, drawing) {
+        await creo(sessionId, {
+            command: "file",
+            function: "open",
+            data: {
+                "file": drawing.name,
+                "display": true,
+                "activate": true
+            }
+        });
+        await creo(sessionId, {
+            command: "drawing",
+            function: "select_sheet",
+            data: {
+                "drawing": drawing.name,
+                "sheet": 2
+            }
+        });
+
+        let scaleDXF = await creo(sessionId, {
+            command: "drawing",
+            function: "get_sheet_scale",
+            data: {
+                "drawing": drawing.name,
+                "sheet": 2
+            }
+        });
+        if (scaleDXF.data.scale != 1) {
+            await creo(sessionId, {
+                command: "drawing",
+                function: "scale_sheet",
+                data: {
+                    "drawing": drawing.name,
+                    "sheet": 2,
+                    "scale": 1
+                }
+            })
+        }
+
+        return await creo(sessionId, {
+            command: "interface",
+            function: "export_file",
+            data: {
+                "file": drawing.name,
+                "type": "DXF",
+                "dirname":path.join(outputDir, "DXF"),
+                "filename": drawing.name.slice(0, drawing.name.length - 4) + ".dxf"
+            }
+        });
+    }
+
+
+    let layoutBoms = req.body.layoutBom;
+    let layoutSections = req.body.layoutSections;
+    let sectionBoms = req.body.binBomSection;
+    let layouts = [];
+    let sections = [];
+    let existingLayoutBoms = [];
+    let existingSectionBoms = [];
+    let SS = [];
+    let GA_7 = [];
+    let LEXAN = [];
+    let NP_A = [];
+    let NP_B = [];
+    let NP_C = [];
+    let NP_D = [];
+    let PUR = [];
+    let STR = [];
+    let PNL = [];
+    let CTL = [];
+    let INT = [];
+    let EXT = [];
+    let SCL = [];
+    let BIN_TRACKER = [];
+
+    if (Array.isArray(layoutBoms) == true) {
+        for (let i = 0; i < layoutBoms.length; i++) {
+            layouts.push({
+                layout: layoutBoms[i].slice(0,7) + layoutBoms[i].slice(12,15),
+                sections: layoutSections[i]
+            });
+        }
+    } else {
+        layouts.push({
+            layout: layoutBoms.slice(0,7) + layoutBoms.slice(12,15),
+            sections: layoutSections[0]
+        });
+    }
+
+    if (Array.isArray(sectionBoms) == true) {
+        for (let sectionBom of sectionBoms) {
+            sections.push(sectionBom);
+        }
+    } else {
+        sections.push(sectionBoms);
+    }
+
+    for (let layout of layouts) {
+        if (req.body['title_' + layout.layout + '-SS'] != undefined) {
+            existingLayoutBoms.push(layout.layout + '-SS');
+        }
+        if (req.body['title_' + layout.layout + '-7GA'] != undefined) {
+            existingLayoutBoms.push(layout.layout + '-7GA');
+        }
+        if (req.body['title_' + layout.layout + '-LEXAN'] != undefined) {
+            existingLayoutBoms.push(layout.layout + '-LEXAN');
+        }
+        if (req.body['title_' + layout.layout + '-A'] != undefined) {
+            existingLayoutBoms.push(layout.layout + '-A');
+        }
+        if (req.body['title_' + layout.layout + '-B'] != undefined) {
+            existingLayoutBoms.push(layout.layout + '-B');
+        }
+        if (req.body['title_' + layout.layout + '-C'] != undefined) {
+            existingLayoutBoms.push(layout.layout + '-C');
+        }
+        if (req.body['title_' + layout.layout + '-D'] != undefined) {
+            existingLayoutBoms.push(layout.layout + '-D');
+        }
+    }
+
+    for (let section of sections) {
+        if (req.body['title_' + section + '-PUR'] != undefined) {
+            existingSectionBoms.push(section + '-PUR');
+        }
+        if (req.body['title_' + section + '-STR'] != undefined) {
+            existingSectionBoms.push(section + '-STR');
+        }
+        if (req.body['title_' + section + '-PNL'] != undefined) {
+            existingSectionBoms.push(section + '-PNL');
+        }
+        if (req.body['title_' + section + '-CTL'] != undefined) {
+            existingSectionBoms.push(section + '-CTL');
+        }
+        if (req.body['title_' + section + '-INT'] != undefined) {
+            existingSectionBoms.push(section + '-INT');
+        }
+        if (req.body['title_' + section + '-EXT'] != undefined) {
+            existingSectionBoms.push(section + '-EXT');
+        }
+        if (req.body['title_' + section + '-SCL'] != undefined) {
+            existingSectionBoms.push(section + '-SCL');
+        }
+    }
+
+    for (let existingLayoutBom of existingLayoutBoms) {
+        if (existingLayoutBom.slice(existingLayoutBom.length - 2, existingLayoutBom.length) == 'SS') {
+            let ss = [];
+            if (Array.isArray(req.body['qty_' + existingLayoutBom]) == true) {
+                for (let i = 0; i < req.body['qty_' + existingLayoutBom].length; i++) {
+                    ss.push({
+                        qty: req.body['qty_' + existingLayoutBom][i],
+                        partDesc: req.body['partDesc_' + existingLayoutBom][i],
+                        part: req.body['part_' + existingLayoutBom][i]
+                    })
+                }
+            } else {
+                ss.push({
+                    qty: req.body['qty_' + existingLayoutBom],
+                    partDesc: req.body['partDesc_' + existingLayoutBom],
+                    part: req.body['part_' + existingLayoutBom]
+                })
+            }
+
+            SS.push({
+                bom: existingLayoutBom,
+                data: ss
+            });
+        }
+
+        if (existingLayoutBom.slice(existingLayoutBom.length - 3, existingLayoutBom.length) == '7GA') {
+            let ga_7 = [];
+            if (Array.isArray(req.body['qty_' + existingLayoutBom]) == true) {
+                for (let i = 0; i < req.body['qty_' + existingLayoutBom].length; i++) {
+                    ga_7.push({
+                        qty: req.body['qty_' + existingLayoutBom][i],
+                        partDesc: req.body['partDesc_' + existingLayoutBom][i],
+                        part: req.body['part_' + existingLayoutBom][i]
+                    })
+                }
+            } else {
+                ga_7.push({
+                    qty: req.body['qty_' + existingLayoutBom],
+                    partDesc: req.body['partDesc_' + existingLayoutBom],
+                    part: req.body['part_' + existingLayoutBom]
+                })
+            }
+            GA_7.push({
+                bom: existingLayoutBom,
+                data: ga_7
+            });
+        }
+
+        if (existingLayoutBom.slice(existingLayoutBom.length - 5, existingLayoutBom.length) == 'LEXAN') {
+            let lexan = [];
+            if (Array.isArray(req.body['qty_' + existingLayoutBom]) == true) {
+                for (let i = 0; i < req.body['qty_' + existingLayoutBom].length; i++) {
+                    lexan.push({
+                        qty: req.body['qty_' + existingLayoutBom][i],
+                        partDesc: req.body['partDesc_' + existingLayoutBom][i],
+                        part: req.body['part_' + existingLayoutBom][i]
+                    })
+                }
+            } else {
+                lexan.push({
+                    qty: req.body['qty_' + existingLayoutBom],
+                    partDesc: req.body['partDesc_' + existingLayoutBom],
+                    part: req.body['part_' + existingLayoutBom]
+                })
+            }
+
+            LEXAN.push({
+                bom: existingLayoutBom,
+                data: lexan
+            });
+        }
+
+        if (existingLayoutBom.slice(existingLayoutBom.length - 1, existingLayoutBom.length) == 'A') {
+            let npA = [];
+            if (Array.isArray(req.body['part_' + existingLayoutBom]) == true) {
+                for (let i = 0; i < req.body['part_' + existingLayoutBom].length; i++) {
+                    npA.push({
+                        part: req.body['part_' + existingLayoutBom][i],
+                        text_row1: req.body['text_row1_' + existingLayoutBom][i],
+                        text_row2: req.body['text_row2_' + existingLayoutBom][i],
+                        text_row3: req.body['text_row3_' + existingLayoutBom][i]
+                    })
+                }
+            } else {
+                npA.push({
+                    part: req.body['part_' + existingLayoutBom],
+                    text_row1: req.body['text_row1_' + existingLayoutBom],
+                    text_row2: req.body['text_row2_' + existingLayoutBom],
+                    text_row3: req.body['text_row3_' + existingLayoutBom]
+                })
+            }
+
+            NP_A.push({
+                bom: existingLayoutBom,
+                data: npA
+            })
+        }
+
+        if (existingLayoutBom.slice(existingLayoutBom.length - 1, existingLayoutBom.length) == 'B') {
+            let npB = [];
+            if (Array.isArray(req.body['part_' + existingLayoutBom]) == true) {
+                for (let i = 0; i < req.body['part_' + existingLayoutBom].length; i++) {
+                    npB.push({
+                        part: req.body['part_' + existingLayoutBom][i],
+                        text_row1: req.body['text_row1_' + existingLayoutBom][i],
+                        text_row2: req.body['text_row2_' + existingLayoutBom][i],
+                        text_row3: req.body['text_row3_' + existingLayoutBom][i]
+                    })
+                }
+            } else {
+                npB.push({
+                    part: req.body['part_' + existingLayoutBom],
+                    text_row1: req.body['text_row1_' + existingLayoutBom],
+                    text_row2: req.body['text_row2_' + existingLayoutBom],
+                    text_row3: req.body['text_row3_' + existingLayoutBom]
+                })
+            }
+            NP_B.push({
+                bom: existingLayoutBom,
+                data: npB
+            })
+        }
+
+        if (existingLayoutBom.slice(existingLayoutBom.length - 1, existingLayoutBom.length) == 'C') {
+            let npC = [];
+            if (Array.isArray(req.body['part_' + existingLayoutBom]) == true) {
+                for (let i = 0; i < req.body['part_' + existingLayoutBom].length; i++) {
+                    npC.push({
+                        part: req.body['part_' + existingLayoutBom][i],
+                        text_row1: req.body['text_row1_' + existingLayoutBom][i],
+                        text_row2: req.body['text_row2_' + existingLayoutBom][i],
+                        text_row3: req.body['text_row3_' + existingLayoutBom][i]
+                    })
+                }
+            } else {
+                npC.push({
+                    part: req.body['part_' + existingLayoutBom],
+                    text_row1: req.body['text_row1_' + existingLayoutBom],
+                    text_row2: req.body['text_row2_' + existingLayoutBom],
+                    text_row3: req.body['text_row3_' + existingLayoutBom]
+                })
+            }
+            NP_C.push({
+                bom: existingLayoutBom,
+                data: npC
+            })
+        }
+
+        if (existingLayoutBom.slice(existingLayoutBom.length - 1, existingLayoutBom.length) == 'D') {
+            let npD = [];
+            if (Array.isArray(req.body['part_' + existingLayoutBom]) == true) {
+                for (let i = 0; i < req.body['part_' + existingLayoutBom].length; i++) {
+                    npD.push({
+                        part: req.body['part_' + existingLayoutBom][i],
+                        text_row1: req.body['text_row1_' + existingLayoutBom][i],
+                        text_row2: req.body['text_row2_' + existingLayoutBom][i],
+                        text_row3: req.body['text_row3_' + existingLayoutBom][i]
+                    })
+                }
+            } else {
+                npD.push({
+                    part: req.body['part_' + existingLayoutBom],
+                    text_row1: req.body['text_row1_' + existingLayoutBom],
+                    text_row2: req.body['text_row2_' + existingLayoutBom],
+                    text_row3: req.body['text_row3_' + existingLayoutBom]
+                })
+            }
+
+            NP_D.push({
+                bom: existingLayoutBom,
+                data: npD
+            })
+        }
+    }
+
+    for (let existingSectionBom of existingSectionBoms) {
+        if (existingSectionBom.slice(existingSectionBom.length - 3, existingSectionBom.length) == 'PUR') {
+            let pur = [];
+            if (Array.isArray(req.body['qty_' + existingSectionBom]) == true) {
+                for (let i = 0; i < req.body['qty_' + existingSectionBom].length; i++) {
+                    pur.push({
+                        qty: req.body['qty_' + existingSectionBom][i],
+                        partDesc: req.body['partDesc_' + existingSectionBom][i],
+                        partNum: req.body['partNum_' + existingSectionBom][i],
+                        weight: req.body['weight_' + existingSectionBom][i],
+                    })
+                }
+            } else {
+                pur.push({
+                    qty: req.body['qty_' + existingSectionBom],
+                    partDesc: req.body['partDesc_' + existingSectionBom],
+                    partNum: req.body['partNum_' + existingSectionBom],
+                    weight: req.body['weight_' + existingSectionBom],
+                })
+            }
+
+            PUR.push({
+                bom: existingSectionBom,
+                data: pur
+            });
+        }
+        if (existingSectionBom.slice(existingSectionBom.length - 3, existingSectionBom.length) == 'STR') {
+            let str = [];
+            if (Array.isArray(req.body['qty_' + existingSectionBom]) == true) {
+                for (let i = 0; i < req.body['qty_' + existingSectionBom].length; i++) {
+                    str.push({
+                        qty: req.body['qty_' + existingSectionBom][i],
+                        partDesc: req.body['partDesc_' + existingSectionBom][i],
+                        part: req.body['part_' + existingSectionBom][i],
+                        weight: req.body['weight_' + existingSectionBom][i],
+                    })
+                }
+            } else {
+                str.push({
+                    qty: req.body['qty_' + existingSectionBom],
+                    partDesc: req.body['partDesc_' + existingSectionBom],
+                    part: req.body['part_' + existingSectionBom],
+                    weight: req.body['weight_' + existingSectionBom],
+                })
+            }
+
+            STR.push({
+                bom: existingSectionBom,
+                data: str
+            });
+        }
+        if (existingSectionBom.slice(existingSectionBom.length - 3, existingSectionBom.length) == 'PNL') {
+            let pnl = [];
+            if (Array.isArray(req.body['qty_' + existingSectionBom]) == true) {
+                for (let i = 0; i < req.body['qty_' + existingSectionBom].length; i++) {
+                    pnl.push({
+                        qty: req.body['qty_' + existingSectionBom][i],
+                        partDesc: req.body['partDesc_' + existingSectionBom][i],
+                        part: req.body['part_' + existingSectionBom][i],
+                        weight: req.body['weight_' + existingSectionBom][i],
+                    })
+                }
+            } else {
+                pnl.push({
+                    qty: req.body['qty_' + existingSectionBom],
+                    partDesc: req.body['partDesc_' + existingSectionBom],
+                    part: req.body['part_' + existingSectionBom],
+                    weight: req.body['weight_' + existingSectionBom],
+                })
+            }
+            PNL.push({
+                bom: existingSectionBom,
+                data: pnl
+            });
+        }
+        if (existingSectionBom.slice(existingSectionBom.length - 3, existingSectionBom.length) == 'CTL') {
+            let ctl = [];
+            if (Array.isArray(req.body['qty_' + existingSectionBom]) == true) {
+                for (let i = 0; i < req.body['qty_' + existingSectionBom].length; i++) {
+                    ctl.push({
+                        qty: req.body['qty_' + existingSectionBom][i],
+                        partDesc: req.body['partDesc_' + existingSectionBom][i],
+                        part: req.body['part_' + existingSectionBom][i],
+                        weight: req.body['weight_' + existingSectionBom][i],
+                    })
+                }
+            } else {
+                ctl.push({
+                    qty: req.body['qty_' + existingSectionBom],
+                    partDesc: req.body['partDesc_' + existingSectionBom],
+                    part: req.body['part_' + existingSectionBom],
+                    weight: req.body['weight_' + existingSectionBom],
+                })
+            }
+            //console.log(existingSectionBom);
+
+            CTL.push({
+                bom: existingSectionBom,
+                data: ctl
+            });
+        }
+        if (existingSectionBom.slice(existingSectionBom.length - 3, existingSectionBom.length) == 'INT') {
+            let int = [];
+            if (Array.isArray(req.body['qty_' + existingSectionBom]) == true) {
+                for (let i = 0; i < req.body['qty_' + existingSectionBom].length; i++) {
+                    int.push({
+                        qty: req.body['qty_' + existingSectionBom][i],
+                        partDesc: req.body['partDesc_' + existingSectionBom][i],
+                        part: req.body['part_' + existingSectionBom][i],
+                        weight: req.body['weight_' + existingSectionBom][i],
+                    })
+                }
+            } else {
+                int.push({
+                    qty: req.body['qty_' + existingSectionBom],
+                    partDesc: req.body['partDesc_' + existingSectionBom],
+                    part: req.body['part_' + existingSectionBom],
+                    weight: req.body['weight_' + existingSectionBom],
+                })
+            }
+
+            INT.push({
+                bom: existingSectionBom,
+                data: int
+            });
+        }
+        if (existingSectionBom.slice(existingSectionBom.length - 3, existingSectionBom.length) == 'EXT') {
+            let ext = [];
+            if (Array.isArray(req.body['qty_' + existingSectionBom]) == true) {
+                for (let i = 0; i < req.body['qty_' + existingSectionBom].length; i++) {
+                    ext.push({
+                        qty: req.body['qty_' + existingSectionBom][i],
+                        partDesc: req.body['partDesc_' + existingSectionBom][i],
+                        part: req.body['part_' + existingSectionBom][i],
+                        weight: req.body['weight_' + existingSectionBom][i],
+                    })
+                }
+            } else {
+                ext.push({
+                    qty: req.body['qty_' + existingSectionBom],
+                    partDesc: req.body['partDesc_' + existingSectionBom],
+                    part: req.body['part_' + existingSectionBom],
+                    weight: req.body['weight_' + existingSectionBom],
+                })
+            }
+
+            EXT.push({
+                bom: existingSectionBom,
+                data: ext
+            });
+        }
+        if (existingSectionBom.slice(existingSectionBom.length - 3, existingSectionBom.length) == 'SCL') {
+            let scl = [];
+            if (Array.isArray(req.body['qty_' + existingSectionBom]) == true) {
+                for (let i = 0; i < req.body['qty_' + existingSectionBom].length; i++) {
+                    scl.push({
+                        qty: req.body['qty_' + existingSectionBom][i],
+                        partDesc: req.body['partDesc_' + existingSectionBom][i],
+                        part: req.body['part_' + existingSectionBom][i],
+                        weight: req.body['weight_' + existingSectionBom][i],
+                        cutLength: req.body['cutLength_' + existingSectionBom][i]
+                    })
+                }
+            } else {
+                scl.push({
+                    qty: req.body['qty_' + existingSectionBom],
+                    partDesc: req.body['partDesc_' + existingSectionBom],
+                    part: req.body['part_' + existingSectionBom],
+                    weight: req.body['weight_' + existingSectionBom],
+                    cutLength: req.body['cutLength_' + existingSectionBom]
+                })
+            }
+
+            SCL.push({
+                bom: existingSectionBom,
+                data: scl
+            });
+        }
+    }
+
+    for (let layout of layouts) {
+        let secBinTrackingData = [];
+        let pur, str, pnl, ctl, int, ext, scl;
+        for (let section of layout.sections.split(',')) {
+            if (req.body['binTracker_PUR_' + layout.layout.slice(0,7) + section] != undefined) {
+                pur = req.body['binTracker_PUR_' + layout.layout.slice(0,7) + section];
+            } else {
+                pur = 'N/A';
+            }
+            if (req.body['binTracker_STR_' + layout.layout.slice(0,7) + section] != undefined) {
+                str = req.body['binTracker_STR_' + layout.layout.slice(0,7) + section];
+            } else {
+                str = 'N/A';
+            }
+            if (req.body['binTracker_PNL_' + layout.layout.slice(0,7) + section] != undefined) {
+                pnl = req.body['binTracker_PNL_' + layout.layout.slice(0,7) + section];
+            } else {
+                pnl = 'N/A';
+            }
+            if (req.body['binTracker_CTL_' + layout.layout.slice(0,7) + section] != undefined) {
+                ctl = req.body['binTracker_CTL_' + layout.layout.slice(0,7) + section];
+            } else {
+                ctl = 'N/A';
+            }
+            if (req.body['binTracker_INT_' + layout.layout.slice(0,7) + section] != undefined) {
+                int = req.body['binTracker_INT_' + layout.layout.slice(0,7) + section];
+            } else {
+                int = 'N/A';
+            }
+            if (req.body['binTracker_EXT_' + layout.layout.slice(0,7) + section] != undefined) {
+                ext = req.body['binTracker_EXT_' + layout.layout.slice(0,7) + section];
+            } else {
+                ext = 'N/A';
+            }
+            if (req.body['binTracker_SCL_' + layout.layout.slice(0,7) + section] != undefined) {
+                scl = req.body['binTracker_SCL_' + layout.layout.slice(0,7) + section];
+            } else {
+                scl = 'N/A';
+            }
+            secBinTrackingData.push({
+                section: section,
+                data: {
+                    PUR: pur,
+                    STR: str,
+                    PNL: pnl,
+                    CTL: ctl,
+                    INT: int,
+                    EXT: ext,
+                    SCL: scl
+                }
+            });
+        }
+        BIN_TRACKER.push({
+            layout: layout.layout,
+            data: secBinTrackingData
+        });
+    }
+
+    if (SS.length != 0) {
+        for (let ss of SS) {
+            let workbook = new Excel.Workbook();
+            let sheet = workbook.addWorksheet('sheet1');
+            sheet.columns = [
+                {header: 'Qty:', key: 'qty', width: 10, style: {font: {name: 'Calibri', size: 11}}},
+                {header: 'Part Description:', key: 'partDesc', width: 40, style: {font: {name: 'Calibri', size: 11}}},
+                {header: 'Part #:', key: 'part', width: 25, style: {font: {name: 'Calibri', size: 11}}}
+            ];
+
+            for(let ssItem of ss.data) {
+                sheet.addRow({
+                    qty: ssItem.qty,
+                    partDesc: ssItem.partDesc,
+                    part: ssItem.part
+                });
+            }
+            workbook.xlsx.writeFile(outputDir + '/BIN BOMS/' + ss.bom + '.xlsx').then(function() {
+                return null
+            });
+        }
+    }
+
+    if (GA_7.length != 0) {
+        for (let ga_7 of GA_7) {
+            let workbook = new Excel.Workbook();
+            let sheet = workbook.addWorksheet('sheet1');
+            sheet.columns = [
+                {header: 'Qty:', key: 'qty', width: 10, style: {font: {name: 'Calibri', size: 11}}},
+                {header: 'Part Description:', key: 'partDesc', width: 40, style: {font: {name: 'Calibri', size: 11}}},
+                {header: 'Part #:', key: 'part', width: 25, style: {font: {name: 'Calibri', size: 11}}}
+            ];
+
+            for(let ga_7Item of ga_7.data) {
+                sheet.addRow({
+                    qty: ga_7Item.qty,
+                    partDesc: ga_7Item.partDesc,
+                    part: ga_7Item.part
+                });
+            }
+            workbook.xlsx.writeFile(outputDir + '/BIN BOMS/' + ga_7.bom + '.xlsx').then(function() {
+                return null
+            });
+        }
+    }
+
+    if (LEXAN.length != 0) {
+        for (let lexan of LEXAN) {
+            let workbook = new Excel.Workbook();
+            let sheet = workbook.addWorksheet('sheet1');
+            sheet.columns = [
+                {header: 'Qty:', key: 'qty', width: 10, style: {font: {name: 'Calibri', size: 11}}},
+                {header: 'Part Description:', key: 'partDesc', width: 40, style: {font: {name: 'Calibri', size: 11}}},
+                {header: 'Part #:', key: 'part', width: 25, style: {font: {name: 'Calibri', size: 11}}}
+            ];
+
+            for(let lexanItem of lexan.data) {
+                sheet.addRow({
+                    qty: lexanItem.qty,
+                    partDesc: lexanItem.partDesc,
+                    part: lexanItem.part
+                });
+            }
+            workbook.xlsx.writeFile(outputDir + '/BIN BOMS/' + lexan.bom + '.xlsx').then(function() {
+                return null
+            });
+        }
+    }
+
+    if (NP_A.length != 0) {
+        for (let npA of NP_A) {
+            let workbook = new Excel.Workbook();
+            let sheet = workbook.addWorksheet(npA.bom);
+
+            for (let npAItem of npA.data) {
+                sheet.addRow([npAItem.text_row1, npAItem.text_row2, npAItem.text_row3])
+            }
+            workbook.csv.writeFile(outputDir + '/NAMEPLATES/' + npA.bom + '.csv').then(function() {
+                return null
+            });
+        }
+    }
+
+    if (NP_B.length != 0) {
+        for (let npB of NP_B) {
+            let workbook = new Excel.Workbook();
+            let sheet = workbook.addWorksheet(npB.bom);
+
+            for (let npBItem of npB.data) {
+                sheet.addRow([npBItem.text_row1, npBItem.text_row2, npBItem.text_row3])
+            }
+
+            workbook.csv.writeFile(outputDir + '/NAMEPLATES/' + npB.bom + '.csv').then(function() {
+                return null
+            });
+        }
+    }
+
+    if (NP_C.length!= 0) {
+        for (let npC of NP_C) {
+            let workbook = new Excel.Workbook();
+            let sheet = workbook.addWorksheet(npC.bom);
+
+            for (let npCItem of npC.data) {
+                sheet.addRow([npCItem.text_row1, npCItem.text_row2, npCItem.text_row3])
+            }
+
+            workbook.csv.writeFile(outputDir + '/NAMEPLATES/' + npC.bom + '.csv').then(function() {
+                return null
+            });
+        }
+    }
+
+    if (NP_D.length != 0) {
+        for (let npD of NP_D) {
+            let workbook = new Excel.Workbook();
+            let sheet = workbook.addWorksheet(npD.bom);
+
+            for (let npDItem of npD.data) {
+                sheet.addRow([npDItem.text_row1, npDItem.text_row2, npDItem.text_row3])
+            }
+
+            for (let npDItem of npD.data) {
+                sheet.addRow([npDItem.text_row1, npDItem.text_row2, npDItem.text_row3])
+            }
+            workbook.csv.writeFile(outputDir + '/NAMEPLATES/' + npD.bom + '.csv').then(function() {
+                return null
+            });
+        }
+    }
+
+    if (PUR.length != 0) {
+        for (let pur of PUR) {
+            let workbook = new Excel.Workbook();
+            let sheet = workbook.addWorksheet('sheet1');
+            sheet.columns = [
+                {header: 'Assembly Number:', key: 'assemblyNum', width: 20, style: {font: {name: 'Calibri', size: 11}}},
+                {
+                    header: 'Item & BOM Sequence Number:',
+                    key: 'seqNum',
+                    width: 30,
+                    style: {font: {name: 'Calibri', size: 11}}
+                },
+                {
+                    header: 'Component Part Number:',
+                    key: 'compPartNum',
+                    width: 30,
+                    style: {font: {name: 'Calibri', size: 11}}
+                },
+                {header: 'Description 1:', key: 'desc1', width: 50, style: {font: {name: 'Calibri', size: 11}}},
+                {header: 'Quantity Per:', key: 'qty', width: 15, style: {font: {name: 'Calibri', size: 11}}},
+                {header: 'Unit Of Issue:', key: 'unitOfIssue', width: 10, style: {font: {name: 'Calibri', size: 11}}},
+                {
+                    header: 'Unit Of Purchase:',
+                    key: 'unitOfPurchase',
+                    width: 15,
+                    style: {font: {name: 'Calibri', size: 11}}
+                },
+                {header: 'Category Code:', key: 'categoryCode', width: 10, style: {font: {name: 'Calibri', size: 11}}},
+                {header: 'Make Part:', key: 'makePart', width: 10, style: {font: {name: 'Calibri', size: 11}}},
+                {header: 'Buy Part', key: 'buyPart', width: 10, style: {font: {name: 'Calibri', size: 11}}},
+                {header: 'Stock Part', key: 'stockPart', width: 10, style: {font: {name: 'Calibri', size: 11}}},
+                {header: 'Weight:', key: 'weight', width: 10, style: {font: {name: 'Calibri', size: 11}}}
+            ];
+            let count = 1;
+            sheet.addRow({
+                assemblyNum: pur.bom,
+                seqNum: '00'+count,
+                compPartNum: pur.bom,
+                desc1: pur.bom + ' Bill of Material',
+                qty: 1,
+                unitOfIssue: 'EA',
+                unitOfPurchase: 'EA',
+                categoryCode: '82-BOM',
+                makePart: 1,
+                buyPart: 0,
+                stockPart: 0,
+                manufacturer: 'SAI'
+            });
+
+            for (let purItem of pur.data) {
+                count += 1;
+                let seqNum;
+                if (count < 10) {
+                    seqNum = '00' + count;
+                } else if (count < 100){
+                    seqNum = '0' + count;
+                } else {
+                    seqNum = count.toString();
+                }
+                sheet.addRow({
+                    assemblyNum: pur.bom,
+                    seqNum: seqNum,
+                    compPartNum: purItem.partNum,
+                    desc1: purItem.partDesc,
+                    qty: purItem.qty,
+                });
+            }
+            workbook.xlsx.writeFile(outputDir + '/BIN BOMS/' + pur.bom + '.xlsx').then(function() {
+                return null
+            });
+        }
+    }
+
+    if (STR.length != 0) {
+        for (let str of STR) {
+            let workbook = new Excel.Workbook();
+            let sheet = workbook.addWorksheet('sheet1');
+            sheet.columns = [
+                {header: 'Assembly Number:', key: 'assemblyNum', width: 20, style: {font: {name: 'Calibri', size: 11}}},
+                {
+                    header: 'Item & BOM Sequence Number:',
+                    key: 'seqNum',
+                    width: 30,
+                    style: {font: {name: 'Calibri', size: 11}}
+                },
+                {
+                    header: 'Component Part Number:',
+                    key: 'compPartNum',
+                    width: 30,
+                    style: {font: {name: 'Calibri', size: 11}}
+                },
+                {header: 'Description 1:', key: 'desc1', width: 50, style: {font: {name: 'Calibri', size: 11}}},
+                {header: 'Quantity Per:', key: 'qty', width: 15, style: {font: {name: 'Calibri', size: 11}}},
+                {header: 'Unit Of Issue:', key: 'unitOfIssue', width: 10, style: {font: {name: 'Calibri', size: 11}}},
+                {
+                    header: 'Unit Of Purchase:',
+                    key: 'unitOfPurchase',
+                    width: 15,
+                    style: {font: {name: 'Calibri', size: 11}}
+                },
+                {header: 'Category Code:', key: 'categoryCode', width: 10, style: {font: {name: 'Calibri', size: 11}}},
+                {header: 'Make Part:', key: 'makePart', width: 10, style: {font: {name: 'Calibri', size: 11}}},
+                {header: 'Buy Part', key: 'buyPart', width: 10, style: {font: {name: 'Calibri', size: 11}}},
+                {header: 'Stock Part', key: 'stockPart', width: 10, style: {font: {name: 'Calibri', size: 11}}},
+                {header: 'Weight:', key: 'weight', width: 20, style: {font: {name: 'Calibri', size: 11}}}
+            ];
+            let count = 1;
+            sheet.addRow({
+                assemblyNum: str.bom,
+                seqNum: '00'+count,
+                compPartNum: str.bom,
+                desc1: str.bom + ' Bill of Material',
+                qty: 1,
+                unitOfIssue: 'EA',
+                unitOfPurchase: 'EA',
+                categoryCode: '82-BOM',
+                makePart: 1,
+                buyPart: 0,
+                stockPart: 0,
+                manufacturer: 'SAI'
+            });
+
+            for (let strItem of str.data) {
+                count += 1;
+                let seqNum;
+                if (count < 10) {
+                    seqNum = '00' + count;
+                } else if (count < 100){
+                    seqNum = '0' + count;
+                } else {
+                    seqNum = count.toString();
+                }
+                sheet.addRow({
+                    assemblyNum: str.bom,
+                    seqNum: seqNum,
+                    compPartNum: strItem.part,
+                    desc1: strItem.partDesc,
+                    qty: strItem.qty,
+                    unitOfIssue: 'EA',
+                    unitOfPurchase: 'EA',
+                    categoryCode: '91-MFG',
+                    makePart: 1,
+                    buyPart: 0,
+                    stockPart: 0,
+                    weight: strItem.weight
+                });
+            }
+            workbook.xlsx.writeFile(outputDir + '/BIN BOMS/' + str.bom + '.xlsx').then(function() {
+                return null
+            });
+        }
+    }
+
+    if (PNL.length != 0) {
+        for (let pnl of PNL) {
+            let workbook = new Excel.Workbook();
+            let sheet = workbook.addWorksheet('sheet1');
+            sheet.columns = [
+                {header: 'Assembly Number:', key: 'assemblyNum', width: 20, style: {font: {name: 'Calibri', size: 11}}},
+                {
+                    header: 'Item & BOM Sequence Number:',
+                    key: 'seqNum',
+                    width: 30,
+                    style: {font: {name: 'Calibri', size: 11}}
+                },
+                {
+                    header: 'Component Part Number:',
+                    key: 'compPartNum',
+                    width: 30,
+                    style: {font: {name: 'Calibri', size: 11}}
+                },
+                {header: 'Description 1:', key: 'desc1', width: 50, style: {font: {name: 'Calibri', size: 11}}},
+                {header: 'Quantity Per:', key: 'qty', width: 15, style: {font: {name: 'Calibri', size: 11}}},
+                {header: 'Unit Of Issue:', key: 'unitOfIssue', width: 10, style: {font: {name: 'Calibri', size: 11}}},
+                {
+                    header: 'Unit Of Purchase:',
+                    key: 'unitOfPurchase',
+                    width: 15,
+                    style: {font: {name: 'Calibri', size: 11}}
+                },
+                {header: 'Category Code:', key: 'categoryCode', width: 10, style: {font: {name: 'Calibri', size: 11}}},
+                {header: 'Make Part:', key: 'makePart', width: 10, style: {font: {name: 'Calibri', size: 11}}},
+                {header: 'Buy Part', key: 'buyPart', width: 10, style: {font: {name: 'Calibri', size: 11}}},
+                {header: 'Stock Part', key: 'stockPart', width: 10, style: {font: {name: 'Calibri', size: 11}}},
+                {header: 'Weight:', key: 'weight', width: 15, style: {font: {name: 'Calibri', size: 11}}}
+            ];
+            let count = 1;
+            sheet.addRow({
+                assemblyNum: pnl.bom,
+                seqNum: '00'+count,
+                compPartNum: pnl.bom,
+                desc1: pnl.bom + ' Bill of Material',
+                qty: 1,
+                unitOfIssue: 'EA',
+                unitOfPurchase: 'EA',
+                categoryCode: '82-BOM',
+                makePart: 1,
+                buyPart: 0,
+                stockPart: 0,
+                manufacturer: 'SAI'
+            });
+
+            for (let pnlItem of pnl.data) {
+                count += 1;
+                let seqNum;
+                if (count < 10) {
+                    seqNum = '00' + count;
+                } else if (count < 100){
+                    seqNum = '0' + count;
+                } else {
+                    seqNum = count.toString();
+                }
+                sheet.addRow({
+                    assemblyNum: pnl.bom,
+                    seqNum: seqNum,
+                    compPartNum: pnlItem.part,
+                    desc1: pnlItem.partDesc,
+                    qty: pnlItem.qty,
+                    unitOfIssue: 'EA',
+                    unitOfPurchase: 'EA',
+                    categoryCode: '91-MFG',
+                    makePart: 1,
+                    buyPart: 0,
+                    stockPart: 0,
+                    weight: pnlItem.weight
+                });
+            }
+            workbook.xlsx.writeFile(outputDir + '/BIN BOMS/' + pnl.bom + '.xlsx').then(function() {
+                return null
+            });
+        }
+    }
+
+    if (CTL.length != 0) {
+        for (let ctl of CTL) {
+            let workbook = new Excel.Workbook();
+            let sheet = workbook.addWorksheet('sheet1');
+            sheet.columns = [
+                {header: 'Assembly Number:', key: 'assemblyNum', width: 20, style: {font: {name: 'Calibri', size: 11}}},
+                {
+                    header: 'Item & BOM Sequence Number:',
+                    key: 'seqNum',
+                    width: 30,
+                    style: {font: {name: 'Calibri', size: 11}}
+                },
+                {
+                    header: 'Component Part Number:',
+                    key: 'compPartNum',
+                    width: 30,
+                    style: {font: {name: 'Calibri', size: 11}}
+                },
+                {header: 'Description 1:', key: 'desc1', width: 50, style: {font: {name: 'Calibri', size: 11}}},
+                {header: 'Quantity Per:', key: 'qty', width: 15, style: {font: {name: 'Calibri', size: 11}}},
+                {header: 'Unit Of Issue:', key: 'unitOfIssue', width: 10, style: {font: {name: 'Calibri', size: 11}}},
+                {
+                    header: 'Unit Of Purchase:',
+                    key: 'unitOfPurchase',
+                    width: 15,
+                    style: {font: {name: 'Calibri', size: 11}}
+                },
+                {header: 'Category Code:', key: 'categoryCode', width: 10, style: {font: {name: 'Calibri', size: 11}}},
+                {header: 'Make Part:', key: 'makePart', width: 10, style: {font: {name: 'Calibri', size: 11}}},
+                {header: 'Buy Part', key: 'buyPart', width: 10, style: {font: {name: 'Calibri', size: 11}}},
+                {header: 'Stock Part', key: 'stockPart', width: 10, style: {font: {name: 'Calibri', size: 11}}},
+                {header: 'Weight:', key: 'weight', width: 20, style: {font: {name: 'Calibri', size: 11}}}
+            ];
+            let count = 1;
+            sheet.addRow({
+                assemblyNum: ctl.bom,
+                seqNum: '00'+count,
+                compPartNum: ctl.bom,
+                desc1: ctl.bom + ' Bill of Material',
+                qty: 1,
+                unitOfIssue: 'EA',
+                unitOfPurchase: 'EA',
+                categoryCode: '82-BOM',
+                makePart: 1,
+                buyPart: 0,
+                stockPart: 0,
+                manufacturer: 'SAI'
+            });
+
+            for (let ctlItem of ctl.data) {
+                count += 1;
+                let seqNum;
+                if (count < 10) {
+                    seqNum = '00' + count;
+                } else if (count < 100){
+                    seqNum = '0' + count;
+                } else {
+                    seqNum = count.toString();
+                }
+                sheet.addRow({
+                    assemblyNum: ctl.bom,
+                    seqNum: seqNum,
+                    compPartNum: ctlItem.part,
+                    desc1: ctlItem.partDesc,
+                    qty: ctlItem.qty,
+                    unitOfIssue: 'EA',
+                    unitOfPurchase: 'EA',
+                    categoryCode: '91-MFG',
+                    makePart: 1,
+                    buyPart: 0,
+                    stockPart: 0,
+                    weight: ctlItem.weight
+                });
+            }
+            workbook.xlsx.writeFile(outputDir + '/BIN BOMS/' + ctl.bom + '.xlsx').then(function() {
+                return null
+            });
+        }
+    }
+
+    if (INT.length != 0) {
+        for (let int of INT) {
+            let workbook = new Excel.Workbook();
+            let sheet = workbook.addWorksheet('sheet1');
+            sheet.columns = [
+                {header: 'Assembly Number:', key: 'assemblyNum', width: 20, style: {font: {name: 'Calibri', size: 11}}},
+                {
+                    header: 'Item & BOM Sequence Number:',
+                    key: 'seqNum',
+                    width: 30,
+                    style: {font: {name: 'Calibri', size: 11}}
+                },
+                {
+                    header: 'Component Part Number:',
+                    key: 'compPartNum',
+                    width: 30,
+                    style: {font: {name: 'Calibri', size: 11}}
+                },
+                {header: 'Description 1:', key: 'desc1', width: 50, style: {font: {name: 'Calibri', size: 11}}},
+                {header: 'Quantity Per:', key: 'qty', width: 15, style: {font: {name: 'Calibri', size: 11}}},
+                {header: 'Unit Of Issue:', key: 'unitOfIssue', width: 10, style: {font: {name: 'Calibri', size: 11}}},
+                {
+                    header: 'Unit Of Purchase:',
+                    key: 'unitOfPurchase',
+                    width: 15,
+                    style: {font: {name: 'Calibri', size: 11}}
+                },
+                {header: 'Category Code:', key: 'categoryCode', width: 10, style: {font: {name: 'Calibri', size: 11}}},
+                {header: 'Make Part:', key: 'makePart', width: 10, style: {font: {name: 'Calibri', size: 11}}},
+                {header: 'Buy Part', key: 'buyPart', width: 10, style: {font: {name: 'Calibri', size: 11}}},
+                {header: 'Stock Part', key: 'stockPart', width: 10, style: {font: {name: 'Calibri', size: 11}}},
+                {header: 'Weight:', key: 'weight', width: 20, style: {font: {name: 'Calibri', size: 11}}}
+            ];
+            let count = 1;
+            sheet.addRow({
+                assemblyNum: int.bom,
+                seqNum: '00'+count,
+                compPartNum: int.bom,
+                desc1: int.bom + ' Bill of Material',
+                qty: 1,
+                unitOfIssue: 'EA',
+                unitOfPurchase: 'EA',
+                categoryCode: '82-BOM',
+                makePart: 1,
+                buyPart: 0,
+                stockPart: 0,
+                manufacturer: 'SAI'
+            });
+
+            for (let intItem of int.data) {
+                count += 1;
+                let seqNum;
+                if (count < 10) {
+                    seqNum = '00' + count;
+                } else if (count < 100){
+                    seqNum = '0' + count;
+                } else {
+                    seqNum = count.toString();
+                }
+                sheet.addRow({
+                    assemblyNum: int.bom,
+                    seqNum: seqNum,
+                    compPartNum: intItem.part,
+                    desc1: intItem.partDesc,
+                    qty: intItem.qty,
+                    unitOfIssue: 'EA',
+                    unitOfPurchase: 'EA',
+                    categoryCode: '91-MFG',
+                    makePart: 1,
+                    buyPart: 0,
+                    stockPart: 0,
+                    weight: intItem.weight
+                });
+            }
+            workbook.xlsx.writeFile(outputDir + '/BIN BOMS/' + int.bom + '.xlsx').then(function() {
+                return null
+            });
+        }
+    }
+
+    if (EXT.length != 0) {
+        for (let ext of EXT) {
+            let workbook = new Excel.Workbook();
+            let sheet = workbook.addWorksheet('sheet1');
+            sheet.columns = [
+                {header: 'Assembly Number:', key: 'assemblyNum', width: 20, style: {font: {name: 'Calibri', size: 11}}},
+                {
+                    header: 'Item & BOM Sequence Number:',
+                    key: 'seqNum',
+                    width: 30,
+                    style: {font: {name: 'Calibri', size: 11}}
+                },
+                {
+                    header: 'Component Part Number:',
+                    key: 'compPartNum',
+                    width: 30,
+                    style: {font: {name: 'Calibri', size: 11}}
+                },
+                {header: 'Description 1:', key: 'desc1', width: 50, style: {font: {name: 'Calibri', size: 11}}},
+                {header: 'Quantity Per:', key: 'qty', width: 15, style: {font: {name: 'Calibri', size: 11}}},
+                {header: 'Unit Of Issue:', key: 'unitOfIssue', width: 10, style: {font: {name: 'Calibri', size: 11}}},
+                {
+                    header: 'Unit Of Purchase:',
+                    key: 'unitOfPurchase',
+                    width: 15,
+                    style: {font: {name: 'Calibri', size: 11}}
+                },
+                {header: 'Category Code:', key: 'categoryCode', width: 10, style: {font: {name: 'Calibri', size: 11}}},
+                {header: 'Make Part:', key: 'makePart', width: 10, style: {font: {name: 'Calibri', size: 11}}},
+                {header: 'Buy Part', key: 'buyPart', width: 10, style: {font: {name: 'Calibri', size: 11}}},
+                {header: 'Stock Part', key: 'stockPart', width: 10, style: {font: {name: 'Calibri', size: 11}}},
+                {header: 'Weight:', key: 'weight', width: 20, style: {font: {name: 'Calibri', size: 11}}}
+            ];
+            let count = 1;
+            sheet.addRow({
+                assemblyNum: ext.bom,
+                seqNum: '00'+count,
+                compPartNum: ext.bom,
+                desc1: ext.bom + ' Bill of Material',
+                qty: 1,
+                unitOfIssue: 'EA',
+                unitOfPurchase: 'EA',
+                categoryCode: '82-BOM',
+                makePart: 1,
+                buyPart: 0,
+                stockPart: 0,
+                manufacturer: 'SAI'
+            });
+
+            for (let extItem of ext.data) {
+                count += 1;
+                let seqNum;
+                if (count < 10) {
+                    seqNum = '00' + count;
+                } else if (count < 100){
+                    seqNum = '0' + count;
+                } else {
+                    seqNum = count.toString();
+                }
+                sheet.addRow({
+                    assemblyNum: ext.bom,
+                    seqNum: seqNum,
+                    compPartNum: extItem.part,
+                    desc1: extItem.partDesc,
+                    qty: extItem.qty,
+                    unitOfIssue: 'EA',
+                    unitOfPurchase: 'EA',
+                    categoryCode: '91-MFG',
+                    makePart: 1,
+                    buyPart: 0,
+                    stockPart: 0,
+                    weight: extItem.weight
+                });
+            }
+            workbook.xlsx.writeFile(outputDir + '/BIN BOMS/' + ext.bom + '.xlsx').then(function() {
+                return null
+            });
+        }
+    }
+
+    if (SCL.length != 0) {
+        for (let scl of SCL) {
+            let workbook = new Excel.Workbook();
+            let sheet = workbook.addWorksheet('sheet1');
+            sheet.columns = [
+                {header: 'Total Qty Required', key: 'qty', width: 30, style: {font: {name: 'Calibri', size: 11}}},
+                {header: 'Mat\'l Category Code', key: 'catCode', width: 20, style: {font: {name: 'Calibri', size: 11}}},
+                {header: 'Jobscope Stock #', key: 'jobscopeStockNum', width: 25, style: {font: {name: 'Calibri', size: 11}}},
+                {header: 'by', key: 'by1', width: 5, style: {font: {name: 'Calibri', size: 11}}},
+                {header: 'Length', key: 'length', width: 10, style: {font: {name: 'Calibri', size: 11}}},
+                {header: 'by', key: 'by2', width: 5, style: {font: {name: 'Calibri', size: 11}}},
+                {header: 'Width', key: 'width', width: 10, style: {font: {name: 'Calibri', size: 11}}},
+                {header: 'Part Description', key: 'partDesc', width: 40, style: {font: {name: 'Calibri', size: 11}}},
+                {header: 'Program Number', key: 'programNum', width: 20, style: {font: {name: 'Calibri', size: 11}}},
+                {header: 'PART #', key: 'partNum', width: 25, style: {font: {name: 'Calibri', size: 11}}}
+            ];
+
+            for(let sclItem of scl.data) {
+
+                let jobscopeStockNum;
+
+                switch(sclItem.partDesc.split(',')[0]) {
+                    case 'OUTER TUBE':
+                        jobscopeStockNum = 'GREEN OUTER TUBE';
+                        break;
+                    case 'INNER TUBE':
+                        jobscopeStockNum = 'BLACK INNER TUBE';
+                        break;
+                    case 'THREADED ROD':
+                        jobscopeStockNum = 'THREADED ROD';
+                        break;
+                }
+
+                sheet.addRow({
+                    qty: sclItem.qty,
+                    catCode: 'MISC',
+                    jobscopeStockNum: jobscopeStockNum,
+                    by1: 'x',
+                    length: sclItem.cutLength,
+                    by2: 'X',
+                    partDesc: sclItem.partDesc,
+                    partNum: sclItem.part
+                });
+            }
+            workbook.xlsx.writeFile(outputDir + '/BIN BOMS/' + scl.bom + '.xlsx').then(function() {
+                return null
+            });
+        }
+    }
+
+    if (BIN_TRACKER.length != 0) {
+        for (let binTracker of BIN_TRACKER) {
+            let workbook = new Excel.Workbook();
+            let sheet = workbook.addWorksheet('sheet1');
+            sheet.columns = [
+                {header: 'Section:', key: 'section', width: 20, style: {font: {name: 'Calibri', size: 11}}},
+                {header: 'PUR:', key: 'pur', width: 30, style: {font: {name: 'Calibri', size: 11}}},
+                {header: 'STR:', key: 'str', width: 30, style: {font: {name: 'Calibri', size: 11}}},
+                {header: 'PNL:', key: 'pnl', width: 30, style: {font: {name: 'Calibri', size: 11}}},
+                {header: 'CTL:', key: 'ctl', width: 30, style: {font: {name: 'Calibri', size: 11}}},
+                {header: 'INT:', key: 'int', width: 30, style: {font: {name: 'Calibri', size: 11}}},
+                {header: 'EXT:', key: 'ext', width: 30, style: {font: {name: 'Calibri', size: 11}}},
+                {header: 'SCL:', key: 'scl', width: 30, style: {font: {name: 'Calibri', size: 11}}}
+            ];
+            for (let binTrackerItem of binTracker.data) {
+                sheet.addRow({
+                    section: binTrackerItem.section,
+                    pur: binTrackerItem.data.PUR,
+                    str: binTrackerItem.data.STR,
+                    pnl: binTrackerItem.data.PNL,
+                    ctl: binTrackerItem.data.CTL,
+                    int: binTrackerItem.data.INT,
+                    ext: binTrackerItem.data.EXT,
+                    scl: binTrackerItem.data.SCL
+                });
+            }
+            workbook.xlsx.writeFile(outputDir + '/BIN BOMS/' + binTracker.layout + '-BIN_TRACKER' + '.xlsx').then(function() {
+                return null
+            });
+        }
+    }
+
+    //create the drawings JSON array from the .drw files in the working directory
+    for (let i = 0; i < drawingCount - 1; i++) {
+        drawings.push({
+            name: drawingNames[i],
+            pdf: parseInt(pdfs[i]),
+            dxf: parseInt(dxfs[i])
+        })
+    }
+    //function that takes in a .drw file, opens it, and then generates a PDF
+    async function openAndExport_PDF_DXF(sessionId, drawings) {
+        for (let drawing of drawings) {
+            if (drawing.pdf == 1 && drawing.dxf == 1) {
+                await exportSheet1PDF(sessionId, drawing);
+                await exportSheet2DXF(sessionId, drawing);
+            }
+            if (drawing.pdf == 1 && drawing.dxf == 0) {
+                await exportSheet1PDF(sessionId, drawing);
+            }
+            if (drawing.pdf == 0 && drawing.dxf == 1) {
+                await exportSheet1DXF(sessionId, drawing);
+            }
+        }
+        return null
+    }
+
+    //execute the async open and export PDF_DXF_BINBOM function declared above
+    openAndExport_PDF_DXF(sessionId, drawings)
+        .then(() => {
+            //render the main PDF-DXF-BIN BOM page (happens before the CreoSON requests above finish)
+            res.locals = {title: 'PDF-DXF-BIN BOM'};
+            res.redirect('/PDF-DXF-BIN_BOM');
         })
         .catch(err => {
             console.log(err);
@@ -2609,6 +4022,10 @@ exports.generateBinBoms = function(req, res) {
         }
     }
 
+    //render the main PDF-DXF-BIN BOM page (happens before the CreoSON requests above finish)
+    res.locals = {title: 'PDF-DXF-BIN BOM'};
+    res.redirect('/PDF-DXF-BIN_BOM');
+
 };
 
 //Exports the Checked drawings to PDF/DXF format
@@ -2623,6 +4040,157 @@ exports.generateDrawings = function(req, res) {
     let dxfs = req.body.dxfCheck;
     let drawings = [];
 
+    async function exportSheet1PDF(sessionId, drawing) {
+        await creo(sessionId, {
+            command: "file",
+            function: "open",
+            data: {
+                "file": drawing.name,
+                "display": true,
+                "activate": true
+            }
+        });
+        let curSheetPDF = await creo(sessionId, {
+            command: "drawing",
+            function: "get_cur_sheet",
+            data: {}
+        });
+
+        if (curSheetPDF.data.sheet != 1) {
+            await creo(sessionId, {
+                command: "drawing",
+                function: "select_sheet",
+                data: {
+                    "drawing": drawing.name,
+                    "sheet": 1
+                }
+            });
+        }
+
+        return await creo(sessionId, {
+            command: "interface",
+            function: "mapkey",
+            data: {
+                "script": "~ Activate `main_dlg_cur` `switcher_lay_buttons_lay_ph.page_0` 1;\n" +
+                    "~ Trail `UI Desktop` `UI Desktop` `SmartTabs` `selectButton \n" +
+                    "main_dlg_cur@switcher_lay_buttons_lay page_0 0`;\n" +
+                    "~ Close `main_dlg_cur` `appl_casc`;~ Command `ProCmdExportPreview` ;\n" +
+                    "~ Activate `main_dlg_cur` `switcher_lay_buttons_lay_ph.page_0` 1;\n" +
+                    "~ Trail `UI Desktop` `UI Desktop` `SmartTabs` `selectButton \n" +
+                    "main_dlg_cur@switcher_lay_buttons_lay page_0 0`;\n" +
+                    "~ Command `ProCmdDwgPubSettings` ;~ Activate `intf_profile` `OkPshBtn`;\n" +
+                    "~ Command `ProCmdDwgPubExport` ;~ Activate `file_saveas` `Current Dir`;\n" +
+                    "~ Select `file_saveas` `ph_list.Filelist` 1 `_outputDir`;\n" +
+                    "~ Activate `file_saveas` `ph_list.Filelist` 1 `_outputDir`;\n" +
+                    "~ Select `file_saveas` `ph_list.Filelist` 1 `PDF`;\n" +
+                    "~ Activate `file_saveas` `ph_list.Filelist` 1 `PDF`;\n" +
+                    "~ Activate `file_saveas` `OK`;~ Command `ProCmdDwgPubCloseExportPvw`;"
+            }
+        });
+    }
+
+    async function exportSheet1DXF(sessionId, drawing) {
+        await creo(sessionId, {
+            command: "file",
+            function: "open",
+            data: {
+                "file": drawing.name,
+                "display": true,
+                "activate": true
+            }
+        });
+        await creo(sessionId, {
+            command: "drawing",
+            function: "select_sheet",
+            data: {
+                "drawing": drawing.name,
+                "sheet": 1
+            }
+        });
+
+        let scaleDXF = await creo(sessionId, {
+            command: "drawing",
+            function: "get_sheet_scale",
+            data: {
+                "drawing": drawing.name,
+                "sheet": 1
+            }
+        });
+        if (scaleDXF.data.scale != 1) {
+            await creo(sessionId, {
+                command: "drawing",
+                function: "scale_sheet",
+                data: {
+                    "drawing": drawing.name,
+                    "sheet": 1,
+                    "scale": 1
+                }
+            })
+        }
+
+        return await creo(sessionId, {
+            command: "interface",
+            function: "export_file",
+            data: {
+                "file": drawing.name,
+                "type": "DXF",
+                "dirname":path.join(outputDir, "DXF"),
+                "filename": drawing.name.slice(0, drawing.name.length - 4) + ".dxf"
+            }
+        });
+    }
+
+    async function exportSheet2DXF(sessionId, drawing) {
+        await creo(sessionId, {
+            command: "file",
+            function: "open",
+            data: {
+                "file": drawing.name,
+                "display": true,
+                "activate": true
+            }
+        });
+        await creo(sessionId, {
+            command: "drawing",
+            function: "select_sheet",
+            data: {
+                "drawing": drawing.name,
+                "sheet": 2
+            }
+        });
+
+        let scaleDXF = await creo(sessionId, {
+            command: "drawing",
+            function: "get_sheet_scale",
+            data: {
+                "drawing": drawing.name,
+                "sheet": 2
+            }
+        });
+        if (scaleDXF.data.scale != 1) {
+            await creo(sessionId, {
+                command: "drawing",
+                function: "scale_sheet",
+                data: {
+                    "drawing": drawing.name,
+                    "sheet": 2,
+                    "scale": 1
+                }
+            })
+        }
+
+        return await creo(sessionId, {
+            command: "interface",
+            function: "export_file",
+            data: {
+                "file": drawing.name,
+                "type": "DXF",
+                "dirname":path.join(outputDir, "DXF"),
+                "filename": drawing.name.slice(0, drawing.name.length - 4) + ".dxf"
+            }
+        });
+    }
+
     //create the drawings JSON array from the .drw files in the working directory
     for (let i = 0; i < drawingCount - 1; i++) {
         drawings.push({
@@ -2631,148 +4199,34 @@ exports.generateDrawings = function(req, res) {
             dxf: parseInt(dxfs[i])
         })
     }
-    console.log(drawings);
     //function that takes in a .drw file, opens it, and then generates a PDF
-    async function openAndExport_PDF_DXF_BINBOM(sessionId, drawings) {
-        let openedDRWs = [];
-        let exportedPDFs = [];
-        let exportedDXFs = [];
-        let exportedBINBOMs = [];
+    async function openAndExport_PDF_DXF(sessionId, drawings) {
         for (let drawing of drawings) {
             if (drawing.pdf == 1 && drawing.dxf == 1) {
-                const openDwg = await creo(sessionId, {
-                    command: "file",
-                    function: "open",
-                    data: {
-                        "file": drawing.name,
-                        "display": true,
-                        "activate": true
-                    }
-                });
-                openedDRWs.push(openDwg);
-
-                const exportPDF = await creo(sessionId, {
-                    command: "interface",
-                    function: "mapkey",
-                    data: {
-                        "script": "~ Activate `main_dlg_cur` `switcher_lay_buttons_lay_ph.page_0` 1; ~ Trail `UI Desktop` `UI Desktop` `SmartTabs` `selectButton main_dlg_cur@switcher_lay_buttons_lay page_0 0`; ~ Close `main_dlg_cur` `appl_casc`;~ Command `ProCmdModelSaveAs` ; ~ Open `file_saveas` `type_option`;~ Close `file_saveas` `type_option`; ~ Open `file_saveas` `type_option`;~ Close `file_saveas` `type_option`; ~ Select `file_saveas` `type_option` 1 `db_617`; ~ Activate `file_saveas` `OK`; ~ Select `intf_profile` `pdf_export.pdf_sheets_choice` 1 `current`; ~ Select `intf_profile` `pdf_export.pdf_color_depth` 1 `pdf_mono`; ~ Activate `intf_profile` `pdf_export.pdf_launch_viewer` 0; ~ Activate `intf_profile` `OkPshBtn`;"
-                    }
-                });
-                /*const exportPDF = await creo(sessionId, {
-                    command: "interface",
-                    function: "mapkey",
-                    data: {
-                        "script": "~ Activate `main_dlg_cur` `switcher_lay_buttons_lay_ph.page_0` 0;~ Trail `UI Desktop` `UI Desktop` `SmartTabs` `selectButton main_dlg_cur@switcher_lay_buttons_lay page_0 0`;~ Key `main_dlg_cur` `switcher_lay_buttons_lay_ph.page_p"
-                    }
-                });*/
-                exportedPDFs.push(exportPDF);
-
-                await creo(sessionId, {
-                    command: "drawing",
-                    function: "select_sheet",
-                    data: {
-                        "drawing": drawing.name,
-                        "sheet": 2
-                    }
-                });
-                const exportDXF = await creo(sessionId, {
-                    command: "interface",
-                    function: "export_file",
-                    data: {
-                        "file": drawing.name,
-                        "type": "DXF",
-                        "dirname":path.join(outputDir, "DXF"),
-                        "filename": drawing.name.slice(0, drawing.name.length - 4) + ".dxf"
-                    }
-                });
-                exportedDXFs.push(exportDXF)
+                await exportSheet1PDF(sessionId, drawing);
+                await exportSheet2DXF(sessionId, drawing);
             }
-
             if (drawing.pdf == 1 && drawing.dxf == 0) {
-                const openDwg = await creo(sessionId, {
-                    command: "file",
-                    function: "open",
-                    data: {
-                        "file": drawing.name,
-                        "display": true,
-                        "activate": true
-                    }
-                });
-                openedDRWs.push(openDwg);
-
-                const exportPDF = await creo(sessionId, {
-                    command: "interface",
-                    function: "mapkey",
-                    data: {
-                        "script": "~ Activate `main_dlg_cur` `switcher_lay_buttons_lay_ph.page_0` 1; ~ Trail `UI Desktop` `UI Desktop` `SmartTabs` `selectButton main_dlg_cur@switcher_lay_buttons_lay page_0 0`; ~ Close `main_dlg_cur` `appl_casc`;~ Command `ProCmdModelSaveAs` ; ~ Open `file_saveas` `type_option`;~ Close `file_saveas` `type_option`; ~ Open `file_saveas` `type_option`;~ Close `file_saveas` `type_option`; ~ Select `file_saveas` `type_option` 1 `db_617`; ~ Activate `file_saveas` `OK`; ~ Select `intf_profile` `pdf_export.pdf_sheets_choice` 1 `current`; ~ Select `intf_profile` `pdf_export.pdf_color_depth` 1 `pdf_mono`; ~ Activate `intf_profile` `pdf_export.pdf_launch_viewer` 0; ~ Activate `intf_profile` `OkPshBtn`;"
-                    }
-                });
-                exportedPDFs.push(exportPDF);
-                /*const exportPDF = await creo(sessionId, {
-                    command: "interface",
-                    function: "export_pdf",
-                    data: {
-                        "file": drawing.name,
-                        "dirname": path.join(outputDir, "PDF"),
-                        "filename": drawing.name.slice(0, drawing.name.length - 4) + ".pdf",
-                        "use_drawing_settings": true
-                    }
-                });*/
+                await exportSheet1PDF(sessionId, drawing);
             }
             if (drawing.pdf == 0 && drawing.dxf == 1) {
-                const openDwg = await creo(sessionId, {
-                    command: "file",
-                    function: "open",
-                    data: {
-                        "file": drawing.name,
-                        "display": true,
-                        "activate": true
-                    }
-                });
-                openedDRWs.push(openDwg);
-                await creo(sessionId, {
-                    command: "drawing",
-                    function: "select_sheet",
-                    data: {
-                        "drawing": drawing.name,
-                        "sheet": 2
-                    }
-                });
-                const exportDXF = await creo(sessionId, {
-                    command: "interface",
-                    function: "export_file",
-                    data: {
-                        "file": drawing.name,
-                        "type": "DXF",
-                        "dirname":path.join(outputDir, "DXF"),
-                        "filename": drawing.name.slice(0, drawing.name.length - 4) + ".dxf"
-                    }
-                });
-                exportedDXFs.push(exportDXF)
+                await exportSheet1DXF(sessionId, drawing);
             }
         }
-        return {openedDRWs, exportedPDFs, exportedDXFs}
+        return null
     }
 
     //execute the async open and export PDF_DXF_BINBOM function declared above
-    openAndExport_PDF_DXF_BINBOM(sessionId, drawings)
-        .then(({openedDRWs, exportedPDFs, exportedDXFs}) => {
-            return null
-        })
+    openAndExport_PDF_DXF(sessionId, drawings)
         .then(() => {
             //render the main PDF-DXF-BIN BOM page (happens before the CreoSON requests above finish)
             res.locals = {title: 'PDF-DXF-BIN BOM'};
             res.redirect('/PDF-DXF-BIN_BOM');
-            /* res.render('MechEng/pdfDxfBinBom', {
-                 profilePic: profilePic,
-                 workingDir: workingDir,
-                 outputDir: outputDir,
-                 drawingList: drawingNames
-             });*/
         })
         .catch(err => {
             console.log(err);
         });
 };
+
 
 

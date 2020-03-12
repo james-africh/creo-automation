@@ -12,6 +12,9 @@ module.exports = function(app) {
     //Load Drawings from current working directory
     app.post('/loadDesign', creosonController.loadDesign);
 
+
+    app.post('/generateAll', creosonController.generateAll);
+
     //Generate Drawings POST request
     app.post('/generateDrawings', creosonController.generateDrawings);
 
