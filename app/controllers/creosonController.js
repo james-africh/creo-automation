@@ -1430,8 +1430,7 @@ exports.loadDesign = function(req, res) {
         });
 };
 
-
-
+//Exports the Checked drawings to PDF/DXF format and BIN BOMs
 exports.generateAll = function(req, res) {
     req.setTimeout(0); //no timeout
     //initialize variables
@@ -1482,6 +1481,10 @@ exports.generateAll = function(req, res) {
                     "~ Activate `main_dlg_cur` `switcher_lay_buttons_lay_ph.page_0` 1;\n" +
                     "~ Trail `UI Desktop` `UI Desktop` `SmartTabs` `selectButton \n" +
                     "main_dlg_cur@switcher_lay_buttons_lay page_0 0`;\n" +
+                    "~ Close `main_dlg_cur` `appl_casc`;~ Command `ProCmdExportPreview` ;\n" +
+                    "~ Command `ProCmdDwgPubSettings` ;~ Open `intf_profile` `opt_profile`;\n" +
+                    "~ Close `intf_profile` `opt_profile`;\n" +
+                    "~ Select `intf_profile` `opt_profile` 1 `drawing_setup`;\n" +
                     "~ Command `ProCmdDwgPubSettings` ;~ Activate `intf_profile` `OkPshBtn`;\n" +
                     "~ Command `ProCmdDwgPubExport` ;~ Activate `file_saveas` `Current Dir`;\n" +
                     "~ Select `file_saveas` `ph_list.Filelist` 1 `_outputDir`;\n" +
@@ -1594,7 +1597,6 @@ exports.generateAll = function(req, res) {
             }
         });
     }
-
 
     let layoutBoms = req.body.layoutBom;
     let layoutSections = req.body.layoutSections;
@@ -2798,6 +2800,32 @@ exports.generateAll = function(req, res) {
     }
     //function that takes in a .drw file, opens it, and then generates a PDF
     async function openAndExport_PDF_DXF(sessionId, drawings) {
+        const doesSetupExist = await creo(sessionId, {
+            command: "creo",
+            function: "list_files",
+            data: {
+                "filename": "*dop"
+            }
+        });
+
+
+        if (doesSetupExist.data == undefined) {
+            await creo(sessionId, {
+                command: "interface",
+                function: "mapkey",
+                data: {
+                    "script":
+                        "~ Command `ProCmdExportPreview` ;~ Command `ProCmdDwgPubSettings` ;\n" +
+                        "~ Update `intf_profile` `opt_profile` `drawing_setup`;\n" +
+                        "~ Select `intf_profile` `pdf_export.pdf_sheets_choice` 1 `current`;\n" +
+                        "~ Select `intf_profile` `pdf_export.pdf_color_depth` 1 `pdf_mono`;\n" +
+                        "~ Activate `intf_profile` `pdf_export.pdf_launch_viewer` 0;\n" +
+                        "~ Activate `intf_profile` `psh_profile_save`;\n" +
+                        "~ Activate `intf_profile` `OkPshBtn`;"
+                }
+            });
+        }
+
         for (let drawing of drawings) {
             if (drawing.pdf == 1 && drawing.dxf == 1) {
                 await exportSheet1PDF(sessionId, drawing);
@@ -2825,6 +2853,7 @@ exports.generateAll = function(req, res) {
         });
 };
 
+//Exports the BIN BOMs only
 exports.generateBinBoms = function(req, res) {
     req.setTimeout(0); //no timeout
     //initialize variables
