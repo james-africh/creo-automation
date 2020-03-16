@@ -790,7 +790,7 @@ exports.loadDesign = function(req, res) {
             return null
         })
         .then(async function () {
-            console.log('exportData started');
+            console.log('Completed: .asm files opened and regenerated with mass properties');
             let secPartData = [];
             for (let asm of asms) {
                 let sections = [];
@@ -840,10 +840,10 @@ exports.loadDesign = function(req, res) {
                     sections: sections
                 })
             }
-            console.log('exportData completed');
             return secPartData
         })
         .then(async function (secPartData) {
+            console.log('Completed: Parts extracted from all sections within selected layouts');
             let globallyCommonParts = [];
             for (let i = 0; i < secPartData.length; i++) {
                 for (let j = 0; j < secPartData[i].parts.length; j++) {
@@ -852,7 +852,12 @@ exports.loadDesign = function(req, res) {
                     }
                 }
             }
+
+            console.log('Completed: Unique parts identified');
+
             await listParameters(sessionId, globallyCommonParts, partBinInfo);
+
+            console.log('Completed: Applicable Parameters extracted from all unique parts');
 
             let standalonePNLs = [];
             for (let lineup of lineups) {
@@ -878,6 +883,8 @@ exports.loadDesign = function(req, res) {
                     }
                 }
             }
+
+            console.log('Completed: Standalone Panel Check');
 
 
             let sectionMatBoms = [];
@@ -1191,6 +1198,8 @@ exports.loadDesign = function(req, res) {
         })
         .then(async function () {
 
+            console.log("Completed: All SS, LEXAN, 7GA, NP, and BIN BOMs calculated");
+
             let similarPURs = [];
             let similarSTRs = [];
             let similarPNLs = [];
@@ -1389,6 +1398,7 @@ exports.loadDesign = function(req, res) {
             return null
         })
         .then(async function () {
+            console.log("Completed: BIN tracker calculated");
             let drawings = [];
             for (let part of partBinInfo) {
                 //filters out the hardware and skeletons from the part drawing array
@@ -1402,10 +1412,12 @@ exports.loadDesign = function(req, res) {
             return await listAllDwgs(sessionId, drawings)
         })
         .then(async function (sortedCheckedDwgs) {
+            console.log("Completed: Drawing Existence and Error Check");
             await checkFlats(sessionId, sortedCheckedDwgs);
             return null
         })
         .then(() => {
+            console.log("Completed: Matching Drawing Models and Scale Check");
             sortedCheckedDwgs.sort(function(a,b) {
                 let intA = parseInt(a.drawing.slice(7, 11) + a.drawing.slice(12, 15));
                 let intB = parseInt(b.drawing.slice(7, 11) + b.drawing.slice(12, 15));
