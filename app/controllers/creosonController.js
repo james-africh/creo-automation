@@ -209,11 +209,25 @@ exports.setWD = function(req, res) {
                 }
             });
         })
-        .then(listAsms => {
+        .then(async function(listAsms) {
             let asmList = listAsms.data.filelist;
             for (let i = 0; i < asmList.length; i++) {
                 if (asmList[i].slice(7,11) == '0000') {
-                    topLevelAsmList.push(asmList[i])
+                    const famTabExists = await creo(sessionId, {
+                        command: "familytable",
+                        function: "list",
+                        data: {
+                            "file": asmList[i]
+                        }
+                    });
+                    if (famTabExists.data != undefined) {
+                        topLevelAsmList.push(asmList[i]);
+                        for (let j = 0; j < famTabExists.data.instances.length; j++) {
+                            topLevelAsmList.push(famTabExists.data.instances[j]+'<'+asmList[i].slice(0,15) +'>'+'.asm')
+                        }
+                    } else {
+                        topLevelAsmList.push(asmList[i])
+                    }
                 }
             }
             return null;
