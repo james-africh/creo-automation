@@ -900,6 +900,7 @@ exports.loadDesign = function(req, res) {
 
             console.log('Completed: Standalone Panel Check');
 
+            console.log(partBinInfo);
 
             let sectionMatBoms = [];
             for (let m = 0; m < secPartData.length; m++) {
@@ -918,7 +919,7 @@ exports.loadDesign = function(req, res) {
                     let part = secPartData[m].parts[n].part;
                     for (let p = 0; p < partBinInfo.length; p++) {
                         if (part == partBinInfo[p].part) {
-                            switch(partBinInfo[p].bin) {
+                            switch(partBinInfo[p].bin.toString()) {
                                 case 'NULL':
                                     if (part.slice(0,6) == '999999') {
                                         PUR.push({
@@ -980,7 +981,6 @@ exports.loadDesign = function(req, res) {
                                             weight: partBinInfo[p].weight
                                         });
                                     }
-
                                     if (part.slice(7,8) == '9') {
                                         SCL.push({
                                             qty: secPartData[m].parts[n].qty,

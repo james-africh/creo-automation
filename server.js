@@ -9,12 +9,12 @@ const flash = require('req-flash');
 //For BodyParser
 app.use(bodyParser.urlencoded({
     extended: true,
-    limit: '100mb',
-    parameterLimit: 20000
+    limit: '200mb',
+    parameterLimit: 50000
 }));
 app.use(bodyParser.json({
     extended: true,
-    limit: '10mb'
+    limit: '200mb'
 }));
 app.use(cookieParser());
 
