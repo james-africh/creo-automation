@@ -2294,10 +2294,11 @@ exports.generateAll = function(req, res) {
                 {header: 'Stock Part', key: 'stockPart', width: 10, style: {font: {name: 'Calibri', size: 11}}},
                 {header: 'Weight:', key: 'weight', width: 10, style: {font: {name: 'Calibri', size: 11}}}
             ];
+            sheet.getColumn(2).numFmt = '000';
             let count = 1;
             sheet.addRow({
                 assemblyNum: pur.bom,
-                seqNum: '00'+count,
+                seqNum: count,
                 compPartNum: pur.bom,
                 desc1: pur.bom + ' Bill of Material',
                 qty: 1,
@@ -2312,20 +2313,13 @@ exports.generateAll = function(req, res) {
 
             for (let purItem of pur.data) {
                 count += 1;
-                let seqNum;
-                if (count < 10) {
-                    seqNum = '00' + count;
-                } else if (count < 100){
-                    seqNum = '0' + count;
-                } else {
-                    seqNum = count.toString();
-                }
+                let seqNum = count;
                 sheet.addRow({
                     assemblyNum: pur.bom,
                     seqNum: seqNum,
                     compPartNum: purItem.partNum,
                     desc1: purItem.partDesc,
-                    qty: purItem.qty,
+                    qty: parseInt(purItem.qty),
                 });
             }
             workbook.xlsx.writeFile(outputDir + '/BIN BOMS/' + pur.bom + '.xlsx').then(function() {
@@ -2367,10 +2361,11 @@ exports.generateAll = function(req, res) {
                 {header: 'Stock Part', key: 'stockPart', width: 10, style: {font: {name: 'Calibri', size: 11}}},
                 {header: 'Weight:', key: 'weight', width: 20, style: {font: {name: 'Calibri', size: 11}}}
             ];
+            sheet.getColumn(2).numFmt = '000';
             let count = 1;
             sheet.addRow({
                 assemblyNum: str.bom,
-                seqNum: '00'+count,
+                seqNum: count,
                 compPartNum: str.bom,
                 desc1: str.bom + ' Bill of Material',
                 qty: 1,
@@ -2385,20 +2380,13 @@ exports.generateAll = function(req, res) {
 
             for (let strItem of str.data) {
                 count += 1;
-                let seqNum;
-                if (count < 10) {
-                    seqNum = '00' + count;
-                } else if (count < 100){
-                    seqNum = '0' + count;
-                } else {
-                    seqNum = count.toString();
-                }
+                let seqNum = count;
                 sheet.addRow({
                     assemblyNum: str.bom,
                     seqNum: seqNum,
                     compPartNum: strItem.part,
                     desc1: strItem.partDesc,
-                    qty: strItem.qty,
+                    qty: parseInt(strItem.qty),
                     unitOfIssue: 'EA',
                     unitOfPurchase: 'EA',
                     categoryCode: '91-MFG',
@@ -2447,10 +2435,11 @@ exports.generateAll = function(req, res) {
                 {header: 'Stock Part', key: 'stockPart', width: 10, style: {font: {name: 'Calibri', size: 11}}},
                 {header: 'Weight:', key: 'weight', width: 15, style: {font: {name: 'Calibri', size: 11}}}
             ];
+            sheet.getColumn(2).numFmt = '000';
             let count = 1;
             sheet.addRow({
                 assemblyNum: pnl.bom,
-                seqNum: '00'+count,
+                seqNum: count,
                 compPartNum: pnl.bom,
                 desc1: pnl.bom + ' Bill of Material',
                 qty: 1,
@@ -2465,20 +2454,13 @@ exports.generateAll = function(req, res) {
 
             for (let pnlItem of pnl.data) {
                 count += 1;
-                let seqNum;
-                if (count < 10) {
-                    seqNum = '00' + count;
-                } else if (count < 100){
-                    seqNum = '0' + count;
-                } else {
-                    seqNum = count.toString();
-                }
+                let seqNum = count;
                 sheet.addRow({
                     assemblyNum: pnl.bom,
                     seqNum: seqNum,
                     compPartNum: pnlItem.part,
                     desc1: pnlItem.partDesc,
-                    qty: pnlItem.qty,
+                    qty: parseInt(pnlItem.qty),
                     unitOfIssue: 'EA',
                     unitOfPurchase: 'EA',
                     categoryCode: '91-MFG',
@@ -2527,10 +2509,11 @@ exports.generateAll = function(req, res) {
                 {header: 'Stock Part', key: 'stockPart', width: 10, style: {font: {name: 'Calibri', size: 11}}},
                 {header: 'Weight:', key: 'weight', width: 20, style: {font: {name: 'Calibri', size: 11}}}
             ];
+            sheet.getColumn(2).numFmt = '000';
             let count = 1;
             sheet.addRow({
                 assemblyNum: ctl.bom,
-                seqNum: '00'+count,
+                seqNum: count,
                 compPartNum: ctl.bom,
                 desc1: ctl.bom + ' Bill of Material',
                 qty: 1,
@@ -2545,20 +2528,14 @@ exports.generateAll = function(req, res) {
 
             for (let ctlItem of ctl.data) {
                 count += 1;
-                let seqNum;
-                if (count < 10) {
-                    seqNum = '00' + count;
-                } else if (count < 100){
-                    seqNum = '0' + count;
-                } else {
-                    seqNum = count.toString();
-                }
+                let seqNum = count;
+
                 sheet.addRow({
                     assemblyNum: ctl.bom,
                     seqNum: seqNum,
                     compPartNum: ctlItem.part,
                     desc1: ctlItem.partDesc,
-                    qty: ctlItem.qty,
+                    qty: parseInt(ctlItem.qty),
                     unitOfIssue: 'EA',
                     unitOfPurchase: 'EA',
                     categoryCode: '91-MFG',
@@ -2607,10 +2584,11 @@ exports.generateAll = function(req, res) {
                 {header: 'Stock Part', key: 'stockPart', width: 10, style: {font: {name: 'Calibri', size: 11}}},
                 {header: 'Weight:', key: 'weight', width: 20, style: {font: {name: 'Calibri', size: 11}}}
             ];
+            sheet.getColumn(2).numFmt = '000';
             let count = 1;
             sheet.addRow({
                 assemblyNum: int.bom,
-                seqNum: '00'+count,
+                seqNum: count,
                 compPartNum: int.bom,
                 desc1: int.bom + ' Bill of Material',
                 qty: 1,
@@ -2625,20 +2603,14 @@ exports.generateAll = function(req, res) {
 
             for (let intItem of int.data) {
                 count += 1;
-                let seqNum;
-                if (count < 10) {
-                    seqNum = '00' + count;
-                } else if (count < 100){
-                    seqNum = '0' + count;
-                } else {
-                    seqNum = count.toString();
-                }
+                let seqNum = count;
+
                 sheet.addRow({
                     assemblyNum: int.bom,
                     seqNum: seqNum,
                     compPartNum: intItem.part,
                     desc1: intItem.partDesc,
-                    qty: intItem.qty,
+                    qty: parseInt(intItem.qty),
                     unitOfIssue: 'EA',
                     unitOfPurchase: 'EA',
                     categoryCode: '91-MFG',
@@ -2687,10 +2659,11 @@ exports.generateAll = function(req, res) {
                 {header: 'Stock Part', key: 'stockPart', width: 10, style: {font: {name: 'Calibri', size: 11}}},
                 {header: 'Weight:', key: 'weight', width: 20, style: {font: {name: 'Calibri', size: 11}}}
             ];
+            sheet.getColumn(2).numFmt = '000';
             let count = 1;
             sheet.addRow({
                 assemblyNum: ext.bom,
-                seqNum: '00'+count,
+                seqNum: count,
                 compPartNum: ext.bom,
                 desc1: ext.bom + ' Bill of Material',
                 qty: 1,
@@ -2705,20 +2678,13 @@ exports.generateAll = function(req, res) {
 
             for (let extItem of ext.data) {
                 count += 1;
-                let seqNum;
-                if (count < 10) {
-                    seqNum = '00' + count;
-                } else if (count < 100){
-                    seqNum = '0' + count;
-                } else {
-                    seqNum = count.toString();
-                }
+                let seqNum = count;
                 sheet.addRow({
                     assemblyNum: ext.bom,
                     seqNum: seqNum,
                     compPartNum: extItem.part,
                     desc1: extItem.partDesc,
-                    qty: extItem.qty,
+                    qty: parseInt(extItem.qty),
                     unitOfIssue: 'EA',
                     unitOfPurchase: 'EA',
                     categoryCode: '91-MFG',
@@ -3555,10 +3521,11 @@ exports.generateBinBoms = function(req, res) {
                 {header: 'Stock Part', key: 'stockPart', width: 10, style: {font: {name: 'Calibri', size: 11}}},
                 {header: 'Weight:', key: 'weight', width: 10, style: {font: {name: 'Calibri', size: 11}}}
             ];
+            sheet.getColumn(2).numFmt = '000';
             let count = 1;
             sheet.addRow({
                 assemblyNum: pur.bom,
-                seqNum: '00'+count,
+                seqNum: count,
                 compPartNum: pur.bom,
                 desc1: pur.bom + ' Bill of Material',
                 qty: 1,
@@ -3573,20 +3540,13 @@ exports.generateBinBoms = function(req, res) {
 
             for (let purItem of pur.data) {
                 count += 1;
-                let seqNum;
-                if (count < 10) {
-                    seqNum = '00' + count;
-                } else if (count < 100){
-                    seqNum = '0' + count;
-                } else {
-                    seqNum = count.toString();
-                }
+                let seqNum = count;
                 sheet.addRow({
                     assemblyNum: pur.bom,
                     seqNum: seqNum,
                     compPartNum: purItem.partNum,
                     desc1: purItem.partDesc,
-                    qty: purItem.qty,
+                    qty: parseInt(purItem.qty),
                 });
             }
             workbook.xlsx.writeFile(outputDir + '/BIN BOMS/' + pur.bom + '.xlsx').then(function() {
@@ -3628,10 +3588,11 @@ exports.generateBinBoms = function(req, res) {
                 {header: 'Stock Part', key: 'stockPart', width: 10, style: {font: {name: 'Calibri', size: 11}}},
                 {header: 'Weight:', key: 'weight', width: 20, style: {font: {name: 'Calibri', size: 11}}}
             ];
+            sheet.getColumn(2).numFmt = '000';
             let count = 1;
             sheet.addRow({
                 assemblyNum: str.bom,
-                seqNum: '00'+count,
+                seqNum: count,
                 compPartNum: str.bom,
                 desc1: str.bom + ' Bill of Material',
                 qty: 1,
@@ -3646,20 +3607,13 @@ exports.generateBinBoms = function(req, res) {
 
             for (let strItem of str.data) {
                 count += 1;
-                let seqNum;
-                if (count < 10) {
-                    seqNum = '00' + count;
-                } else if (count < 100){
-                    seqNum = '0' + count;
-                } else {
-                    seqNum = count.toString();
-                }
+                let seqNum = count;
                 sheet.addRow({
                     assemblyNum: str.bom,
                     seqNum: seqNum,
                     compPartNum: strItem.part,
                     desc1: strItem.partDesc,
-                    qty: strItem.qty,
+                    qty: parseInt(strItem.qty),
                     unitOfIssue: 'EA',
                     unitOfPurchase: 'EA',
                     categoryCode: '91-MFG',
@@ -3708,10 +3662,11 @@ exports.generateBinBoms = function(req, res) {
                 {header: 'Stock Part', key: 'stockPart', width: 10, style: {font: {name: 'Calibri', size: 11}}},
                 {header: 'Weight:', key: 'weight', width: 15, style: {font: {name: 'Calibri', size: 11}}}
             ];
+            sheet.getColumn(2).numFmt = '000';
             let count = 1;
             sheet.addRow({
                 assemblyNum: pnl.bom,
-                seqNum: '00'+count,
+                seqNum: count,
                 compPartNum: pnl.bom,
                 desc1: pnl.bom + ' Bill of Material',
                 qty: 1,
@@ -3726,20 +3681,13 @@ exports.generateBinBoms = function(req, res) {
 
             for (let pnlItem of pnl.data) {
                 count += 1;
-                let seqNum;
-                if (count < 10) {
-                    seqNum = '00' + count;
-                } else if (count < 100){
-                    seqNum = '0' + count;
-                } else {
-                    seqNum = count.toString();
-                }
+                let seqNum = count;
                 sheet.addRow({
                     assemblyNum: pnl.bom,
                     seqNum: seqNum,
                     compPartNum: pnlItem.part,
                     desc1: pnlItem.partDesc,
-                    qty: pnlItem.qty,
+                    qty: parseInt(pnlItem.qty),
                     unitOfIssue: 'EA',
                     unitOfPurchase: 'EA',
                     categoryCode: '91-MFG',
@@ -3788,10 +3736,11 @@ exports.generateBinBoms = function(req, res) {
                 {header: 'Stock Part', key: 'stockPart', width: 10, style: {font: {name: 'Calibri', size: 11}}},
                 {header: 'Weight:', key: 'weight', width: 20, style: {font: {name: 'Calibri', size: 11}}}
             ];
+            sheet.getColumn(2).numFmt = '000';
             let count = 1;
             sheet.addRow({
                 assemblyNum: ctl.bom,
-                seqNum: '00'+count,
+                seqNum: count,
                 compPartNum: ctl.bom,
                 desc1: ctl.bom + ' Bill of Material',
                 qty: 1,
@@ -3806,20 +3755,14 @@ exports.generateBinBoms = function(req, res) {
 
             for (let ctlItem of ctl.data) {
                 count += 1;
-                let seqNum;
-                if (count < 10) {
-                    seqNum = '00' + count;
-                } else if (count < 100){
-                    seqNum = '0' + count;
-                } else {
-                    seqNum = count.toString();
-                }
+                let seqNum = count;
+
                 sheet.addRow({
                     assemblyNum: ctl.bom,
                     seqNum: seqNum,
                     compPartNum: ctlItem.part,
                     desc1: ctlItem.partDesc,
-                    qty: ctlItem.qty,
+                    qty: parseInt(ctlItem.qty),
                     unitOfIssue: 'EA',
                     unitOfPurchase: 'EA',
                     categoryCode: '91-MFG',
@@ -3868,10 +3811,11 @@ exports.generateBinBoms = function(req, res) {
                 {header: 'Stock Part', key: 'stockPart', width: 10, style: {font: {name: 'Calibri', size: 11}}},
                 {header: 'Weight:', key: 'weight', width: 20, style: {font: {name: 'Calibri', size: 11}}}
             ];
+            sheet.getColumn(2).numFmt = '000';
             let count = 1;
             sheet.addRow({
                 assemblyNum: int.bom,
-                seqNum: '00'+count,
+                seqNum: count,
                 compPartNum: int.bom,
                 desc1: int.bom + ' Bill of Material',
                 qty: 1,
@@ -3886,20 +3830,14 @@ exports.generateBinBoms = function(req, res) {
 
             for (let intItem of int.data) {
                 count += 1;
-                let seqNum;
-                if (count < 10) {
-                    seqNum = '00' + count;
-                } else if (count < 100){
-                    seqNum = '0' + count;
-                } else {
-                    seqNum = count.toString();
-                }
+                let seqNum = count;
+
                 sheet.addRow({
                     assemblyNum: int.bom,
                     seqNum: seqNum,
                     compPartNum: intItem.part,
                     desc1: intItem.partDesc,
-                    qty: intItem.qty,
+                    qty: parseInt(intItem.qty),
                     unitOfIssue: 'EA',
                     unitOfPurchase: 'EA',
                     categoryCode: '91-MFG',
@@ -3948,10 +3886,11 @@ exports.generateBinBoms = function(req, res) {
                 {header: 'Stock Part', key: 'stockPart', width: 10, style: {font: {name: 'Calibri', size: 11}}},
                 {header: 'Weight:', key: 'weight', width: 20, style: {font: {name: 'Calibri', size: 11}}}
             ];
+            sheet.getColumn(2).numFmt = '000';
             let count = 1;
             sheet.addRow({
                 assemblyNum: ext.bom,
-                seqNum: '00'+count,
+                seqNum: count,
                 compPartNum: ext.bom,
                 desc1: ext.bom + ' Bill of Material',
                 qty: 1,
@@ -3966,20 +3905,13 @@ exports.generateBinBoms = function(req, res) {
 
             for (let extItem of ext.data) {
                 count += 1;
-                let seqNum;
-                if (count < 10) {
-                    seqNum = '00' + count;
-                } else if (count < 100){
-                    seqNum = '0' + count;
-                } else {
-                    seqNum = count.toString();
-                }
+                let seqNum = count;
                 sheet.addRow({
                     assemblyNum: ext.bom,
                     seqNum: seqNum,
                     compPartNum: extItem.part,
                     desc1: extItem.partDesc,
-                    qty: extItem.qty,
+                    qty: parseInt(extItem.qty),
                     unitOfIssue: 'EA',
                     unitOfPurchase: 'EA',
                     categoryCode: '91-MFG',
