@@ -127,3 +127,184 @@ function editFreightDestination(checkbox) {
         }
     })
 }
+
+function devMfg(selectObj) {
+    let mfg = selectObj.value;
+    let brkAccDropdown = document.getElementsByName('brkAccDropdownArr');
+    for(let row of brkAccDropdown){
+        if(mfg.includes(row.value)){
+            document.getElementById(row.value).style.display = 'block';
+        } else {
+            document.getElementById(row.value).style.display = 'none';
+            for(let el of document.getElementById(row.value).getElementsByTagName('li')){
+                el.children[0].checked = false;
+
+                for(let el2 of el.getElementsByTagName('li')){
+                    el2.children[0].checked = false;
+                }
+            }
+        }
+    }
+}
+
+function accBrk(checkbox) {
+    if(checkbox.checked == true)
+        document.getElementById(checkbox.id + 'Opt').style.display = "table-row";
+    else{
+        document.getElementById(checkbox.id + 'Opt').style.display = "none";
+        for(let el of document.getElementById(checkbox.id + 'Opt').getElementsByTagName('li')){
+            el.children[0].checked = false;
+        }
+    }
+}
+
+function accBrkOpt(checkbox) {
+    let anyChecked = false;
+    let parent = checkbox.value.split('_')[0] + '_' + checkbox.value.split('_')[1] + 'Opt';
+    for(let el of document.getElementById(parent).getElementsByTagName('li')){
+        console.log(el.children[0].checked);
+        if(el.children[0].checked == true){
+            anyChecked = true;
+        }
+    }
+    console.log(anyChecked);
+    if(anyChecked == false){
+        document.getElementById(parent).style.display = "none";
+        document.getElementById(checkbox.value.split('_')[0] + '_' + checkbox.value.split('_')[1]).checked = false;
+    }
+}
+
+//Section properties panelboard detail button
+/*function compAdetails(selectObj) {
+    console.log(selectObj);
+    let pb = selectObj.value.split('_')[0];
+    let div = 'details_' + selectObj.value.split('_')[1] + '_A';
+    if(pb == 'panelboard'){
+        document.getElementById(div).style.display = "flex";
+    } else {
+        document.getElementById(div).style.display = "none";
+    }
+}
+
+function compBdetails(selectObj) {
+    let pb = selectObj.value.split('_')[0];
+    let div = 'details_' + selectObj.value.split('_')[1] + '_B';
+    if(pb == 'panelboard'){
+        document.getElementById(div).style.display = "flex";
+    } else {
+        document.getElementById(div).style.display = "none";
+    }
+}
+
+function compCdetails(selectObj) {
+    let pb = selectObj.value.split('_')[0];
+    let div = 'details_' + selectObj.value.split('_')[1] + '_C';
+    if(pb == 'panelboard'){
+        document.getElementById(div).style.display = "flex";
+    } else {
+        document.getElementById(div).style.display = "none";
+    }
+}
+
+function compDdetails(selectObj) {
+    let pb = selectObj.value.split('_')[0];
+    let div = 'details_' + selectObj.value.split('_')[1] + '_D';
+    if(pb == 'panelboard'){
+        document.getElementById(div).style.display = "flex";
+    } else {
+        document.getElementById(div).style.display = "none";
+    }
+}*/
+
+function showComp(secNum){
+    let element = document.getElementById('compA' + secNum);
+    let event = new Event('change');
+    element.dispatchEvent(event);
+
+    let element2 = document.getElementById('compB' + secNum);
+    let event2 = new Event('change');
+    element2.dispatchEvent(event2);
+
+    let element3 = document.getElementById('compC' + secNum);
+    let event3 = new Event('change');
+    element3.dispatchEvent(event3);
+
+    let element4 = document.getElementById('compD' + secNum);
+    let event4 = new Event('change');
+    element4.dispatchEvent(event4);
+}
+
+function getComp(comp){
+    $(".modal-header #getComp").val( comp );
+}
+
+function showPB(checkbox){
+    let checkboxes = document.getElementsByName('pbCheck');
+    let noChecks = true;
+    let secNum = checkbox.id.split('_')[1];
+    checkboxes.forEach((item) => {
+        if (item !== checkbox){
+            item.checked = false
+        }
+
+        if(item.checked == true){
+            noChecks = false;
+            document.getElementById('pb' + secNum).style.display = "flex";
+            document.getElementById('configurePB' + secNum).style.display = "flex";
+        } else {
+            document.getElementById('pbBrk' + secNum).style.display = "none";
+            document.getElementById('notPB' + secNum).style.display = "none";
+        }
+    });
+
+    if(noChecks){
+        document.getElementById('notPB' + secNum).style.display = "flex";
+        document.getElementById('pb' + secNum).style.display = "none";
+        document.getElementById('configurePB' + secNum).style.display = "none";
+    }
+}
+
+function showPBbrk(checkbox){
+    var checkboxes = document.getElementsByName('pbCheck');
+    let noChecks = true;
+    let secNum = checkbox.id.split('_')[1];
+    checkboxes.forEach((item) => {
+        if (item !== checkbox){
+            item.checked = false
+        }
+
+        if(item.checked == true){
+            noChecks = false;
+            document.getElementById('pbBrk' + secNum).style.display = "flex";
+            document.getElementById('configurePB' + secNum).style.display = "flex";
+        } else {
+            document.getElementById('pb' + secNum).style.display = "none";
+            document.getElementById('notPB' + secNum).style.display = "none";
+        }
+    });
+
+    if(noChecks){
+        document.getElementById('notPB' + secNum).style.display = "flex";
+        document.getElementById('pbBrk' + secNum).style.display = "none";
+        document.getElementById('configurePB' + secNum).style.display = "none";
+    }
+}
+
+function checkForPB(secNum, compType){
+    if(compType.A == 'panelboard' && compType.D != 'brk'){
+        document.getElementById('pb' + secNum).style.display = "flex";
+        document.getElementById('configurePB' + secNum).style.display = "flex";
+        document.getElementById('pbBrk' + secNum).style.display = "none";
+        document.getElementById('notPB' + secNum).style.display = "none";
+        document.getElementById('panelboard_' + secNum).checked = true;
+
+    } else if(compType.A == 'panelboard' && compType.D == 'brk'){
+        document.getElementById('pbBrk' + secNum).style.display = "flex";
+        document.getElementById('configurePB' + secNum).style.display = "flex";
+        document.getElementById('pb' + secNum).style.display = "none";
+        document.getElementById('notPB' + secNum).style.display = "none";
+        document.getElementById('panelboardbrk_' + secNum).checked = true;
+    }
+}
+
+

@@ -21,6 +21,28 @@ app.use(cookieParser());
 // For Passport
 app.use(session({ secret: 'saiapsportal',resave: true, saveUninitialized:true})); // session secret
 
+/*
+//Database dependencies
+let mysql = require('mysql');
+let myConnection = require('express-myconnection');
+let dbConfig = require('./app/config/database.js');
+let database = dbConfig.database;
+let host = dbConfig.connection.host;
+let user = dbConfig.connection.user;
+let password = dbConfig.connection.password;
+let port = dbConfig.connection.port;
+let dbOptions = {
+    host: host,
+    user: user,
+    password: password,
+    port: port,
+    database: database
+};*/
+/*
+
+//Connection to DB
+app.use(myConnection(mysql, dbOptions, 'pool'));
+*/
 
 
 // Setting up the views
@@ -43,7 +65,10 @@ app.use(flash());
 
 //Routes
 require('./app/routes/main.js')(app); //Main Router
-require('./app/routes/creoson.js')(app); //creoSON Router
+//require('./app/routes/creoson.js')(app); //creoSON Router
+require('./app/routes/pdfDxfBinBom.js')(app); //PDF DXF BIN BOM Router
+//require('./app/routes/submittal.js')(app); //Submittal Router
+
 
 
 //Start app

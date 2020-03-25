@@ -195,11 +195,17 @@
     }
 
 
+    //let brkLen = 0;
 
     //mousedown event to implement single selection
     document.addEventListener('mousedown', function(e)
     {
         //if the element is a draggable item
+
+        /*if(e.target.id.split('_')[1] == 'brk'){
+            brkLen++;
+        }*/
+
         if(e.target.getAttribute('draggable'))
         {
             //clear dropeffect from the target containers
@@ -245,31 +251,36 @@
     //mouseup event to implement multiple selection
     document.addEventListener('mouseup', function(e)
     {
+        /* console.log(brkLen);
+         brkLen++;
+         let wasDragging = isDragging;
+         console.log(isDragging);
+         isDragging = false;*/
+        //if(brkLen < 0){
+
+
         //if the element is a draggable item
         //and the multipler selection modifier is pressed
-        if(e.target.getAttribute('draggable') && hasModifier(e))
-        {
+        if (e.target.getAttribute('draggable') && hasModifier(e)) {
             //if the item's grabbed state is currently true
-            if(e.target.getAttribute('aria-grabbed') == 'true')
-            {
+            if (e.target.getAttribute('aria-grabbed') == 'true') {
                 //unselect this item
                 removeSelection(e.target);
 
                 //if that was the only selected item
                 //then reset the owner container reference
-                if(!selections.items.length)
-                {
+                if (!selections.items.length) {
                     selections.owner = null;
                 }
             }
 
             //else [if the item's grabbed state is false]
-            else
-            {
+            else {
                 //add this additional selection
                 addSelection(e.target);
             }
         }
+        //}
 
     }, false);
 
@@ -503,7 +514,6 @@
         {
             e.preventDefault();
         }
-
     }, false);
 
 
@@ -513,6 +523,7 @@
     //or invalidly dropped elsewhere, and to clean-up the interface either way
     document.addEventListener('dragend', function(e)
     {
+        let layoutNum = document.getElementById('layoutNumSave').value;
         let compType = selections.droptarget.id.split('-')[2];
         let brkItems = document.getElementById(selections.droptarget.id).getElementsByTagName('li').length;
 
@@ -524,7 +535,9 @@
             for(var len = selections.items.length, i = 0; i < len; i ++)
             {
                 let itemType = selections.items[i].id.split('_')[1];
+                //check it item is in the right compartment
                 if(compType == itemType){
+                    //if item is a IC brk make sure there's only one per compartment
                     if(compType == 'brk'){
                         if(brkItems == 0)
                             selections.droptarget.appendChild(selections.items[i]);
@@ -532,11 +545,28 @@
                         selections.droptarget.appendChild(selections.items[i]);
 
                 }
+                //for dragging back to queues
+                if(selections.droptarget.id == 'icBrkQueue_' + layoutNum){
+                    if(selections.items[i].style.backgroundColor == 'rgb(177, 231, 213)'){
+                        selections.droptarget.appendChild(selections.items[i]);
+                    }
+                } else if(selections.droptarget.id == 'mcBrkQueue_' + layoutNum){
+                    if(selections.items[i].style.backgroundColor == 'rgb(252, 202, 156)'){
+                        selections.droptarget.appendChild(selections.items[i]);
+                    }
+                } else if(selections.droptarget.id == 'controlQueue_' + layoutNum){
+                    if(selections.items[i].style.backgroundColor == 'rgb(213, 192, 216)'){
+                        selections.droptarget.appendChild(selections.items[i]);
+                    }
+                } else if(selections.droptarget.id == 'itemQueue_' + layoutNum){
+                    if(selections.items[i].style.backgroundColor == 'rgb(197, 205, 152)'){
+                        selections.droptarget.appendChild(selections.items[i]);
+                    }
+                }
             }
 
             //prevent default to allow the action
             e.preventDefault();
-
         }
 
         //if we have any selected items
@@ -602,6 +632,7 @@
         let secNum = document.getElementById('numSectionsSave').value;
         let layoutNum = document.getElementById('layoutNumSave').value;
         let secArr = [];
+        let usedIDs = [];
 
         function getCompA(secNum) {
             let brkA = document.getElementById(secNum + '_' + layoutNum + '-A-brk');
@@ -640,6 +671,8 @@
 
             if(brkC)
                 return brkC.children;
+            else if(controlC && panelboardC)
+                return {control: controlC, panelboard: panelboardC };
             else if(controlC)
                 return controlC.children;
             else if(panelboardC)
@@ -655,6 +688,8 @@
 
             if(brkD)
                 return brkD.children;
+            else if(controlD && panelboardD)
+                return {control: controlD, panelboard: panelboardD};
             else if(controlD)
                 return controlD.children;
             else if(panelboardD)
@@ -662,55 +697,124 @@
             else
                 return null;
         }
+        function getQueues(){
+            let queues = [];
+            let icQueue = document.getElementById('icBrkQueue_' + layoutNum);
+            let mcQueue = document.getElementById('mcBrkQueue_' + layoutNum);
+            let itemQueue = document.getElementById('itemQueue_' + layoutNum);
+            let controlQueue = document.getElementById('controlQueue_' + layoutNum);
+            let q = document.getElementsByName('queue' + '_' + layoutNum);
+
+            /*for(let el of icQueue.children)
+                queues.push(el);
+            for(let el of mcQueue.children)
+                queues.push(el);
+            for(let el of itemQueue.children)
+                queues.push(el);
+            for(let el of controlQueue.children)
+                queues.push(el);*/
+            for(let el of q){
+                for(let child of el.children){
+                    queues.push(child);
+                }
+            }
+
+            return queues;
+        }
 
         for (let j = 0; j < secNum; j++) {
             let secNum = j+1;
-            let tempObj = {
-                secNum: secNum,
-                compA: null,
-                compB: null,
-                compC: null,
-                compD: null
-            };
-            let compA = getCompA(secNum);
-            let compB = getCompB(secNum);
-            let compC = getCompC(secNum);
-            let compD = getCompD(secNum);
 
+            let compA = getCompA(secNum);
             if(compA){
-                for(let el of compA){
-                    if(tempObj.compA == null)
-                        tempObj.compA = el.id.split('_')[0];
-                    else
-                        tempObj.compA = tempObj.compA + ',' + el.id.split('_')[0];
+                for(let el of compA) {
+                    secArr.push({
+                        secNum: secNum,
+                        ID: el.id.split('_')[0],
+                        comp: 'A'
+                    });
+                    usedIDs.push(el.id.split('_')[0]);
                 }
             }
+
+            let compB = getCompB(secNum);
             if(compB){
                 for(let el of compB){
-                    if(tempObj.compB == null)
-                        tempObj.compB = el.id.split('_')[0];
-                    else
-                        tempObj.compB = tempObj.compB + ',' + el.id.split('_')[0];
-                }
-            }
-            if(compC){
-                for(let el of compC){
-                    if(tempObj.compC == null)
-                        tempObj.compC = el.id.split('_')[0];
-                    else
-                        tempObj.compC = tempObj.compC + ',' + el.id.split('_')[0];
-                }
-            }
-            if(compD){
-                for(let el of compD){
-                    if(tempObj.compD == null)
-                        tempObj.compD = el.id.split('_')[0];
-                    else
-                        tempObj.compD = tempObj.compD + ',' + el.id.split('_')[0];
+                    secArr.push({
+                        secNum: secNum,
+                        ID: el.id.split('_')[0],
+                        comp: 'B'
+                    });
+                    usedIDs.push(el.id.split('_')[0]);
                 }
             }
 
-            secArr.push(tempObj);
+            let compC = getCompC(secNum);
+            if(compC){
+                if(compC.length){
+                    for(let el of compC){
+                        secArr.push({
+                            secNum: secNum,
+                            ID: el.id.split('_')[0],
+                            comp: 'C'
+                        });
+                        usedIDs.push(el.id.split('_')[0]);
+                    }
+                } else {
+                    for(let row of Object.values(compC)){
+                        for(let el of row.children){
+                            if(!el.className){
+                                secArr.push({
+                                    secNum: secNum,
+                                    ID: el.id.split('_')[0],
+                                    comp: 'C'
+                                });
+                                usedIDs.push(el.id.split('_')[0]);
+                            }
+                        }
+                    }
+                }
+            }
+
+            let compD = getCompD(secNum);
+            if(compD){
+                if(compD.length) {
+                    for (let el of compD) {
+                        secArr.push({
+                            secNum: secNum,
+                            ID: el.id.split('_')[0],
+                            comp: 'D'
+                        });
+                        usedIDs.push(el.id.split('_')[0]);
+                    }
+                } else {
+                    for(let row of Object.values(compD)){
+                        for(let el of row.children){
+                            if(!el.className){
+                                secArr.push({
+                                    secNum: secNum,
+                                    ID: el.id.split('_')[0],
+                                    comp: 'D'
+                                });
+                                usedIDs.push(el.id.split('_')[0]);
+                            }
+                        }
+                    }
+                }
+            }
+            let queues = getQueues();
+            if(queues){
+                for(let el of queues){
+                    if(usedIDs.includes(el.id.split('_')[0])){
+                    } else {
+                        secArr.push({
+                            secNum: null,
+                            ID: el.id.split('_')[0],
+                            comp: null
+                        });
+                    }
+                }
+            }
         }
 
         function sectionFormSubmit(secArr, layoutNum, secNum) {
@@ -726,42 +830,30 @@
                 form.appendChild(element1);
 
                 let element2 = document.createElement('input');
-                element2.value = el.compA;
-                element2.name = "compA";
+                element2.value = el.comp;
+                element2.name = "comp";
                 form.appendChild(element2);
 
                 let element3 = document.createElement('input');
-                element3.value = el.compB;
-                element3.name = "compB";
+                element3.value = el.ID;
+                element3.name = "ID";
                 form.appendChild(element3);
 
                 let element4 = document.createElement('input');
-                element4.value = el.compC;
-                element4.name = "compC";
+                element4.value = quoteID;
+                element4.name = "quoteID";
                 form.appendChild(element4);
 
                 let element5 = document.createElement('input');
-                element5.value = el.compD;
-                element5.name = "compD";
+                element5.value = layoutNum;
+                element5.name = "layoutNum";
                 form.appendChild(element5);
 
                 let element6 = document.createElement('input');
-                element6.value = quoteID;
-                element6.name = "quoteID";
+                element6.value = secArr.length;
+                element6.name = "total";
                 form.appendChild(element6);
-
-                let element7 = document.createElement('input');
-                element7.value = layoutNum;
-                element7.name = "layoutNum";
-                form.appendChild(element7);
-
-                let element8 = document.createElement('input');
-                element8.value = secNum;
-                element8.name = "totalSection";
-                form.appendChild(element8);
-
             }
-
             document.body.appendChild(form);
             form.submit();
         }

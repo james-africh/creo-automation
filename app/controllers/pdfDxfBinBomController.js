@@ -29,30 +29,30 @@ reqPromise(connectOptions)
 
 
 function creo(sessionId, functionData) {
-     if (functionData.data.length != 0) {
-         return reqPromise({
-             method: 'POST',
-             uri: creoHttp,
-             body: {
-                 "sessionId": sessionId,
-                 "command": functionData.command,
-                 "function": functionData.function,
-                 "data": functionData.data
-             },
-             json: true
-         });
-     } else {
-         return reqPromise({
-             method: 'POST',
-             uri: creoHttp,
-             body: {
-                 "sessionId": sessionId,
-                 "command": functionData.command,
-                 "function": functionData.function
-             },
-             json: true
-         });
-     }
+    if (functionData.data.length != 0) {
+        return reqPromise({
+            method: 'POST',
+            uri: creoHttp,
+            body: {
+                "sessionId": sessionId,
+                "command": functionData.command,
+                "function": functionData.function,
+                "data": functionData.data
+            },
+            json: true
+        });
+    } else {
+        return reqPromise({
+            method: 'POST',
+            uri: creoHttp,
+            body: {
+                "sessionId": sessionId,
+                "command": functionData.command,
+                "function": functionData.function
+            },
+            json: true
+        });
+    }
 }
 
 
@@ -735,7 +735,7 @@ exports.loadDesign = function(req, res) {
                     })
                 }
             } else {
-                 asmToPart(item.children, parts)
+                asmToPart(item.children, parts)
             }
         }
         return parts
@@ -755,7 +755,7 @@ exports.loadDesign = function(req, res) {
                     }
                 }
             }
-         })
+        })
         .then(async function () {
 
             await creo(sessionId, {
@@ -1231,10 +1231,10 @@ exports.loadDesign = function(req, res) {
             let extBOMS = [];
             let sclBOMS = [];
             function areJSONArraysEqual (jsonArray1, jsonArray2) {
-                 if (jsonArray1.length !== jsonArray2.length) return false;
-                 const ser = o => JSON.stringify(Object.keys(o).sort().map( k => [k, o[k]] ));
-                 jsonArray1 = new Set(jsonArray1.map(ser));
-                 return jsonArray2.every( o => jsonArray1.has(ser(o)) );
+                if (jsonArray1.length !== jsonArray2.length) return false;
+                const ser = o => JSON.stringify(Object.keys(o).sort().map( k => [k, o[k]] ));
+                jsonArray1 = new Set(jsonArray1.map(ser));
+                return jsonArray2.every( o => jsonArray1.has(ser(o)) );
             }
             for (let binBom of binBoms) {
                 sections.push(binBom.section);
@@ -1393,7 +1393,7 @@ exports.loadDesign = function(req, res) {
             }
             for (let similarINT of similarINTs) {
                 let parent = similarINT.parent;
-                    for (let child of similarINT.children) {
+                for (let child of similarINT.children) {
                     binBoms.filter(e => e.section === child)[0].INT = parent
                 }
             }
@@ -1651,13 +1651,13 @@ exports.generateAll = function(req, res) {
         for (let i = 0; i < layoutBoms.length; i++) {
             layouts.push({
                 layout: layoutBoms[i].slice(0,7) + layoutBoms[i].slice(12,15),
-                sections: layoutSections[i]
+                sections: layoutSections
             });
         }
     } else {
         layouts.push({
             layout: layoutBoms.slice(0,7) + layoutBoms.slice(12,15),
-            sections: layoutSections[0]
+            sections: layoutSections
         });
     }
 
@@ -2752,6 +2752,8 @@ exports.generateAll = function(req, res) {
 
     if (BIN_TRACKER.length != 0) {
         for (let binTracker of BIN_TRACKER) {
+            console.log(binTracker);
+            console.log(binTracker.data);
             let workbook = new Excel.Workbook();
             let sheet = workbook.addWorksheet('sheet1');
             sheet.columns = [
@@ -2878,13 +2880,13 @@ exports.generateBinBoms = function(req, res) {
         for (let i = 0; i < layoutBoms.length; i++) {
             layouts.push({
                 layout: layoutBoms[i].slice(0,7) + layoutBoms[i].slice(12,15),
-                sections: layoutSections[i]
+                sections: layoutSections
             });
         }
     } else {
         layouts.push({
             layout: layoutBoms.slice(0,7) + layoutBoms.slice(12,15),
-            sections: layoutSections[0]
+            sections: layoutSections
         });
     }
 
