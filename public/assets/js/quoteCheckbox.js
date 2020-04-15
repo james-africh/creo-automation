@@ -150,14 +150,14 @@ function devMfg(selectObj) {
 function accBrk(checkbox) {
     if(checkbox.checked == true)
         document.getElementById(checkbox.id + 'Opt').style.display = "table-row";
-    else{
+    else {
         document.getElementById(checkbox.id + 'Opt').style.display = "none";
         for(let el of document.getElementById(checkbox.id + 'Opt').getElementsByTagName('li')){
-            el.children[0].checked = false;
+            //el.children[0].checked = false;
         }
     }
 }
-
+/*
 function accBrkOpt(checkbox) {
     let anyChecked = false;
     let parent = checkbox.value.split('_')[0] + '_' + checkbox.value.split('_')[1] + 'Opt';
@@ -172,7 +172,7 @@ function accBrkOpt(checkbox) {
         document.getElementById(parent).style.display = "none";
         document.getElementById(checkbox.value.split('_')[0] + '_' + checkbox.value.split('_')[1]).checked = false;
     }
-}
+}*/
 
 //Section properties panelboard detail button
 /*function compAdetails(selectObj) {

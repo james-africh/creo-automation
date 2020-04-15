@@ -21,6 +21,7 @@ app.use(cookieParser());
 // For Passport
 app.use(session({ secret: 'saiapsportal',resave: true, saveUninitialized:true})); // session secret
 
+
 /*
 //Database dependencies
 let mysql = require('mysql');
@@ -38,11 +39,11 @@ let dbOptions = {
     port: port,
     database: database
 };*/
-/*
+
 
 //Connection to DB
-app.use(myConnection(mysql, dbOptions, 'pool'));
-*/
+//app.use(myConnection(mysql, dbOptions, 'pool'));
+
 
 
 // Setting up the views

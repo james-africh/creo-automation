@@ -213,6 +213,13 @@ exports.setWD = function(req, res) {
             let asmList = listAsms.data.filelist;
             for (let i = 0; i < asmList.length; i++) {
                 if (asmList[i].slice(7,11) == '0000') {
+                    await creo(sessionId, {
+                        command: "file",
+                        function: "open",
+                        data: {
+                            "file": asmList[i]
+                        }
+                    });
                     const famTabExists = await creo(sessionId, {
                         command: "familytable",
                         function: "list",
@@ -905,6 +912,7 @@ exports.loadDesign = function(req, res) {
             let sectionMatBoms = [];
             for (let m = 0; m < secPartData.length; m++) {
                 let SS = [];
+                let AL = [];
                 let GA_7 = [];
                 let LEXAN = [];
                 let NP = [];
@@ -1028,6 +1036,21 @@ exports.loadDesign = function(req, res) {
                                         });
                                     }
                                     break;
+                                case "ALUMINUM":
+                                    if(part.slice(0,6) != '777777') {
+                                        if (AL.filter(e => e.part === part).length > 0) {
+                                            AL.filter(e => e.part === part)[0].qty += secPartData[m].parts[n].qty;
+                                        } else {
+                                            AL.push({
+                                                qty: secPartData[m].parts[n].qty,
+                                                part: part,
+                                                partNum: partBinInfo[p].partNum,
+                                                partDesc: partBinInfo[p].partDesc,
+                                                weight: partBinInfo[p].weight
+                                            });
+                                        }
+                                    }
+                                    break;
                                 case "MILD STEEL":
                                     if (partBinInfo[p].gauge == '7') {
                                         if (GA_7.filter(e => e.part === part).length > 0) {
@@ -1076,6 +1099,7 @@ exports.loadDesign = function(req, res) {
                 sectionMatBoms.push({
                     section: secPartData[m].section.slice(12,15),
                     SS: SS,
+                    AL: AL,
                     GA_7: GA_7,
                     LEXAN: LEXAN,
                     NP: NP
@@ -1120,9 +1144,9 @@ exports.loadDesign = function(req, res) {
                 });
             }
 
-
             for (let lineup of lineups) {
                 let lineup_SS_bom = [];
+                let lineup_AL_bom = [];
                 let lineup_GA_7_bom = [];
                 let lineup_LEXAN_bom = [];
                 let lineup_NP_bom = [];
@@ -1130,6 +1154,7 @@ exports.loadDesign = function(req, res) {
                 for (let sectionMatBom of sectionMatBoms) {
                     if (sections.includes(sectionMatBom.section)) {
                         let ss = sectionMatBom.SS;
+                        let al = sectionMatBom.AL;
                         let ga_7 = sectionMatBom.GA_7;
                         let lexan = sectionMatBom.LEXAN;
                         let np = sectionMatBom.NP;
@@ -1144,41 +1169,57 @@ exports.loadDesign = function(req, res) {
                                 })
                             }
                         }
-                        for (let part2 of ga_7) {
-                            if (lineup_GA_7_bom.filter(e => e.part === part2.part.slice(0,15)).length > 0) {
-                                lineup_GA_7_bom.filter(e => e.part === part2.part.slice(0,15))[0].qty += part2.qty;
+                        for (let part2 of al) {
+                            if (lineup_AL_bom.filter(e => e.part === part2.part.slice(0,15)).length > 0) {
+                                lineup_AL_bom.filter(e => e.part === part2.part.slice(0,15))[0].qty += part2.qty;
                             } else {
-                                lineup_GA_7_bom.push({
+                                lineup_AL_bom.push({
                                     qty: part2.qty,
                                     part: part2.part.slice(0,15),
                                     partDesc: part2.partDesc
                                 })
                             }
                         }
-                        for (let part3 of lexan) {
-                            if (lineup_LEXAN_bom.filter(e => e.part === part3.part.slice(0,15)).length > 0) {
-                                lineup_LEXAN_bom.filter(e => e.part === part3.part.slice(0,15))[0].qty += part3.qty;
+                        for (let part3 of ga_7) {
+                            if (lineup_GA_7_bom.filter(e => e.part === part3.part.slice(0,15)).length > 0) {
+                                lineup_GA_7_bom.filter(e => e.part === part3.part.slice(0,15))[0].qty += part3.qty;
                             } else {
-                                lineup_LEXAN_bom.push({
+                                lineup_GA_7_bom.push({
                                     qty: part3.qty,
                                     part: part3.part.slice(0,15),
                                     partDesc: part3.partDesc
                                 })
                             }
                         }
-                        for (let part4 of np) {
+                        for (let part4 of lexan) {
+                            if (lineup_LEXAN_bom.filter(e => e.part === part4.part.slice(0,15)).length > 0) {
+                                lineup_LEXAN_bom.filter(e => e.part === part4.part.slice(0,15))[0].qty += part4.qty;
+                            } else {
+                                lineup_LEXAN_bom.push({
+                                    qty: part4.qty,
+                                    part: part4.part.slice(0,15),
+                                    partDesc: part4.partDesc
+                                })
+                            }
+                        }
+                        for (let part5 of np) {
                             lineup_NP_bom.push({
-                                part: part4.part,
-                                template: part4.template,
-                                text_row1: part4.text_row1,
-                                text_row2: part4.text_row2,
-                                text_row3: part4.text_row3
+                                part: part5.part,
+                                template: part5.template,
+                                text_row1: part5.text_row1,
+                                text_row2: part5.text_row2,
+                                text_row3: part5.text_row3
                             })
                         }
                     }
                 }
 
                 lineup_SS_bom.sort(function(a,b) {
+                    let intA = parseInt(a.part.slice(0,6)+a.part.slice(7,11)+a.part.slice(12,15));
+                    let intB = parseInt(b.part.slice(0,6)+b.part.slice(7,11)+b.part.slice(12,15));
+                    return intA - intB
+                });
+                lineup_AL_bom.sort(function(a,b) {
                     let intA = parseInt(a.part.slice(0,6)+a.part.slice(7,11)+a.part.slice(12,15));
                     let intB = parseInt(b.part.slice(0,6)+b.part.slice(7,11)+b.part.slice(12,15));
                     return intA - intB
@@ -1203,6 +1244,7 @@ exports.loadDesign = function(req, res) {
                     lineup: lineup.lineup,
                     sections: lineup.sections,
                     SS: lineup_SS_bom,
+                    AL: lineup_AL_bom,
                     GA_7: lineup_GA_7_bom,
                     LEXAN: lineup_LEXAN_bom,
                     NP: lineup_NP_bom
@@ -1212,7 +1254,7 @@ exports.loadDesign = function(req, res) {
         })
         .then(async function () {
 
-            console.log("Completed: All SS, LEXAN, 7GA, NP, and BIN BOMs calculated");
+            console.log("Completed: All SS, AL, LEXAN, 7GA, NP, and BIN BOMs calculated");
 
             let similarPURs = [];
             let similarSTRs = [];
@@ -1632,6 +1674,7 @@ exports.generateAll = function(req, res) {
     let existingLayoutBoms = [];
     let existingSectionBoms = [];
     let SS = [];
+    let AL = [];
     let GA_7 = [];
     let LEXAN = [];
     let NP_A = [];
@@ -1672,6 +1715,9 @@ exports.generateAll = function(req, res) {
     for (let layout of layouts) {
         if (req.body['title_' + layout.layout + '-SS'] != undefined) {
             existingLayoutBoms.push(layout.layout + '-SS');
+        }
+        if (req.body['title_' + layout.layout + '-AL'] != undefined) {
+            existingLayoutBoms.push(layout.layout + '-AL');
         }
         if (req.body['title_' + layout.layout + '-7GA'] != undefined) {
             existingLayoutBoms.push(layout.layout + '-7GA');
@@ -1739,6 +1785,30 @@ exports.generateAll = function(req, res) {
             SS.push({
                 bom: existingLayoutBom,
                 data: ss
+            });
+        }
+
+        if (existingLayoutBom.slice(existingLayoutBom.length - 2, existingLayoutBom.length) == 'AL') {
+            let al = [];
+            if (Array.isArray(req.body['qty_' + existingLayoutBom]) == true) {
+                for (let i = 0; i < req.body['qty_' + existingLayoutBom].length; i++) {
+                    al.push({
+                        qty: req.body['qty_' + existingLayoutBom][i],
+                        partDesc: req.body['partDesc_' + existingLayoutBom][i],
+                        part: req.body['part_' + existingLayoutBom][i]
+                    });
+                }
+            } else {
+                al.push({
+                    qty: req.body['qty_' + existingLayoutBom],
+                    partDesc: req.body['partDesc_' + existingLayoutBom],
+                    part: req.body['part_' + existingLayoutBom]
+                })
+            }
+
+            AL.push({
+                bom: existingLayoutBom,
+                data: al
             });
         }
 
@@ -2148,6 +2218,29 @@ exports.generateAll = function(req, res) {
                 });
             }
             workbook.xlsx.writeFile(outputDir + '/BIN BOMS/' + ss.bom + '.xlsx').then(function() {
+                return null
+            });
+        }
+    }
+
+    if (AL.length != 0) {
+        for (let al of AL) {
+            let workbook = new Excel.Workbook();
+            let sheet = workbook.addWorksheet('sheet1');
+            sheet.columns = [
+                {header: 'Qty:', key: 'qty', width: 10, style: {font: {name: 'Calibri', size: 11}}},
+                {header: 'Part Description:', key: 'partDesc', width: 40, style: {font: {name: 'Calibri', size: 11}}},
+                {header: 'Part #:', key: 'part', width: 25, style: {font: {name: 'Calibri', size: 11}}}
+            ];
+
+            for(let alItem of al.data) {
+                sheet.addRow({
+                    qty: alItem.qty,
+                    partDesc: alItem.partDesc,
+                    part: alItem.part
+                });
+            }
+            workbook.xlsx.writeFile(outputDir + '/BIN BOMS/' + al.bom + '.xlsx').then(function() {
                 return null
             });
         }
@@ -2861,6 +2954,7 @@ exports.generateBinBoms = function(req, res) {
     let existingLayoutBoms = [];
     let existingSectionBoms = [];
     let SS = [];
+    let AL = [];
     let GA_7 = [];
     let LEXAN = [];
     let NP_A = [];
@@ -2968,6 +3062,30 @@ exports.generateBinBoms = function(req, res) {
             SS.push({
                 bom: existingLayoutBom,
                 data: ss
+            });
+        }
+
+        if (existingLayoutBom.slice(existingLayoutBom.length - 2, existingLayoutBom.length) == 'AL') {
+            let al = [];
+            if (Array.isArray(req.body['qty_' + existingLayoutBom]) == true) {
+                for (let i = 0; i < req.body['qty_' + existingLayoutBom].length; i++) {
+                    al.push({
+                        qty: req.body['qty_' + existingLayoutBom][i],
+                        partDesc: req.body['partDesc_' + existingLayoutBom][i],
+                        part: req.body['part_' + existingLayoutBom][i]
+                    })
+                }
+            } else {
+                al.push({
+                    qty: req.body['qty_' + existingLayoutBom],
+                    partDesc: req.body['partDesc_' + existingLayoutBom],
+                    part: req.body['part_' + existingLayoutBom]
+                })
+            }
+
+            AL.push({
+                bom: existingLayoutBom,
+                data: al
             });
         }
 
@@ -3377,6 +3495,29 @@ exports.generateBinBoms = function(req, res) {
                 });
             }
             workbook.xlsx.writeFile(outputDir + '/BIN BOMS/' + ss.bom + '.xlsx').then(function() {
+                return null
+            });
+        }
+    }
+
+    if (AL.length != 0) {
+        for (let al of AL) {
+            let workbook = new Excel.Workbook();
+            let sheet = workbook.addWorksheet('sheet1');
+            sheet.columns = [
+                {header: 'Qty:', key: 'qty', width: 10, style: {font: {name: 'Calibri', size: 11}}},
+                {header: 'Part Description:', key: 'partDesc', width: 40, style: {font: {name: 'Calibri', size: 11}}},
+                {header: 'Part #:', key: 'part', width: 25, style: {font: {name: 'Calibri', size: 11}}}
+            ];
+
+            for(let alItem of al.data) {
+                sheet.addRow({
+                    qty: alItem.qty,
+                    partDesc: alItem.partDesc,
+                    part: alItem.part
+                });
+            }
+            workbook.xlsx.writeFile(outputDir + '/BIN BOMS/' + al.bom + '.xlsx').then(function() {
                 return null
             });
         }

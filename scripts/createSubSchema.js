@@ -107,6 +107,69 @@ CREATE TABLE IF NOT EXISTS ' + dbConfig.database + '.' + dbConfig.submittal_sect
     UNIQUE INDEX secID_UNIQUE (secID ASC))\
     ENGINE = InnoDB;', function(err) { if(err) throw err; });
 
+
+connection.query('\
+CREATE TABLE IF NOT EXISTS ' + dbConfig.database + '.' + dbConfig.submittal_secType_table + ' ( \
+    secTypeID INT UNSIGNED NOT NULL AUTO_INCREMENT, \
+    type VARCHAR(100) NULL, \
+    PRIMARY KEY (secTypeID), \
+    UNIQUE INDEX secTypeID_UNIQUE (secTypeID ASC))\
+    ENGINE = InnoDB;', function(err) { if(err) throw err; });
+
+
+
+connection.query("INSERT INTO "+dbConfig.database+"."+dbConfig.submittal_secType_table+" (type) VALUES " +
+    //ulListing
+    "('SWITCHGEAR - UL1558'), " +
+    "('SWITCHBOARD - UL891'), " +
+    "('PANELBOARD'), " +
+    "('CONTROL'), " +
+    "('PASSTHROUGH'), " +
+    "('XFMR'), " +
+    "('BOLTSWITCH'), " +
+    "('DC DISCONNECT'), " +
+    "('UTILITY METERING'); ", function (err, result) { if(err) throw err; });
+
+connection.query('\
+CREATE TABLE IF NOT EXISTS ' + dbConfig.database + '.' + dbConfig.submittal_breaker_table + ' ( \
+    devID INT UNSIGNED NOT NULL AUTO_INCREMENT, \
+    layoutID INT UNSIGNED NOT NULL, \
+    secID INT UNSIGNED NULL,\
+    comp VARCHAR(100) NULL, \
+    devDesignation VARCHAR(100) NULL, \
+    tie VARCHAR(1) DEFAULT "N", \
+    unitOfIssue VARCHAR(2)  DEFAULT "EA", \
+    catCode VARCHAR(100) NULL, \
+    brkPN VARCHAR(100) NULL, \
+    cradlePN VARCHAR(100) NULL, \
+    devMount VARCHAR(100) NULL, \
+    rearAdaptType VARCHAR(100) NULL, \
+    devUL VARCHAR(100) NULL, \
+    devLevel VARCHAR(100) NULL, \
+    devOperation VARCHAR(100) NULL, \
+    devCtrlVolt VARCHAR(100) NULL, \
+    devMaxVolt VARCHAR(100) NULL, \
+    devKAIC VARCHAR(100) NULL, \
+    devFrameSet VARCHAR(100) NULL, \
+    devSensorSet VARCHAR(100) NULL, \
+    devTripSet VARCHAR(100) NULL, \
+    devTripUnit VARCHAR(100) NULL, \
+    devTripParam VARCHAR(100) NULL, \
+    devPoles VARCHAR(100) NULL,  \
+    devLugQty VARCHAR(100) NULL,  \
+    devLugType VARCHAR(100) NULL, \
+    devLugSize VARCHAR(100) NULL, \
+    PRIMARY KEY (devID), \
+    CONSTRAINT fk_layoutID_1 \
+    FOREIGN KEY (layoutID) \
+        REFERENCES submittalLayoutSum(layoutID), \
+    CONSTRAINT fk_secID_1 \
+    FOREIGN KEY (secID) \
+        REFERENCES submittalSectionSum(secID), \
+    UNIQUE INDEX devID_UNIQUE (devID ASC))\
+    ENGINE = InnoDB;', function(err) { if(err) throw err; });
+
+
 connection.query('\
 CREATE TABLE IF NOT EXISTS ' + dbConfig.database + '.' + dbConfig.submittal_layout_dropdowns + ' ( \
     dropdownID INT UNSIGNED NOT NULL AUTO_INCREMENT,\
@@ -218,286 +281,66 @@ connection.query("INSERT INTO "+dbConfig.database+"."+dbConfig.submittal_layout_
     "('keyInterlocks', 'OTHER'), " +
     "('keyInterlocks', 'N/A'); ", function (err, result) { if(err) throw err; });
 
-
-
 connection.query('\
-CREATE TABLE IF NOT EXISTS ' + dbConfig.database + '.' + dbConfig.submittal_breaker_table + ' ( \
-    devID INT UNSIGNED NOT NULL AUTO_INCREMENT, \
-    quoteID INT UNSIGNED NULL, \
-    layoutNum INT UNSIGNED NULL, \
-    comp VARCHAR(100) NULL, \
-    secID VARCHAR(100) NULL,\
-    devDesignation VARCHAR(100) NULL, \
-    tie VARCHAR(1) DEFAULT "N", \
-    unitOfIssue VARCHAR(100) NULL, \
-    catCode VARCHAR(100) NULL, \
-    brkPN VARCHAR(100) NULL, \
-    cradlePN VARCHAR(100) NULL, \
-    devProduct VARCHAR(100) NULL, \
-    devMfg VARCHAR(100) NULL, \
-    devProdLine VARCHAR(100) NULL, \
-    devMount VARCHAR(100) NULL, \
-    rearAdaptType VARCHAR(100) NULL, \
-    devUL VARCHAR(100) NULL, \
-    devLevel VARCHAR(100) NULL, \
-    devOperation VARCHAR(100) NULL, \
-    devCtrlVolt VARCHAR(100) NULL, \
-    devMaxVolt VARCHAR(100) NULL, \
-    devKAIC VARCHAR(100) NULL, \
-    devFrameSet VARCHAR(100) NULL, \
-    devSensorSet VARCHAR(100) NULL, \
-    devTripSet VARCHAR(100) NULL, \
-    devTripUnit VARCHAR(100) NULL, \
-    devTripParam VARCHAR(100) NULL, \
-    devPoles VARCHAR(100) NULL,  \
-    devLugQty VARCHAR(100) NULL,  \
-    devLugType VARCHAR(100) NULL, \
-    devLugSize VARCHAR(100) NULL, \
-    devAcc VARCHAR(100) NULL, \
-    PRIMARY KEY (devID), \
-    UNIQUE INDEX idDev_UNIQUE (devID ASC))\
-    ENGINE = InnoDB;', function(err) { if(err) throw err; });
+CREATE TABLE IF NOT EXISTS ' + dbConfig.database + '.' + dbConfig.submittal_brkAcc_options + ' (\
+        brkAccDropdownID INT UNSIGNED NOT NULL AUTO_INCREMENT, \
+        brkAcc VARCHAR(100) NULL, \
+        brkAccName VARCHAR(100) NULL, \
+        brkAccOpt VARCHAR(100) NULL, \
+        PRIMARY KEY (brkAccDropdownID), \
+        UNIQUE INDEX brkAccDropdownID_UNIQUE (brkAccDropdownID ASC))\
+        ENGINE = InnoDB;', function(err){ if(err) throw err; });
 
+let brkAccData = [
+    {brkAcc: "shuntTrip", brkAccName: "Shunt Trip", brkAccOpt: ["110-127VAC/DC 100% DUTY", "24VDC 100% DUTY", "48VDC 100% DUTY"]},
+    {brkAcc: "motor", brkAccName: "Spring Charge Motor",  brkAccOpt: ["110-125VAC 3s" , "110-125VDC 3s" , "24VDC 3s" , "48VDC 3s"]},
+    {brkAcc: "springReleaseDevice", brkAccName: "Closing Coil",  brkAccOpt: ["110-127VAC/DC" , "24VDC" , "48VDC"]},
+    {brkAcc: "undervoltageTrip", brkAccName: "UV Trip",  brkAccOpt: ["110-127VAC/DC 100% DUTY", "24VDC 100% DUTY", "48VDC 100% DUTY"]},
+    {brkAcc: "secondShuntTrip", brkAccName: "2nd Shunt Trip",  brkAccOpt: ["110-127VAC/DC 100% DUTY", "24VDC 100% DUTY", "48VDC 100% DUTY"]},
+    {brkAcc: "auxSwitch", brkAccName: "Aux Switch",  brkAccOpt: ["2" , "4" , "6" , "8" , "10" , "12"]},
+    {brkAcc: "bellAlarm", brkAccName: "Bell Alarm",  brkAccOpt: ["1" , "2"]},
+    {brkAcc: "padlock", brkAccName: "Padlock Provision",  brkAccOpt: ["Metal" , "Plastic"]},
+    {brkAcc: "comms", brkAccName: "Communications",  brkAccOpt: ["Modbus" , "Profibus"]},
+    {brkAcc: "mechTripIndicator", brkAccName: "Mechanical Trip Indicator",  brkAccOpt: []},
+    {brkAcc: "mechInterlock", brkAccName: "Mechanical Interlock",  brkAccOpt: []},
+    {brkAcc: "remoteReset", brkAccName: "Remote Reset",  brkAccOpt: []},
+    {brkAcc: "operationsCounter", brkAccName: "Operations Counter",  brkAccOpt: []},
+    {brkAcc: "kirkKeyProvisions", brkAccName: "Kirk Key Provision",  brkAccOpt: []},
+    {brkAcc: "breakerReadyToClose", brkAccName: "Ready to Close",  brkAccOpt: []},
+    {brkAcc: "meteringForTripUnit", brkAccName: "Trip Unit Metering",  brkAccOpt: []},
+    {brkAcc: "pushButtonCover", brkAccName: "Push-button Cover",  brkAccOpt: []},
+    {brkAcc: "latchCheck", brkAccName: "Latch Check Switch",  brkAccOpt: []},
+    {brkAcc: "secondaryTerminalBlocks", brkAccName: "Secondary Terminal Blocks",  brkAccOpt: []}
+];
+
+for (let i = 0; i < brkAccData.length; i++) {
+    if (brkAccData[i].brkAccOpt.length != 0) {
+        for (let j = 0; j < brkAccData[i].brkAccOpt.length; j++) {
+            connection.query("INSERT INTO " + dbConfig.database + '.' + dbConfig.submittal_brkAcc_options + " (brkAcc, brkAccName, brkAccOpt) VALUES (?,?,?)", [brkAccData[i].brkAcc, brkAccData[i].brkAccName, brkAccData[i].brkAccOpt[j]]);
+        }
+    } else {
+        connection.query("INSERT INTO " + dbConfig.database + '.' + dbConfig.submittal_brkAcc_options + " (brkAcc, brkAccName, brkAccOpt) VALUES (?,?,?)", [brkAccData[i].brkAcc, brkAccData[i].brkAccName, null]);
+    }
+}
 
 
 connection.query('\
 CREATE TABLE IF NOT EXISTS ' + dbConfig.database + '.' + dbConfig.submittal_brkAcc_table + ' ( \
     brkAccID INT UNSIGNED NOT NULL AUTO_INCREMENT, \
-    quoteID INT NULL,\
-    layoutNum INT NULL, \
-    devID INT NULL,\
-    productLine VARCHAR(100) NULL,\
-    brkAccOpt JSON NULL, \
+    brkAccDropdownID INT UNSIGNED NOT NULL,\
+    devID INT UNSIGNED NOT NULL,\
     PRIMARY KEY (brkAccID), \
-        UNIQUE INDEX brkAccID_UNIQUE (brkAccID ASC))\
-        ENGINE = InnoDB;', function(err) { if(err) throw err; });
+    CONSTRAINT fk_devID_1 \
+    FOREIGN KEY (devID) \
+        REFERENCES submittalBrkSum(devID) \
+        ON DELETE CASCADE \
+        ON UPDATE CASCADE, \
+    CONSTRAINT fk_brkAccDropdownID \
+    FOREIGN KEY (brkAccDropdownID) \
+        REFERENCES submittalBrkAccOptions(brkAccDropdownID), \
+    UNIQUE INDEX brkAccID_UNIQUE (brkAccID ASC))\
+    ENGINE = InnoDB;', function(err) { if(err) throw err; });
 
-connection.query('\
-CREATE TABLE IF NOT EXISTS ' + dbConfig.database + '.' + dbConfig.submittal_brkAcc_dropdown + ' (\
-        brkAccDropdownID INT UNSIGNED NOT NULL AUTO_INCREMENT, \
-        mfg VARCHAR(100) NULL, \
-        productLine VARCHAR(100) NULL, \
-        brkAccOpt JSON NULL, \
-        PRIMARY KEY (brkAccDropdownID), \
-        UNIQUE INDEX brkAccDropdownID_UNIQUE (brkAccDropdownID ASC))\
-        ENGINE = InnoDB;', function(err){ if(err) throw err; });
-
-connection.query("INSERT INTO " + dbConfig.database + '.' + dbConfig.submittal_brkAcc_dropdown + " (mfg, productLine, brkAccOpt) VALUES " +
-    "(" +
-    "'Eaton', " +
-    "'Magnum DS (ICCB)', " +
-    "'{" +
-    "\"shuntTrip\": [\"None\", \"110-127vac/dc 100% duty\", \"24vdc 100% duty\", \"48vdc 100% duty\"], " +
-    "\"motor\": [\"None\", \"110-125vac 3 sec\", \"110-125vdc 3 sec\", \"24vdc 3 sec\", \"48vdc 3 sec\"], " +
-    "\"springReleaseDevice\": [\"None\", \"110-127vac/dc\", \"24vdc\", \"48vdc\"], " +
-    "\"undervoltageTrip\": [\"None\", \"110-125vac\", \"110-125vdc\", \"208-277vac\", \"24vdc\", \"48vdc\"], " +
-    "\"secondShuntTrip\": [\"None\", \"110-127vac/dc 100% duty\", \"24vdc 100% duty\", \"48vdc 100% duty\"], " +
-    "\"auxSwitch\": [\"2\", \"4\", \"6\", \"8\", \"10\", \"12\"], " +
-    "\"bellAlarm\": [\"1\", \"2\"], " +
-    "\"mechTripIndicator\": [\"Yes\"], " +
-    "\"mechInterlock\": [\"Yes\"], " +
-    "\"remoteReset\": " + null + ", " +
-    "\"padlock\": [\"None\", \"Metal\", \"Plastic\"], " +
-    "\"operationsCounter\": [\"Yes\", \"No\"], " +
-    "\"kirkKeyProvisions\": [\"Yes\", \"No\"], " +
-    "\"breakerReadyToClose\": " + null + ", " +
-    "\"meteringForTripUnit\": " + null + ", " +
-    "\"coms\": " + null + ", " +
-    "\"pushButtonCover\": " + null + ", " +
-    "\"latchCheck\": " + null + ", " +
-    "\"secondaryTerminalBlocks\": " + null +
-    "}'" +
-    "), " +
-    "(" +
-    "'Eaton', " +
-    "'Magnum SB (ICCB or MCCB)', " +
-    "'{" +
-    "\"shuntTrip\": [\"None\", \"110-127vac/dc 100% duty\", \"24vdc 100% duty\", \"48vdc 100% duty\"], " +
-    "\"motor\": [\"None\", \"110-125vac 3 sec\", \"110-125vdc 3 sec\", \"24vdc 3 sec\", \"48vdc 3 sec\"], " +
-    "\"springReleaseDevice\": [\"None\", \"110-127vac/dc\", \"24vdc\", \"48vdc\"], " +
-    "\"undervoltageTrip\": [\"None\", \"110-125vac\", \"110-125vdc\", \"208-277vac\", \"24vdc\", \"48vdc\"], " +
-    "\"secondShuntTrip\": [\"None\", \"110-127vac/dc 100% duty\", \"24vdc 100% duty\", \"48vdc 100% duty\"], " +
-    "\"auxSwitch\": [\"2\", \"4\", \"6\"], " +
-    "\"bellAlarm\": [\"2\"], " +
-    "\"mechTripIndicator\": [\"Yes\"], " +
-    "\"mechInterlock\": [\"Yes\"], " +
-    "\"remoteReset\": " + null + ", " +
-    "\"padlock\": [\"None\", \"Metal\", \"Plastic\"], " +
-    "\"operationsCounter\": [\"Yes\", \"No\"], " +
-    "\"kirkKeyProvisions\": [\"Yes\", \"No\"], " +
-    "\"breakerReadyToClose\": " + null + ", " +
-    "\"meteringForTripUnit\": [\"Upper Terms\", \"Lower Terms\"], " +
-    "\"coms\": " + null + ", " +
-    "\"pushButtonCover\": " + null + ", " +
-    "\"latchCheck\": [\"None\", \"LCS Wired to SRD\"], " +
-    "\"secondaryTerminalBlocks\": " + null +
-    "}'" +
-    "), " +
-    "(" +
-    "'Eaton', " +
-    "'NRX NF (ICCB or MCCB)', " +
-    "'{" +
-    "\"shuntTrip\": [\"None\", \"110-127vac/dc\", \"24vdc\", \"48vdc\"], " +
-    "\"motor\": [\"None\", \"110-125vac\", \"110-125vdc\", \"24vdc\", \"48vdc\"], " +
-    "\"springReleaseDevice\": [\"None\", \"110-127vac/dc\", \"24vdc\", \"48vdc\"], " +
-    "\"undervoltageTrip\": [\"None\", \"110-125vac/dc\", \"208-250vac/dc\", \"24vdc\", \"48vdc\"], " +
-    "\"secondShuntTrip\": [\"None\", \"110-127vac/dc\", \"24vdc\", \"48vdc\"], " +
-    "\"auxSwitch\": [\"2\", \"4\"], " +
-    "\"bellAlarm\": [\"2\"], " +
-    "\"mechTripIndicator\": [\"interlock trip\"], " +
-    "\"mechInterlock\": " + null + ", " +
-    "\"remoteReset\": " + null + ", " +
-    "\"padlock\": [\"None\", \"Metal\", \"Plastic\"], " +
-    "\"operationsCounter\": [\"Yes\", \"No\"], " +
-    "\"kirkKeyProvisions\": [\"Yes\", \"No\"], " +
-    "\"breakerReadyToClose\":" + null + ", " +
-    "\"meteringForTripUnit\": " + null + ", " +
-    "\"coms\": " + null + ", " +
-    "\"pushButtonCover\": " + null + ", " +
-    "\"latchCheck\": [\"None\", \"LCS Wired to SRD\"], " +
-    "\"secondaryTerminalBlocks\": [\"Per Breaker Options\", \"Full Complement\"] " +
-    "}'" +
-    "), " +
-    "(" +
-    "'Eaton', " +
-    "'NRX RF (ICCB or MCCB)', " +
-    "'{" +
-    "\"shuntTrip\": [\"None\", \"110-127vac/dc\", \"24vdc\", \"48vdc\"], " +
-    "\"motor\": [\"None\", \"110-125vac\", \"24vdc\", \"48vdc\"], " +
-    "\"springReleaseDevice\": [\"None\", \"110-127vac/dc\", \"24vdc\", \"48vdc\"], " +
-    "\"undervoltageTrip\": [\"None\", \"110-125vac/dc\", \"208-250vac/dc\", \"24vdc\", \"48vdc\"], " +
-    "\"secondShuntTrip\": [\"None\", \"110-127vac/dc\", \"24vdc\", \"48vdc\"], " +
-    "\"auxSwitch\": [\"2\", \"6\", \"8\", \"10\", \"12\"], " +
-    "\"bellAlarm\": [\"1\", \"2\"], " +
-    "\"mechTripIndicator\": " + null + ", " +
-    "\"mechInterlock\": [\"interlock trip\"], " +
-    "\"remoteReset\": " + null + ", " +
-    "\"padlock\": [\"None\", \"Metal\", \"Plastic\"], " +
-    "\"operationsCounter\": [\"Yes\", \"No\"], " +
-    "\"kirkKeyProvisions\": [\"Yes\", \"No\"], " +
-    "\"breakerReadyToClose\": " + null + ", " +
-    "\"meteringForTripUnit\": " + null + ", " +
-    "\"coms\": " + null + ", " +
-    "\"pushButtonCover\": " + null + ", " +
-    "\"latchCheck\": [\"None\", \"LCS Wired to SRD\"], " +
-    "\"secondaryTerminalBlocks\": [\"Per Breaker Options\", \"Full Complement\"] " +
-    "}'" +
-    "), " +
-    "(" +
-    "'Siemens', " +
-    "'WL (ICCB)', " +
-    "'{" +
-    "\"shuntTrip\": [\"None\", \"24vdc\", \"48vdc\", \"125vdc\", \"120vac\"], " +
-    "\"motor\": [\"None\", \"24vdc\", \"48vdc\", \"125vdc\", \"120vac\"], " +
-    "\"springReleaseDevice\": [\"None\", \"24vdc\", \"48vdc\", \"125vdc\", \"120vac\"], " +
-    "\"undervoltageTrip\": [\"None\", \"24vdc\", \"48vdc\", \"125vdc\", \"120vac\", \"240vac\", \"24vdc delay\", \"48vdc delay\", \"125vdc delay\", \"120vac delay\"], " +
-    "\"secondShuntTrip\": [\"None\", \"24vdc\", \"48vdc\", \"125vdc\", \"120vac\"], " +
-    "\"auxSwitch\": [\"2\", \"4\"], " +
-    "\"bellAlarm\": [\"Yes\"], " +
-    "\"mechTripIndicator\": " + null + ", " +
-    "\"mechInterlock\": " + null + ", " +
-    "\"remoteReset\": " + null + ", " +
-    "\"padlock\": " + null + ", " +
-    "\"operationsCounter\": [\"Yes\", \"No\"], " +
-    "\"kirkKeyProvisions\": [\"Yes\", \"No\"], " +
-    "\"breakerReadyToClose\": [\"Yes\", \"No\"], " +
-    "\"meteringForTripUnit\": [\"Yes\", \"No\"], " +
-    "\"coms\": [\"None\", \"Modbus\"], " +
-    "\"pushButtonCover\": " + null + ", " +
-    "\"latchCheck\": " + null + ", " +
-    "\"secondaryTerminalBlocks\": " + null +
-    "}'" +
-    "), " +
-    "(" +
-    "'ABB', " +
-    "'EMAX 2 (ICCB)', " +
-    "'{" +
-    "\"shuntTrip\": [\"None\", \"24vac/dc\", \"30vac/dc\", \"48vac/dc\", \"110-120vac/dc\", \"120-127vac/dc\"], " +
-    "\"motor\": [\"None\", \"24-30vac/dc\", \"48-60vac/dc\", \"100-130vac/dc\"], " +
-    "\"springReleaseDevice\": [\"None\", \"24vac/dc\", \"30vac/dc\", \"48vac/dc\", \"110-120vac/dc\", \"120-127vac/dc\"], " +
-    "\"undervoltageTrip\": [\"None\", \"24vac/dc\", \"30vac/dc\", \"48vac/dc\", \"110-120vac/dc\", \"120-127vac/dc\", \"277vac\"], " +
-    "\"secondShuntTrip\": [\"None\", \"24vac/dc\", \"30vac/dc\", \"48vac/dc\", \"110-120vac/dc\", \"120-127vac/dc\"], " +
-    "\"auxSwitch\": [\"4\"], " +
-    "\"bellAlarm\": [\"Yes\"], " +
-    "\"mechTripIndicator\": " + null + ", " +
-    "\"mechInterlock\": " + null + ", " +
-    "\"remoteReset\": " + null + ", " +
-    "\"padlock\": [\"None\", \"Yes\"], " +
-    "\"operationsCounter\": [\"Yes\", \"No\"], " +
-    "\"kirkKeyProvisions\": [\"Yes\", \"No\"], " +
-    "\"breakerReadyToClose\": [\"None\", \"250vac/dc\"], " +
-    "\"meteringForTripUnit\": " + null + ", " +
-    "\"coms\": [\"None\", \"Mod rs 485\", \"Mod tcp\"], " +
-    "\"pushButtonCover\": [\"Yes\", \"No\"], " +
-    "\"latchCheck\": " + null + ", " +
-    "\"secondaryTerminalBlocks\": " + null +
-    "}'" +
-    "), " +
-    "(" +
-    "'Schneider/ Square D', " +
-    "'Masterpact NW (ICCB)', " +
-    "'{" +
-    "\"shuntTrip\": [\"None\", \"24-30vac/dc\", \"48-60vac/dc\", \"100-130vac/dc\"], " +
-    "\"motor\": [\"None\", \"24-30vac/dc\", \"48-60vac/dc\", \"100-130vac/dc\"], " +
-    "\"springReleaseDevice\": [\"None\", \"24-30vac/dc\", \"48-60vac/dc\", \"100-130vac/dc\"], " +
-    "\"undervoltageTrip\": [\"None\", \"24-30vac/dc\", \"48-60vac/dc\", \"100-130vac/dc\", \"220-240vac/dc\", \"24-30vac/dc delay\", \"48-60vac/dc delay\", \"100-130vac/dc delay\", \"220-240vac/dc delay\"], " +
-    "\"secondShuntTrip\": [\"None\", \"24-30vac/dc\", \"48-60vac/dc\", \"100-130vac/dc\"], " +
-    "\"auxSwitch\": [\"4\", \"8\", \"12\"], " +
-    "\"bellAlarm\": [\"1\", \"2\"], " +
-    "\"mechTripIndicator\": " + null + ", " +
-    "\"mechInterlock\": " + null + ", " +
-    "\"remoteReset\": " + null + ", " +
-    "\"padlock\": [\"Yes\", \"No\"], " +
-    "\"operationsCounter\": [\"Yes\", \"No\"], " +
-    "\"kirkKeyProvisions\": [\"Yes\", \"No\"], " +
-    "\"breakerReadyToClose\": [\"Yes\", \"No\"], " +
-    "\"meteringForTripUnit\": " + null + ", " +
-    "\"coms\": [\"None\", \"Modbus\"], " +
-    "\"pushButtonCover\": [\"Yes\", \"No\"], " +
-    "\"latchCheck\": " + null + ", " +
-    "\"secondaryTerminalBlocks\": " + null +
-    "}'" +
-    "), " +
-    "(" +
-    "'Schneider/ Square D', " +
-    "'Powerpact (MCCB)', " +
-    "'{}'" +
-    "), " +
-    "(" +
-    "'Eaton', " +
-    "'Power Defense (MCCB)', " +
-    "'{}'" +
-    "), " +
-    "(" +
-    "'Eaton', " +
-    "'Series C (MCCB)', " +
-    "'{}'" +
-    "), " +
-    "(" +
-    "'ABB', " +
-    "'Tmax (MCCB)', " +
-    "'{}'" +
-    "), " +
-    "(" +
-    "'Siemens', " +
-    "'VL (MCCB)', " +
-    "'{}'" +
-    "), " +
-    "(" +
-    "'LSIS', " +
-    "'Susol (ICCB)', " +
-    "'{}'" +
-    "), " +
-    "(" +
-    "'LSIS', " +
-    "'Susol (MCCB)', " +
-    "'{}'" +
-    ") "
-    , function (err) {
-        if (err)
-            console.log("Error inserting : %s ", err);
-    }
-);
 
 connection.query('\
 CREATE TABLE IF NOT EXISTS ' + dbConfig.database + '.' + dbConfig.submittal_common_items + ' ( \

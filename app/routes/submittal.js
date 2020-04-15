@@ -9,6 +9,23 @@ module.exports = function(app) {
 
     app.get('/searchSubmittal/', submittalController.searchSubmittal);
 
+    app.post('/editSubmittal/', submittalController.editSubmittal);
+
     app.post('/addLayout/', submittalController.addLayout);
 
+    app.post('/editLayout/', submittalController.editLayout);
+
+    app.post('/layoutAddSection/', submittalController.layoutAddSection);
+
+    app.post('/layoutDeleteSection/', submittalController.layoutDeleteSection);
+
+    app.post('/layoutSectionProperties/', submittalController.layoutSectionProperties);
+
+    app.post('/addDevice', submittalController.addBrk);
+
+    app.post('/submittalCopyDevice/', submittalController.copyBrk);
+
+    app.post('/submittalEditDevice/', submittalController.editBrk);
+
+    app.post('/submittalDeleteDevice/', submittalController.deleteBrk);
 };

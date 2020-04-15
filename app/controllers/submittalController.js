@@ -1,13 +1,10 @@
-
 const path = require('path');
 const url = require('url');
 const queryString = require('query-string');
 const moment = require('moment');
 
-
 //Excel Connection
 const Excel = require('exceljs');
-
 
 //DATABASE INFORMATION (TABLE NAMES)
 const dbConfig = require('../config/database.js');
@@ -26,7 +23,6 @@ let connectOptions = {
     },
     json: true // Automatically stringifies the body to JSON
 };
-
 reqPromise(connectOptions)
     .then(reqConnectBody => {
         // get the sessionId
@@ -63,11 +59,9 @@ function creo(sessionId, functionData) {
         });
     }
 }
-
 const DB = require('../config/db.js');
 const querySql = DB.querySql;
 const Promise = require('bluebird');
-
 
 exports = {};
 module.exports = exports;
@@ -93,6 +87,9 @@ async function revLookup(lookupArray) {
     }
 }
 
+/***********************************************
+ MAIN SUBMITTAL
+ ***********************************************/
 
 exports.submittal = function(req, res) {
     let submittalData = [];
@@ -196,7 +193,39 @@ exports.createSubmittal = function(req, res) {
         })
 };
 
+exports.editSubmittal = function(req, res) {
+    let urlObj = url.parse(req.originalUrl);
+    urlObj.protocol = req.protocol;
+    urlObj.host = req.get('host');
+    let qs = queryString.parse(urlObj.search);
+    let jobNumReleaseNum = qs.subID.split('_')[0];
+    let subID = qs.subID.split('_')[1];
+
+    let newSubData = {
+        jobName: req.body.jobName,
+        customer: req.body.customer,
+        layoutName: req.body.layoutName,
+        drawnBy: req.body.drawnBy,
+        drawnDate: req.body.drawnDate,
+        checkedBy: req.body.checkedBy,
+        checkedDate: req.body.checkedDate
+    };
+
+    async function editSubmittal(subData) {
+        return await querySql("UPDATE " + database + "." + dbConfig.submittal_summary_table + " SET ? WHERE subID = ?", [subData, subID]);
+    }
+
+    editSubmittal(newSubData)
+        .then(() => {
+            res.redirect('../searchSubmittal/?subID='+jobNumReleaseNum+"_"+subID);
+        })
+        .catch(err => {
+            console.log(err);
+        });
+};
+
 exports.searchSubmittal = function(req, res) {
+
     let urlObj = url.parse(req.originalUrl);
     urlObj.protocol = req.protocol;
     urlObj.host = req.get('host');
@@ -206,7 +235,12 @@ exports.searchSubmittal = function(req, res) {
     let revData = [];
     let creoData = [];
     let layoutData = [];
-    let dropdownData = [];
+    let layoutDropdownData = [];
+    let brkAccDropdownData = [];
+    let deviceData = [];
+    let brkAccData = [];
+    let sectionData = [];
+    let sectionTypeData = [];
 
     submittalLookup([null, null, subID])
         .then(async function(submittals) {
@@ -284,6 +318,7 @@ exports.searchSubmittal = function(req, res) {
                 for (let layout of layouts) {
                     layoutData.push({
                         subID: layout.subID,
+                        layoutID: layout.layoutID,
                         layoutName: layout.layoutName,
                         ulListing: layout.ulListing,
                         systemType: layout.systemType,
@@ -313,19 +348,133 @@ exports.searchSubmittal = function(req, res) {
             return null
         })
         .then(async function() {
-            return await querySql("SELECT * FROM " + database + "." + dbConfig.submittal_layout_dropdowns);
+            if (layoutData.length != 0) {
+                let layoutID = layoutData[0].layoutID;
+                return await querySql("SELECT * FROM " + database + "." + dbConfig.submittal_breaker_table + " WHERE layoutID = ?", layoutID);
+            } else {
+                return [];
+            }
         })
-        .then(async function(dropdowns) {
-            for (let dropdown of dropdowns) {
-                dropdownData.push({
+        .then(async function(breakers) {
+            for (let breaker of breakers) {
+                deviceData.push({
+                    devID: breaker.devID,
+                    layoutID: breaker.layoutID,
+                    secID: breaker.secID,
+                    comp: breaker.comp,
+                    devDesignation: breaker.devDesignation,
+                    tie: breaker.tie,
+                    unitOfIssue: breaker.unitOfIssue,
+                    catCode: breaker.catCode,
+                    brkPN: breaker.brkPN,
+                    cradlePN: breaker.cradlePN,
+                    devMount: breaker.devMount,
+                    rearAdaptType: breaker.rearAdaptType,
+                    devUL: breaker.devUL,
+                    devLevel: breaker.devLevel,
+                    devOperation: breaker.devOperation,
+                    devCtrlVolt: breaker.devCtrlVolt,
+                    devMaxVolt: breaker.devMaxVolt,
+                    devKAIC: breaker.devKAIC,
+                    devFrameSet: breaker.devFrameSet,
+                    devSensorSet: breaker.devSensorSet,
+                    devTripSet: breaker.devTripSet,
+                    devTripUnit: breaker.devTripUnit,
+                    devTripParam: breaker.devTripParam,
+                    devPoles: breaker.devPoles,
+                    devLugQty: breaker.devLugQty,
+                    devLugType: breaker.devLugType,
+                    devLugSize: breaker.devLugSize
+                })
+            }
+            return null
+        })
+        .then(async function() {
+            for (let data of deviceData) {
+                const devAccs = await querySql("SELECT * FROM " + database + "." + dbConfig.submittal_brkAcc_table + " WHERE devID = ?", data.devID);
+                const devAccOptions = await querySql("SELECT * FROM " + database + "." + dbConfig.submittal_brkAcc_options);
+                for (let devAcc of devAccs) {
+                    for  (let devAccOpt of devAccOptions) {
+                        if (devAcc.brkAccDropdownID == devAccOpt.brkAccDropdownID) {
+                            brkAccData.push({
+                                brkAccID: devAcc.brkAccID,
+                                brkAccDropdownID: devAcc.brkAccDropdownID,
+                                name: devAccOpt.brkAccName,
+                                opt: devAccOpt.brkAccOpt,
+                                devID: devAcc.devID
+                            });
+                        }
+                    }
+                }
+            }
+
+        })
+        .then(async function() {
+            const layoutDropdowns = await querySql("SELECT * FROM " + database + "." + dbConfig.submittal_layout_dropdowns);
+            const brkAccDropdowns = await querySql("SELECT * FROM " + database + "." + dbConfig.submittal_brkAcc_options);
+            return {layoutDropdowns, brkAccDropdowns}
+        })
+        .then(async function({layoutDropdowns, brkAccDropdowns}) {
+            for (let dropdown of layoutDropdowns) {
+                layoutDropdownData.push({
                     type: dropdown.dropdownType,
                     value: dropdown.dropdownValue
+                });
+            }
+            let tempBrkAccDropdownData = [];
+            for (let dropdown of brkAccDropdowns) {
+                tempBrkAccDropdownData.push({
+                    id: dropdown.brkAccDropdownID,
+                    type: dropdown.brkAcc,
+                    name: dropdown.brkAccName,
+                    value: dropdown.brkAccOpt
+                });
+            }
+
+            for (let item of tempBrkAccDropdownData) {
+                if (brkAccDropdownData.filter(e => e.type === item.type).length > 0) {
+                    brkAccDropdownData.filter(e => e.type === item.type)[0].value.push(item.value);
+                    brkAccDropdownData.filter(e => e.type === item.type)[0].id.push(item.brkAccDropdownID)
+                } else {
+                    brkAccDropdownData.push({
+                        id: [item.id],
+                        type: item.type,
+                        name: item.name,
+                        value: [item.value]
+                    })
+                }
+            }
+            return null
+        })
+        .then(async function() {
+            if (layoutData.length != 0) {
+                const sections = await querySql("SELECT * FROM " + database + "." + dbConfig.submittal_sections_table+ " WHERE layoutID = ?", layoutData[0].layoutID);
+                for (let section of sections) {
+                    sectionData.push({
+                        secID: section.secID,
+                        layoutID: section.layoutID,
+                        sectionNum: section.sectionNum,
+                        compType: section.compType,
+                        controlAsmID: section.controlAsmID,
+                        secType: section.secType,
+                        secHeight: section.secHeight,
+                        secWidth: section.secWidth,
+                        secDepth: section.secDepth
+                    })
+                }
+            }
+            return null
+        })
+        .then(async function() {
+            const secTypes = await querySql("SELECT * FROM " + database + "." + dbConfig.submittal_secType_table);
+            for (let secType of secTypes) {
+                sectionTypeData.push({
+                    secType: secType.type
                 });
             }
             return null
         })
         .then(() => {
-            console.log(layoutData);
             res.locals = {title: 'Submittal'};
             res.render('Submittal/searchSubmittal', {
                 message: null,
@@ -333,16 +482,18 @@ exports.searchSubmittal = function(req, res) {
                 revData: revData,
                 creoData: creoData,
                 layoutData: layoutData,
-                sectionData: [],
-                dropdownData: dropdownData,
+                sectionData: sectionData,
+                sectionType: sectionTypeData,
+                layoutDropdownData: layoutDropdownData,
+                brkAccDropdownData: brkAccDropdownData,
                 layoutItemData: [],
                 userItemData: [],
                 comItemData: [],
                 layoutControlData: [],
                 controlAsmData: [],
                 panelboardData: [],
-                deviceData: [],
-                brkAccSum: [],
+                deviceData: deviceData,
+                brkAccData: brkAccData,
                 brkAccDropdown: [],
                 currentSlide: 1
             })
@@ -351,8 +502,6 @@ exports.searchSubmittal = function(req, res) {
             console.log(err);
         })
 };
-
-
 
 exports.quoteDetail = function (req, res) {
 // the following code is executed *before* the query is executed
@@ -770,13 +919,377 @@ exports.quoteDetail = function (req, res) {
 };
 
 
+/*********************************************
+ SECTION CONFIGURE
+ *********************************************/
+exports.layoutAddSection = function(req, res){
+    let urlObj = url.parse(req.originalUrl);
+    urlObj.protocol = req.protocol;
+    urlObj.host = req.get('host');
+    let qs = queryString.parse(urlObj.search);
+    let jobRelease = qs.subID.split('_')[0];
+    let subID = qs.subID.split('_')[1];
+    let layoutID, numSections;
+
+    querySql("SELECT * FROM " + database + "." + dbConfig.submittal_layout_table + " WHERE subID = ?", subID)
+        .then(layouts => {
+            if (layouts.length != 0) {
+                layoutID = layouts[0].layoutID;
+                numSections = layouts[0].numSections;
+                if (numSections == null)
+                    numSections = 1;
+                else
+                    numSections += 1;
+
+                querySql("UPDATE " + database + "." + dbConfig.submittal_layout_table + " SET numSections = ? WHERE layoutID = ? ", [numSections, layoutID]);
+                querySql("INSERT INTO " + database + "." + dbConfig.submittal_sections_table + " SET layoutID = ?, sectionNum = ?", [layoutID, numSections]);
+            }
+            return null
+        })
+        .then(() => {
+            res.locals = {title: 'Add Section'};
+            res.redirect('../searchSubmittal/?subID='+jobRelease+"_"+subID);
+            return null
+        })
+        .catch((err) => {
+            return Promise.reject(err);
+        });
+};
+
+
+exports.layoutDeleteSection = function(req, res) {
+
+};
+
+
+exports.layoutSectionProperties = function(req, res) {
+    let urlObj = url.parse(req.originalUrl);
+    urlObj.protocol = req.protocol;
+    urlObj.host = req.get('host');
+    let qs = queryString.parse(urlObj.search);
+    let jobRelease = qs.subID.split('_')[0];
+    let subID = qs.subID.split('_')[1];
+    let sectionNum = qs.sectionNum;
+    let layoutID;
+    let comp;
+    if(req.body.pbCheck){
+        if(req.body.pbCheck == 'noBrk'){
+            comp = {
+                A: 'panelboard',
+                B: 'panelboard',
+                C: 'panelboard',
+                D: 'panelboard'
+            }
+        } else {
+            comp = {
+                A: 'panelboard',
+                B: 'panelboard',
+                C: 'panelboard',
+                D: 'brk'
+            }
+        }
+    } else {
+        comp = {
+            A: req.body.compA.split('_')[0],
+            B: req.body.compB.split('_')[0],
+            C: req.body.compC.split('_')[0],
+            D: req.body.compD.split('_')[0]
+        };
+    }
+
+    let data = {
+        secType: req.body.secType,
+        secHeight: req.body.secHeight,
+        secWidth: req.body.secWidth,
+        secDepth: req.body.secDepth
+    };
+
+    let applyToArr = [];
+    applyToArr.push(sectionNum);
+
+    let apply = req.body.applyToCheck;
+    let secIDArr = [];
+
+
+    querySql("SELECT * FROM " + database + "." + dbConfig.submittal_layout_table + " WHERE subID = ?", subID)
+        .then(layouts => {
+            layoutID = layouts[0].layoutID;
+            return null
+        })
+        .then(async function() {
+            if (apply) {
+                if(apply instanceof Array) {
+                    for (let i = 0; i < apply.length; i++) {
+                        let temp = apply[i].split('o')[1];
+                        applyToArr.push(temp);
+                    }
+                } else {
+                    let temp = apply.split('o')[1];
+                    applyToArr.push(temp);
+                }
+            }
+
+            for (let i = 0; i < applyToArr.length; i++) {
+                await querySql("UPDATE " + database + "." + dbConfig.submittal_sections_table + " SET " +
+                    " compType = JSON_OBJECT(\"A\", ?, \"B\", ?, \"C\", ?, \"D\", ?), secType = ?, secHeight = ?, secWidth = ?, secDepth = ? WHERE layoutID = ? AND sectionNum = ?",
+                    [comp.A, comp.B, comp.C, comp.D, data.secType, data.secHeight, data.secWidth, data.secDepth, layoutID, applyToArr[i]]);
+            }
+            return null
+        })
+        .then(async function() {
+            for(let row of applyToArr) {
+                await querySql("SELECT * FROM " + database + "." + dbConfig.submittal_sections_table + " WHERE layoutID = ? " +
+                    "AND sectionNum = ?", [layoutID, row])
+                    .then(async function(rows){
+                        for(let row of rows){
+                            await querySql("UPDATE " + database + "." + dbConfig.submittal_breaker_table + " SET " +
+                                "comp = ?, secID = ? WHERE secID = ?", [null, null, row.secID]);
+                            await querySql("UPDATE " + database + "." + dbConfig.submittal_item_table + " SET " +
+                                "comp = ?, secID = ? WHERE secID = ?", [null, null, row.secID]);
+                            await querySql("UPDATE " + database + "." + dbConfig.submittal_control_sum + " SET " +
+                                "comp = ?, secID = ? WHERE secID = ?", [null, null, row.secID]);
+                        }
+                    })
+                    .catch(err => {
+                        console.log(err);
+                    });
+            }
+            return null
+        })
+        .then(() => {
+            res.locals = {title: 'Add Section'};
+            res.redirect('../searchSubmittal/?subID='+jobRelease+"_"+subID);
+            return null
+        })
+        .catch((err) => {
+            return Promise.reject(err);
+        });
+
+};
 
 
 
 
+/***********************************************
+ BREAKERS IN SUBMITTAL
+ ***********************************************/
+//CREATE BREAKER IN MBOM
+exports.addBrk = function(req, res) {
+    let jobRelease = req.body.jobRelease;
+    let accOpts = req.body.accOpts;
+    let jobNum = jobRelease.slice(0, jobRelease.length - 1);
+    let releaseNum = jobRelease.slice(jobRelease.length - 1, jobRelease.length);
+    let data = [];
+    let subID, layoutID;
+
+
+    //Splitting up the device designation
+    let designations = req.body.devDesignation;
+    let designationArrayInitial = designations.split(',').map(item => item.trim());
+    let designationArrayFinal = [];
+    for (let i = 0; i < designationArrayInitial.length; i++) {
+        if (designationArrayInitial[i].includes("(") == true) {
+            let designationInterval = (designationArrayInitial[i].slice(designationArrayInitial[i].indexOf('(') + 1, designationArrayInitial[i].indexOf(')'))).split('-');
+            let designationInitialText = designationArrayInitial[i].slice(0, designationArrayInitial[i].indexOf('('));
+            let designationFinalText = designationArrayInitial[i].slice(designationArrayInitial[i].indexOf(')') + 1, designationArrayInitial[i].length);
+            for (let j = parseInt(designationInterval[0]); j <= parseInt(designationInterval[1]); j++) {
+                let newDesignation = designationInitialText + j.toString() + designationFinalText;
+                designationArrayFinal.push(newDesignation);
+            }
+        } else {
+            designationArrayFinal.push(designationArrayInitial[i]);
+        }
+    }
+
+
+    querySql("SELECT * FROM "+database+"."+dbConfig.submittal_summary_table+" WHERE (jobNum, releaseNum) = (?,?)",[jobNum, releaseNum])
+        .then(async function(sub) {
+            subID = sub[0].subID;
+            return await querySql("SELECT * FROM "+database+"."+dbConfig.submittal_layout_table+" WHERE subID = ?",subID);
+        })
+        .then(async function(layout) {
+            layoutID = layout[0].layoutID;
+            for(let row of designationArrayFinal) {
+                data.push({
+                    layoutID: layoutID,
+                    devDesignation: row.toUpperCase(),
+                    tie: req.body.tie,
+                    unitOfIssue: 'EA',
+                    catCode: req.body.catCode,
+                    brkPN: req.body.brkPN,
+                    cradlePN: req.body.cradlePN,
+                    devMount: req.body.devMount,
+                    rearAdaptType: req.body.rearAdaptType,
+                    devUL: req.body.devUL,
+                    devLevel: req.body.devLevel,
+                    devOperation: req.body.devOperation,
+                    devCtrlVolt: req.body.devCtrlVolt,
+                    devMaxVolt: req.body.devMaxVolt,
+                    devKAIC: req.body.devKAIC,
+                    devFrameSet: req.body.devFrameSet,
+                    devSensorSet: req.body.devSensorSet,
+                    devTripSet: req.body.devTripSet,
+                    devTripUnit: req.body.devTripUnit,
+                    devTripParam: req.body.devTripParam,
+                    devPoles: req.body.devPoles
+                });
+            }
+            return null
+        })
+        .then(async function() {
+            let temps = [];
+            for (let row of data) {
+                await querySql("INSERT INTO " +  database + "." + dbConfig.submittal_breaker_table + " SET ? ", row)
+                    .then(rows => {
+                        temps.push(rows.insertId);
+                    });
+            }
+            return temps
+        })
+        .then(async function(temps) {
+            const accOptions = await querySql("SELECT * FROM " + database + "." + dbConfig.submittal_brkAcc_options);
+            for (let temp of temps) {
+                let accData = [];
+                for (let i = 0; i < accOptions.length; i++) {
+                    if (accOpts[i] == 1) {
+                        accData.push({
+                            devID: temp,
+                            brkAccDropdownID: accOptions[i].brkAccDropdownID
+                        });
+                    }
+                }
+                for (let j = 0; j < accData.length; j++) {
+                    await querySql("INSERT INTO " +  database + "." + dbConfig.submittal_brkAcc_table + " SET ? ", accData[j])
+                }
+            }
+        })
+        .then(() => {
+            res.locals = {title: 'Submittal'};
+            res.redirect('../searchSubmittal/?subID='+jobNum+releaseNum+"_"+subID);
+            return null;
+        })
+        .catch(err => {
+            return Promise.reject(err);
+        });
+
+};
+
+exports.copyBrk = function(req, res) {
+    let urlObj = url.parse(req.originalUrl);
+    urlObj.protocol = req.protocol;
+    urlObj.host = req.get('host');
+    let qs = queryString.parse(urlObj.search);
+    let jobRelease = qs.subID.split('_')[0];
+    let subID = qs.subID.split('_')[1];
+    let layoutID = qs.layoutID;
+    let copiedDevID = qs.devID;
+    let newDevID;
+    let newBrkData = [];
+    let newAccData = [];
+
+    async function getCopyBrkData() {
+        return await querySql("SELECT * FROM "+database+"."+dbConfig.submittal_breaker_table+" WHERE devID = ?", copiedDevID);
+    }
+
+    async function getCopyAccData() {
+        return await querySql("SELECT * FROM "+database+"."+dbConfig.submittal_brkAcc_table+" WHERE devID = ?", copiedDevID);
+    }
+
+    getCopyBrkData()
+        .then(async function(brkData) {
+            for (let breaker of brkData) {
+                await newBrkData.push({
+                    layoutID: layoutID,
+                    devDesignation: breaker.devDesignation,
+                    tie: breaker.tie,
+                    unitOfIssue: breaker.unitOfIssue,
+                    catCode: breaker.catCode,
+                    brkPN: breaker.brkPN,
+                    cradlePN: breaker.cradlePN,
+                    devMount: breaker.devMount,
+                    rearAdaptType: breaker.rearAdaptType,
+                    devUL: breaker.devUL,
+                    devLevel: breaker.devLevel,
+                    devOperation: breaker.devOperation,
+                    devCtrlVolt: breaker.devCtrlVolt,
+                    devMaxVolt: breaker.devMaxVolt,
+                    devKAIC: breaker.devKAIC,
+                    devFrameSet: breaker.devFrameSet,
+                    devSensorSet: breaker.devSensorSet,
+                    devTripSet: breaker.devTripSet,
+                    devTripUnit: breaker.devTripUnit,
+                    devTripParam: breaker.devTripParam,
+                    devPoles: breaker.devPoles
+                });
+            }
+
+            for (let newBreaker of newBrkData) {
+                const brkInsert = await querySql("INSERT INTO "+database+"."+dbConfig.submittal_breaker_table+" SET ?", newBreaker);
+                newDevID = brkInsert.insertId;
+            }
+            return getCopyAccData();
+        })
+        .then(async function(accData) {
+            for (let acc of accData) {
+                newAccData.push({
+                    brkAccDropdownID: acc.brkAccDropdownID,
+                    devID: newDevID
+                });
+            }
+            for (let newAcc of newAccData) {
+                await querySql("INSERT INTO "+database+"."+dbConfig.submittal_brkAcc_table+" SET ?", newAcc);
+            }
+            return null;
+        })
+        .then(() => {
+            res.locals = {title: 'Submittal'};
+            res.redirect('../searchSubmittal/?subID='+jobRelease+"_"+subID);
+            return null;
+        })
+        .catch(err => {
+            return Promise.reject(err);
+        });
+
+};
+
+exports.editBrk = function(req, res) {
+    let urlObj = url.parse(req.originalUrl);
+    urlObj.protocol = req.protocol;
+    urlObj.host = req.get('host');
+    let qs = queryString.parse(urlObj.search);
+    let jobRelease = qs.subID.split('_')[0];
+    let subID = qs.subID.split('_')[1];
+    let layoutID = qs.layoutID;
+    let devID = qs.devID;
 
 
 
+};
+
+exports.deleteBrk = function(req, res) {
+    let urlObj = url.parse(req.originalUrl);
+    urlObj.protocol = req.protocol;
+    urlObj.host = req.get('host');
+    let qs = queryString.parse(urlObj.search);
+    let jobRelease = qs.subID.split('_')[0];
+    let subID = qs.subID.split('_')[1];
+    let devID = qs.devID;
+
+    querySql("DELETE FROM "+database+"."+dbConfig.submittal_breaker_table+" WHERE devID = ?", devID)
+        .then(() => {
+            res.locals = {title: 'Submittal'};
+            res.redirect('../searchSubmittal/?subID='+jobRelease+"_"+subID);
+            return null;
+        })
+        .catch(err => {
+            return Promise.reject(err);
+        });
+};
+
+
+/***********************************************
+ LAYOUTS IN SUBMITTAL
+ ***********************************************/
 
 exports.addLayout = function(req, res) {
     let urlObj = url.parse(req.originalUrl);
@@ -826,6 +1339,61 @@ exports.addLayout = function(req, res) {
     }
 
     createLayout(newLayoutData)
+        .then(() => {
+            res.redirect('../searchSubmittal/?subID='+jobNumReleaseNum+"_"+subID);
+        })
+        .catch(err => {
+            console.log(err);
+        });
+};
+
+exports.editLayout = function(req, res) {
+    let urlObj = url.parse(req.originalUrl);
+    urlObj.protocol = req.protocol;
+    urlObj.host = req.get('host');
+    let qs = queryString.parse(urlObj.search);
+    let jobNumReleaseNum = qs.subID.split('_')[0];
+    let subID = qs.subID.split('_')[1];
+
+    let checkArray = [];
+    let reqChecks = [req.body.insulatedBus, req.body.boots, req.body.seismic, req.body.mimic, req.body.IR, req.body.wireway, req.body.trolley];
+    for (let i = 0; i < reqChecks.length; i++) {
+        if(reqChecks[i]) {
+            checkArray.push("Y");
+        } else {
+            checkArray.push("N");
+        }
+    }
+    let newLayoutData = {
+        layoutName: req.body.layoutName,
+        ulListing: req.body.ulListing,
+        systemType: req.body.systemType,
+        systemAmp: req.body.systemAmp,
+        mainBusAmp: req.body.mainBusAmp,
+        enclosure: req.body.enclosure,
+        accessibility: req.body.accessibility,
+        cableAccess: req.body.cableAccess,
+        paint: req.body.paint,
+        interruptRating: req.body.interruptRating,
+        busBracing: req.body.busBracing,
+        busType: req.body.busType,
+        insulatedBus: checkArray[0],
+        boots: checkArray[1],
+        iccbPlatform: req.body.iccbPlatform,
+        mccbPlatform: req.body.mccbPlatform,
+        keyInterlocks: req.body.keyInterlocks,
+        seismic: checkArray[2],
+        mimic: checkArray[3],
+        ir: checkArray[4],
+        wireway: checkArray[5],
+        trolley: checkArray[6]
+    };
+
+    async function editLayout(layoutData) {
+        return await querySql("UPDATE " + database + "." + dbConfig.submittal_layout_table + " SET ? WHERE subID = ?", [layoutData, subID]);
+    }
+
+    editLayout(newLayoutData)
         .then(() => {
             res.redirect('../searchSubmittal/?subID='+jobNumReleaseNum+"_"+subID);
         })

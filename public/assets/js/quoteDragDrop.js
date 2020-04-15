@@ -630,14 +630,14 @@
 
     document.getElementById('quoteSaveSectionBtn').addEventListener('click', function() {
         let secNum = document.getElementById('numSectionsSave').value;
-        let layoutNum = document.getElementById('layoutNumSave').value;
+        //let layoutNum = document.getElementById('layoutNumSave').value;
         let secArr = [];
         let usedIDs = [];
 
         function getCompA(secNum) {
-            let brkA = document.getElementById(secNum + '_' + layoutNum + '-A-brk');
-            let controlA = document.getElementById(secNum + '_' + layoutNum + '-A-control');
-            let panelboardA = document.getElementById(secNum + '_' + layoutNum + '-A-panelboard');
+            let brkA = document.getElementById(secNum + '_1' + '-A-brk');
+            let controlA = document.getElementById(secNum + '_1' + '-A-control');
+            let panelboardA = document.getElementById(secNum + '_1' + '-A-panelboard');
 
             if(brkA)
                 return brkA.children;
@@ -650,9 +650,9 @@
         }
 
         function getCompB(secNum){
-            let brkB = document.getElementById(secNum + '_' + layoutNum + '-B-brk');
-            let controlB = document.getElementById(secNum + '_' + layoutNum + '-B-control');
-            let panelboardB = document.getElementById(secNum + '_' + layoutNum + '-B-panelboard');
+            let brkB = document.getElementById(secNum + '_1' + '-B-brk');
+            let controlB = document.getElementById(secNum + '_1' + '-B-control');
+            let panelboardB = document.getElementById(secNum + '_1' + '-B-panelboard');
 
             if(brkB)
                 return brkB.children;
@@ -665,9 +665,9 @@
         }
 
         function getCompC(secNum){
-            let brkC = document.getElementById(secNum + '_' + layoutNum + '-C-brk');
-            let controlC = document.getElementById(secNum + '_' + layoutNum + '-C-control');
-            let panelboardC = document.getElementById(secNum + '_' + layoutNum + '-C-panelboard');
+            let brkC = document.getElementById(secNum + '_1' + '-C-brk');
+            let controlC = document.getElementById(secNum + '_1' + '-C-control');
+            let panelboardC = document.getElementById(secNum + '_1' + '-C-panelboard');
 
             if(brkC)
                 return brkC.children;
@@ -682,9 +682,9 @@
         }
 
         function getCompD(secNum){
-            let brkD = document.getElementById(secNum + '_' + layoutNum + '-D-brk');
-            let controlD = document.getElementById(secNum + '_' + layoutNum + '-D-control');
-            let panelboardD = document.getElementById(secNum + '_' + layoutNum + '-D-panelboard');
+            let brkD = document.getElementById(secNum + '_1' + '-D-brk');
+            let controlD = document.getElementById(secNum + '_1' + '-D-control');
+            let panelboardD = document.getElementById(secNum + '_1' + '-D-panelboard');
 
             if(brkD)
                 return brkD.children;
@@ -699,11 +699,11 @@
         }
         function getQueues(){
             let queues = [];
-            let icQueue = document.getElementById('icBrkQueue_' + layoutNum);
-            let mcQueue = document.getElementById('mcBrkQueue_' + layoutNum);
-            let itemQueue = document.getElementById('itemQueue_' + layoutNum);
-            let controlQueue = document.getElementById('controlQueue_' + layoutNum);
-            let q = document.getElementsByName('queue' + '_' + layoutNum);
+            let icQueue = document.getElementById('icBrkQueue_1');
+            let mcQueue = document.getElementById('mcBrkQueue_1');
+            let itemQueue = document.getElementById('itemQueue_1');
+            let controlQueue = document.getElementById('controlQueue_1');
+            let q = document.getElementsByName('queue' + '_1');
 
             /*for(let el of icQueue.children)
                 queues.push(el);

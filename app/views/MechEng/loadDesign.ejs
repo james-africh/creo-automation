@@ -92,6 +92,11 @@
                             <i class="mdi mdi-content-duplicate"></i> <span> PDF / DXF / BIN BOM </span>
                         </a>
                     </li>
+                    <li>
+                        <a href="../submittal" class="waves-effect">
+                            <i class="mdi mdi-file-pdf"></i> <span> Submittal </span>
+                        </a>
+                    </li>
                 </ul>
 
             </div>
@@ -247,6 +252,44 @@
                                                                                     <td><input type="text" hidden="hidden" name="partDesc_<%= layoutBom.lineup.slice(0,7) + layoutBom.lineup.slice(12,15) + '-SS' %>" value="<%=row.partDesc%>"><%=row.partDesc%></td>
                                                                                     <td><input type="text" hidden="hidden" name="part_<%= layoutBom.lineup.slice(0,7) + layoutBom.lineup.slice(12,15) + '-SS' %>" value="<%=row.part%>"><%=row.part%></td>
                                                                                 </tr>
+                                                                                <% } %>
+                                                                                </tbody>
+                                                                            </table>
+                                                                        </div>
+                                                                    </td>
+                                                                </tr>
+                                                                <% } %>
+                                                            <% } %>
+
+                                                            <% if (Array.isArray(layoutBom.AL) == true) { %>
+                                                                <% if (layoutBom.AL.length != 0) { %>
+                                                                <tr data-toggle="collapse" data-target="#AL_<%=currentLayoutBom%>" class="accordion-toggle">
+                                                                    <td>
+                                                                        <span class="dripicons-checkmark icon-success"></span>
+                                                                        <%= layoutBom.lineup.slice(0,7) + layoutBom.lineup.slice(12,15) + '-AL' %>
+                                                                        <input type="text" hidden="hidden" name="title_<%= layoutBom.lineup.slice(0,7) + layoutBom.lineup.slice(12,15) + '-AL' %>" value="<%= layoutBom.lineup.slice(0,7) + layoutBom.lineup.slice(12,15) + '-AL' %>">
+                                                                        <i class="fas fa-angle-down rotate-icon"></i>
+                                                                    </td>
+                                                                </tr>
+                                                                <tr>
+                                                                    <td id="bomTD" colspan="6" class="hiddenRow">
+                                                                        <div class="accordion-body collapse in no-transition" id="AL_<%=currentLayoutBom%>">
+                                                                            <h6><%= layoutBom.lineup.slice(0,7) + layoutBom.lineup.slice(12,15) + '-AL' %></h6>
+                                                                            <table id="bomTable" align="center">
+                                                                                <thead>
+                                                                                <tr>
+                                                                                    <th style="width: 10%">Qty</th>
+                                                                                    <th style="width: 60%">Description</th>
+                                                                                    <th style="width: 30%">P/N</th>
+                                                                                </tr>
+                                                                                </thead>
+                                                                                <tbody>
+                                                                                <% for(let row of layoutBom.AL){ %>
+                                                                                    <tr>
+                                                                                        <td><input type="text" hidden="hidden" name="qty_<%= layoutBom.lineup.slice(0,7) + layoutBom.lineup.slice(12,15) + '-AL' %>" value="<%=row.qty%>"><%=row.qty%></td>
+                                                                                        <td><input type="text" hidden="hidden" name="partDesc_<%= layoutBom.lineup.slice(0,7) + layoutBom.lineup.slice(12,15) + '-AL' %>" value="<%=row.partDesc%>"><%=row.partDesc%></td>
+                                                                                        <td><input type="text" hidden="hidden" name="part_<%= layoutBom.lineup.slice(0,7) + layoutBom.lineup.slice(12,15) + '-AL' %>" value="<%=row.part%>"><%=row.part%></td>
+                                                                                    </tr>
                                                                                 <% } %>
                                                                                 </tbody>
                                                                             </table>
