@@ -23,6 +23,7 @@ app.use(session({ secret: 'saiapsportal',resave: true, saveUninitialized:true}))
 
 
 /*
+
 //Database dependencies
 let mysql = require('mysql');
 let myConnection = require('express-myconnection');
@@ -38,11 +39,14 @@ let dbOptions = {
     password: password,
     port: port,
     database: database
-};*/
+};
+*/
 
+/*
 
 //Connection to DB
-//app.use(myConnection(mysql, dbOptions, 'pool'));
+app.use(myConnection(mysql, dbOptions, 'pool'));
+*/
 
 
 

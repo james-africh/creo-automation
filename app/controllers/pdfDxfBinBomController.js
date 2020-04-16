@@ -1694,7 +1694,7 @@ exports.generateAll = function(req, res) {
         for (let i = 0; i < layoutBoms.length; i++) {
             layouts.push({
                 layout: layoutBoms[i].slice(0,7) + layoutBoms[i].slice(12,15),
-                sections: layoutSections
+                sections: layoutSections[i]
             });
         }
     } else {
@@ -2145,55 +2145,55 @@ exports.generateAll = function(req, res) {
     for (let layout of layouts) {
         let secBinTrackingData = [];
         let pur, str, pnl, ctl, int, ext, scl;
-        for (let section of layout.sections.split(',')) {
-            if (req.body['binTracker_PUR_' + layout.layout.slice(0,7) + section] != undefined) {
-                pur = req.body['binTracker_PUR_' + layout.layout.slice(0,7) + section];
-            } else {
-                pur = 'N/A';
-            }
-            if (req.body['binTracker_STR_' + layout.layout.slice(0,7) + section] != undefined) {
-                str = req.body['binTracker_STR_' + layout.layout.slice(0,7) + section];
-            } else {
-                str = 'N/A';
-            }
-            if (req.body['binTracker_PNL_' + layout.layout.slice(0,7) + section] != undefined) {
-                pnl = req.body['binTracker_PNL_' + layout.layout.slice(0,7) + section];
-            } else {
-                pnl = 'N/A';
-            }
-            if (req.body['binTracker_CTL_' + layout.layout.slice(0,7) + section] != undefined) {
-                ctl = req.body['binTracker_CTL_' + layout.layout.slice(0,7) + section];
-            } else {
-                ctl = 'N/A';
-            }
-            if (req.body['binTracker_INT_' + layout.layout.slice(0,7) + section] != undefined) {
-                int = req.body['binTracker_INT_' + layout.layout.slice(0,7) + section];
-            } else {
-                int = 'N/A';
-            }
-            if (req.body['binTracker_EXT_' + layout.layout.slice(0,7) + section] != undefined) {
-                ext = req.body['binTracker_EXT_' + layout.layout.slice(0,7) + section];
-            } else {
-                ext = 'N/A';
-            }
-            if (req.body['binTracker_SCL_' + layout.layout.slice(0,7) + section] != undefined) {
-                scl = req.body['binTracker_SCL_' + layout.layout.slice(0,7) + section];
-            } else {
-                scl = 'N/A';
-            }
-            secBinTrackingData.push({
-                section: section,
-                data: {
-                    PUR: pur,
-                    STR: str,
-                    PNL: pnl,
-                    CTL: ctl,
-                    INT: int,
-                    EXT: ext,
-                    SCL: scl
+            for (let section of layout.sections.split(',')) {
+                if (req.body['binTracker_PUR_' + layout.layout.slice(0, 7) + section] != undefined) {
+                    pur = req.body['binTracker_PUR_' + layout.layout.slice(0, 7) + section];
+                } else {
+                    pur = 'N/A';
                 }
-            });
-        }
+                if (req.body['binTracker_STR_' + layout.layout.slice(0, 7) + section] != undefined) {
+                    str = req.body['binTracker_STR_' + layout.layout.slice(0, 7) + section];
+                } else {
+                    str = 'N/A';
+                }
+                if (req.body['binTracker_PNL_' + layout.layout.slice(0, 7) + section] != undefined) {
+                    pnl = req.body['binTracker_PNL_' + layout.layout.slice(0, 7) + section];
+                } else {
+                    pnl = 'N/A';
+                }
+                if (req.body['binTracker_CTL_' + layout.layout.slice(0, 7) + section] != undefined) {
+                    ctl = req.body['binTracker_CTL_' + layout.layout.slice(0, 7) + section];
+                } else {
+                    ctl = 'N/A';
+                }
+                if (req.body['binTracker_INT_' + layout.layout.slice(0, 7) + section] != undefined) {
+                    int = req.body['binTracker_INT_' + layout.layout.slice(0, 7) + section];
+                } else {
+                    int = 'N/A';
+                }
+                if (req.body['binTracker_EXT_' + layout.layout.slice(0, 7) + section] != undefined) {
+                    ext = req.body['binTracker_EXT_' + layout.layout.slice(0, 7) + section];
+                } else {
+                    ext = 'N/A';
+                }
+                if (req.body['binTracker_SCL_' + layout.layout.slice(0, 7) + section] != undefined) {
+                    scl = req.body['binTracker_SCL_' + layout.layout.slice(0, 7) + section];
+                } else {
+                    scl = 'N/A';
+                }
+                secBinTrackingData.push({
+                    section: section,
+                    data: {
+                        PUR: pur,
+                        STR: str,
+                        PNL: pnl,
+                        CTL: ctl,
+                        INT: int,
+                        EXT: ext,
+                        SCL: scl
+                    }
+                });
+            }
         BIN_TRACKER.push({
             layout: layout.layout,
             data: secBinTrackingData
@@ -2845,8 +2845,6 @@ exports.generateAll = function(req, res) {
 
     if (BIN_TRACKER.length != 0) {
         for (let binTracker of BIN_TRACKER) {
-            console.log(binTracker);
-            console.log(binTracker.data);
             let workbook = new Excel.Workbook();
             let sheet = workbook.addWorksheet('sheet1');
             sheet.columns = [
@@ -2974,7 +2972,7 @@ exports.generateBinBoms = function(req, res) {
         for (let i = 0; i < layoutBoms.length; i++) {
             layouts.push({
                 layout: layoutBoms[i].slice(0,7) + layoutBoms[i].slice(12,15),
-                sections: layoutSections
+                sections: layoutSections[i]
             });
         }
     } else {

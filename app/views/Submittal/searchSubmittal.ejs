@@ -57,6 +57,11 @@
         .dropdown-toggle::after {
             content: none;
         }
+
+        .modal {
+            overflow-y:auto !important;
+        }
+
     </style>
 
     <script src="/public/assets/js/jquery.min.js"></script>
@@ -1206,7 +1211,7 @@
                                                     </div>
                                                 </div>
                                             </div>
-                                            <!-- END EDIT CURRENT SUBMITTAL -->
+                                            <!-- END EDIT CURRENT SUBMITTAL MODAL -->
 
 
 
@@ -2831,7 +2836,7 @@
                                                                     <td style="display: none;"><%= deviceData[i].devOperation %></td>
                                                                     <td>
                                                                         <input id="copyButton" type="submit" value="Copy" class="btn btn-md btn-outline-secondary waves-effect waves-light" onclick="this.form.action='../submittalCopyDevice/?subID=<%=subData[0].jobNum%><%=subData[0].releaseNum%>_<%= layoutData[0].subID %>&layoutID=<%=deviceData[i].layoutID%>&devID=<%= deviceData[i].devID%>'"/>
-                                                                        <input id="editButton" type="submit" value="Edit" class="btn btn-md btn-outline-warning waves-effect waves-light" onclick="this.form.action='../submittalEditDevice/?subID=<%=subData[0].jobNum%><%=subData[0].releaseNum%>_<%= layoutData[0].subID %>&layoutID=<%=deviceData[i].layoutID%>&devID=<%= deviceData[i].devID%>'"/>
+                                                                        <input id="editBreakerButton" type="button" value="Edit" class="btn btn-md btn-outline-warning waves-effect waves-light" data-toggle="modal" data-target="#editBreakerModal"/>
                                                                         <input id="deleteButton" type="submit" value="Delete" class="btn btn-md btn-outline-danger waves-effect waves-light" onclick="this.form.action='../submittalDeleteDevice/?subID=<%=subData[0].jobNum%><%=subData[0].releaseNum%>_<%= layoutData[0].subID %>&layoutID=<%=deviceData[i].layoutID%>&devID=<%= deviceData[i].devID%>'"/>
                                                                     </td>
                                                                 </tr>
@@ -2866,12 +2871,352 @@
                                                                     </td>
                                                                 </tr>
                                                                 <% } %>
-
-
-
-
-
                                                             </form>
+
+
+                                                            <!-- EDIT CURRENT LAYOUT MODAL -->
+                                                            <div class="row justify-content-center" style="padding-bottom:1%;">
+                                                                <div class="col-12">
+                                                                    <div class="modal fade" id="editBreakerModal" tabindex="-1" role="dialog" aria-labelledby="editBreakerModalTitle" aria-hidden="true">
+                                                                        <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+                                                                            <div class="modal-content">
+                                                                                <div class="modal-header">
+                                                                                    <h5 class="modal-title" id="editBreakerModalTitle">Edit Breaker</h5>
+                                                                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                                                        <span aria-hidden="true">&times;</span>
+                                                                                    </button>
+                                                                                </div>
+                                                                                <div class="modal-body">
+                                                                                    <form id="editBreakerForm" class="editBreakerForm" action="../editBreaker/?subID=<%= subData[0].jobNum%><%= subData[0].releaseNum%>_<%= subData[0].subID%>&layoutID=<%=deviceData[i].layoutID%>&devID=<%= deviceData[i].devID%>" method="POST">
+                                                                                        <div class="form-group">
+                                                                                            <p class="mb-0">
+                                                                                                Please fill out the following and click "Save" afterwards
+                                                                                            </p>
+                                                                                            <p class="text-muted m-b-5"></p>
+                                                                                            <div class="row">
+                                                                                                <div class="col-sm-12">
+                                                                                                    <h4 class="mt-0 header-title">Circuit Breakers</h4>
+                                                                                                    <div class="card-body">
+                                                                                                        <div class="row">
+                                                                                                            <div class="col-sm-2">
+                                                                                                                <div class="form-group">
+                                                                                                                    <label for="example-text-input" class="col-form-label">Release</label>
+                                                                                                                    <% if (subData) { %>
+                                                                                                                    <input type="text" name="jobRelease" class="form-control" value="<%=subData[0].jobNum%><%=subData[0].releaseNum%>" id="example-text-input" readonly="readonly">
+                                                                                                                    <% } %>
+                                                                                                                </div>
+                                                                                                            </div>
+                                                                                                            <div class="col-sm-2">
+                                                                                                                <div class="form-group">
+                                                                                                                    <label for="example-text-input" class="col-form-label">Rev #</label>
+                                                                                                                    <% if (revData) { %>
+                                                                                                                    <input type="text" name="revNum" class="form-control" value="<%=revData[0].revNum%>"  id="example-text-input" readonly="readonly">
+                                                                                                                    <% } %>
+                                                                                                                </div>
+                                                                                                            </div>
+                                                                                                            <div class="col-sm-2"  style="margin-top: 0.5rem;">
+                                                                                                                <div class="form-group">
+                                                                                                                    <label for="" class="control-label">Cat. Code</label>
+                                                                                                                    <select class="form-control" id="" name="catCode">
+                                                                                                                        <option>Select</option>
+                                                                                                                        <option value="36-CB MC">36-CB MC</option>
+                                                                                                                        <option value="37-CB IC">37-CB IC</option>
+                                                                                                                        <option value="38-DISC SW">38-DISC SW</option>
+                                                                                                                    </select>
+                                                                                                                </div>
+                                                                                                            </div>
+                                                                                                            <div class="col-sm-5">
+                                                                                                                <div class="form-group">
+                                                                                                                    <label for="example-text-input" class="col-form-label">Device Designation<i style="color: red;">&nbsp;*</i></label>
+                                                                                                                    <input type="text" name="devDesignation" class="form-control" value="" data-toggle="tooltip" data-placement="top" title="To declare multiple breakers (i.e. CB-1A, CB-2A, ..., CB-6A), use the following convention: CB-(1-6)A" placeholder="Type Designation Here" autocomplete="off" required/>
+                                                                                                                </div>
+                                                                                                            </div>
+                                                                                                            <div class="col-sm-1">
+                                                                                                                <div class="form-group">
+                                                                                                                    <input type="checkbox" name="tieBrkCheck" id="tieBrkCheck" class="form-check-input" style="margin-top: 2.7rem; margin-left: .2rem;"/>
+                                                                                                                    <label class="form-check-label" for="tieBrkCheck" style="margin-top: 2.5rem; margin-left: 1.4rem;">TIE<i style="color: red;">&nbsp;*</i></label>
+                                                                                                                </div>
+                                                                                                            </div>
+                                                                                                        </div>
+                                                                                                        <div class="row">
+                                                                                                            <div class="col-sm-6">
+                                                                                                                <div class="form-group">
+                                                                                                                    <label for="" class="col-form-label">Breaker P/N</label>
+                                                                                                                    <input type="text" id="" name="brkPN" class="form-control" value="" placeholder="Type Breaker P/N Here" autocomplete="off"/>
+                                                                                                                </div>
+                                                                                                            </div>
+                                                                                                            <div class="col-sm-6">
+                                                                                                                <div class="form-group">
+                                                                                                                    <label for="" class="col-form-label">Cradle P/N</label>
+                                                                                                                    <input type="text" id="" name="cradlePN" class="form-control" value="" placeholder="Type Cradle P/N Here" autocomplete="off"/>
+                                                                                                                </div>
+                                                                                                            </div>
+                                                                                                        </div>
+                                                                                                        <div class="row">
+                                                                                                            <div class="col-sm-3" style="margin-top: 0.3rem;">
+                                                                                                                <div class="form-group">
+                                                                                                                    <label for="" class="control-label">UL Rating</label>
+                                                                                                                    <select class="form-control" id="" name="devUL">
+                                                                                                                        <option>Select</option>
+                                                                                                                        <option value="UL1066">UL1066</option>
+                                                                                                                        <option value="UL489">UL489</option>
+                                                                                                                    </select>
+                                                                                                                </div>
+                                                                                                            </div>
+                                                                                                            <div class="col-sm-3" style="margin-top: 0.3rem;">
+                                                                                                                <div class="form-group">
+                                                                                                                    <label for="" class="control-label">Device Mounting</label>
+                                                                                                                    <select class="form-control" id="" name="devMount">
+                                                                                                                        <option>Select</option>
+                                                                                                                        <option value="DRAW-OUT">Draw-Out</option>
+                                                                                                                        <option value="FIXED">Fixed</option>
+                                                                                                                        <option value="PLUG-IN">Plug-in</option>
+                                                                                                                    </select>
+                                                                                                                </div>
+                                                                                                            </div>
+                                                                                                            <div class="col-sm-3"  style="margin-top: 0.3rem;">
+                                                                                                                <div class="form-group">
+                                                                                                                    <label for="" class="control-label">Rear Adapter Type</label>
+                                                                                                                    <select class="form-control" id="" name="rearAdaptType">
+                                                                                                                        <option>Select</option>
+                                                                                                                        <option value="Horizontal">Horizontal</option>
+                                                                                                                        <option value="Vertical">Vertical</option>
+                                                                                                                    </select>
+                                                                                                                </div>
+                                                                                                            </div>
+                                                                                                            <div class="col-sm-3" style="margin-top: 0.3rem;">
+                                                                                                                <div class="form-group">
+                                                                                                                    <label for="" class="control-label">Operation</label>
+                                                                                                                    <select class="form-control" id="" name="devOperation">
+                                                                                                                        <option>Select</option>
+                                                                                                                        <option value="ELECTRICAL">Electrical</option>
+                                                                                                                        <option value="MANUAL">Manual</option>
+                                                                                                                    </select>
+                                                                                                                </div>
+                                                                                                            </div>
+                                                                                                        </div>
+                                                                                                        <div class="row">
+                                                                                                            <div class="col-sm-3">
+                                                                                                                <div class="form-group">
+                                                                                                                    <label for="" class="control-label">Poles</label>
+                                                                                                                    <select class="form-control" id="" name="devPoles">
+                                                                                                                        <option>Select</option>
+                                                                                                                        <option value="2">2</option>
+                                                                                                                        <option value="3">3</option>
+                                                                                                                        <option value="4">4</option>
+                                                                                                                    </select>
+                                                                                                                </div>
+                                                                                                            </div>
+                                                                                                            <div class="col-sm-3">
+                                                                                                                <div class="form-group">
+                                                                                                                    <label for="" class="control-label">Max. System Voltage</label>
+                                                                                                                    <select class="form-control" id="" name="devMaxVolt">
+                                                                                                                        <option>Select</option>
+                                                                                                                        <option value="240VAC">240VAC</option>
+                                                                                                                        <option value="480VAC">480VAC</option>
+                                                                                                                        <option value="600VAC">600VAC</option>
+                                                                                                                        <option value="500VDC">500VDC</option>
+                                                                                                                    </select>
+                                                                                                                </div>
+                                                                                                            </div>
+                                                                                                            <div class="col-sm-3">
+                                                                                                                <div class="form-group">
+                                                                                                                    <label for="" class="control-label">kAIC</label>
+                                                                                                                    <select class="form-control" id="" name="devKAIC">
+                                                                                                                        <option>Select</option>
+                                                                                                                        <option value="55kAIC">55kAIC</option>
+                                                                                                                        <option value="65kAIC">65kAIC</option>
+                                                                                                                        <option value="85kAIC">85kAIC</option>
+                                                                                                                        <option value="100kAIC">100kAIC</option>
+                                                                                                                        <option value="150kAIC">150kAIC</option>
+                                                                                                                        <option value="200kAIC">200kAIC</option>
+                                                                                                                    </select>
+                                                                                                                </div>
+                                                                                                            </div>
+                                                                                                            <div class="col-sm-3">
+                                                                                                                <div class="form-group">
+                                                                                                                    <label for="" class="control-label">Control Voltage</label>
+                                                                                                                    <select class="form-control" id="" name="devCtrlVolt">
+                                                                                                                        <option>Select</option>
+                                                                                                                        <option value="120VAC">120VAC</option>
+                                                                                                                        <option value="24VDC">24VDC</option>
+                                                                                                                        <option value="Mixed">Mixed</option>
+                                                                                                                    </select>
+                                                                                                                </div>
+                                                                                                            </div>
+                                                                                                        </div>
+                                                                                                        <div class="row">
+                                                                                                            <div class="col-sm-3">
+                                                                                                                <div class="form-group">
+                                                                                                                    <label for="" class="control-label">Frame Amperage</label>
+                                                                                                                    <select class="form-control" id="" name="devFrameSet">
+                                                                                                                        <option>Select</option>
+                                                                                                                        <option value="15A">15A</option>
+                                                                                                                        <option value="30A">30A</option>
+                                                                                                                        <option value="60A">60A</option>
+                                                                                                                        <option value="100A">100A</option>
+                                                                                                                        <option value="150A">150A</option>
+                                                                                                                        <option value="225A">225A</option>
+                                                                                                                        <option value="250A">250A</option>
+                                                                                                                        <option value="400A">400A</option>
+                                                                                                                        <option value="600A">600A</option>
+                                                                                                                        <option value="800A">800A</option>
+                                                                                                                        <option value="1200A">1200A</option>
+                                                                                                                        <option value="1600A">1600A</option>
+                                                                                                                        <option value="2000A">2000A</option>
+                                                                                                                        <option value="2500A">2500A</option>
+                                                                                                                        <option value="3000A">3000A</option>
+                                                                                                                        <option value="3200A">3200A</option>
+                                                                                                                        <option value="4000A">4000A</option>
+                                                                                                                        <option value="5000A">5000A</option>
+                                                                                                                    </select>
+                                                                                                                </div>
+                                                                                                            </div>
+                                                                                                            <div class="col-sm-3">
+                                                                                                                <div class="form-group">
+                                                                                                                    <label for="" class="control-label">Sensor Amperage</label>
+                                                                                                                    <select class="form-control" id="" name="devSensorSet">
+                                                                                                                        <option>Select</option>
+                                                                                                                        <option value="10A">10A</option>
+                                                                                                                        <option value="15A">15A</option>
+                                                                                                                        <option value="20A">20A</option>
+                                                                                                                        <option value="30A">30A</option>
+                                                                                                                        <option value="40A">40A</option>
+                                                                                                                        <option value="50A">50A</option>
+                                                                                                                        <option value="60A">60A</option>
+                                                                                                                        <option value="70A">70A</option>
+                                                                                                                        <option value="80A">80A</option>
+                                                                                                                        <option value="90A">90A</option>
+                                                                                                                        <option value="100A">100A</option>
+                                                                                                                        <option value="110A">100A</option>
+                                                                                                                        <option value="120A">100A</option>
+                                                                                                                        <option value="130A">100A</option>
+                                                                                                                        <option value="140A">100A</option>
+                                                                                                                        <option value="150A">150A</option>
+                                                                                                                        <option value="160A">160A</option>
+                                                                                                                        <option value="170A">170A</option>
+                                                                                                                        <option value="180A">180A</option>
+                                                                                                                        <option value="190A">190A</option>
+                                                                                                                        <option value="200A">200A</option>
+                                                                                                                        <option value="225A">225A</option>
+                                                                                                                        <option value="250A">250A</option>
+                                                                                                                        <option value="300A">300A</option>
+                                                                                                                        <option value="400A">400A</option>
+                                                                                                                        <option value="600A">600A</option>
+                                                                                                                        <option value="800A">800A</option>
+                                                                                                                        <option value="1000A">1000A</option>
+                                                                                                                        <option value="1200A">1200A</option>
+                                                                                                                        <option value="1250A">1250A</option>
+                                                                                                                        <option value="1600A">1600A</option>
+                                                                                                                        <option value="2000A">2000A</option>
+                                                                                                                        <option value="2500A">2500A</option>
+                                                                                                                        <option value="3000A">3000A</option>
+                                                                                                                        <option value="3200A">3200A</option>
+                                                                                                                        <option value="4000A">4000A</option>
+                                                                                                                        <option value="5000A">5000A</option>
+                                                                                                                    </select>
+                                                                                                                </div>
+                                                                                                            </div>
+                                                                                                            <div class="col-sm-3">
+                                                                                                                <div class="form-group">
+                                                                                                                    <label for="example-number-input" class="control-label">Trip Amperage</label>
+                                                                                                                    <input class="form-control" name="devTripSet" type="number" value="0" id="example-number-input">
+                                                                                                                </div>
+                                                                                                            </div>
+                                                                                                            <div class="col-sm-3">
+                                                                                                                <div class="form-group">
+                                                                                                                    <label for="" class="control-label">Breaker Level</label>
+                                                                                                                    <select class="form-control" id="" name="devLevel">
+                                                                                                                        <option>Select</option>
+                                                                                                                        <option value="Level 1">Level 1</option>
+                                                                                                                        <option value="Level 2">Level 2</option>
+                                                                                                                        <option value="Level 3">Level 3</option>
+                                                                                                                    </select>
+                                                                                                                </div>
+                                                                                                            </div>
+                                                                                                        </div>
+                                                                                                        <div class="row">
+                                                                                                            <div class="col-sm-3">
+                                                                                                                <div class="form-group">
+                                                                                                                    <label for="" class="control-label">Trip Param</label>
+                                                                                                                    <select class="form-control" id="" name="devTripParam">
+                                                                                                                        <option>Select</option>
+                                                                                                                        <option value="LI">LI</option>
+                                                                                                                        <option value="LSI">LSI</option>
+                                                                                                                        <option value="LSIG">LSIG</option>
+                                                                                                                    </select>
+                                                                                                                </div>
+                                                                                                            </div>
+                                                                                                            <div class="col-sm-3">
+                                                                                                                <div class="form-group">
+                                                                                                                    <label for="" class="control-label">Trip Unit</label>
+                                                                                                                    <select class="form-control" id="" name="devTripUnit">
+                                                                                                                        <option>Select</option>
+                                                                                                                        <option value="Micrologic 3.0">Micrologic 3.0</option>
+                                                                                                                        <option value="Micrologic 5.0">Micrologic 5.0</option>
+                                                                                                                        <option value="Micrologic 5.0A">Micrologic 5.0A</option>
+                                                                                                                        <option value="Micrologic 6.0A">Micrologic 6.0A</option>
+                                                                                                                        <option value="Micrologic 6.0P">Micrologic 6.0P</option>
+                                                                                                                        <option value="Micrologic 6.0H">Micrologic 6.0H</option>
+                                                                                                                    </select>
+                                                                                                                </div>
+                                                                                                            </div>
+                                                                                                        </div>
+                                                                                                    </div>
+                                                                                                </div>
+                                                                                            </div>
+                                                                                            <div class="row justify-content-center">
+                                                                                                <div class="col-sm-9">
+                                                                                                    <label class="control-label">Accessories (Select all that apply):</label>
+                                                                                                    <div class="container" id="accContainer" style="height: 28.4rem; border-style: solid; border-color: #cccccc; border-width: 0.09rem; padding: 1rem;  overflow-y: scroll;">
+                                                                                                        <ul id="brkAccTable" style="display: block">
+                                                                                                            <% for (let brkAcc of brkAccDropdownData) { %>
+                                                                                                                <% if (brkAcc.value.length != 0 && brkAcc.value[0] != null) { %>
+                                                                                                                <li style="padding-bottom: 0.5rem;">
+                                                                                                                    <input type="checkbox" class="form-check-input" id="<%=brkAcc.type%>" value="<%=brkAcc.name%>" style="position:relative; top: 2px;" onclick="accBrk(this)">
+                                                                                                                    <label class="form-check-label" for="<%=brkAcc.type%>"><%=brkAcc.name%></label>
+                                                                                                                    <ul id="<%=brkAcc.type%>Opt" style="display: none;">
+                                                                                                                        <% for (let brkAccOpt of brkAcc.value) { %>
+                                                                                                                        <li style="margin-left: 1.2rem; padding-bottom: 0.5rem; width: 15rem;">
+                                                                                                                            <input type="hidden" value="0" name="accOpts"><input type="checkbox" class="form-check-input" id="<%=brkAcc.type%>_Opt_<%brkAccOpt%>" style="position:relative; top: 2px;" onclick="this.previousSibling.value=1-this.previousSibling.value">
+                                                                                                                            <label class="form-check-label" for="<%=brkAcc.type%>_Opt_<%brkAccOpt%>"><%=brkAccOpt%></label>
+                                                                                                                        </li>
+                                                                                                                        <% } %>
+                                                                                                                    </ul>
+                                                                                                                </li>
+                                                                                                                <% } else { %>
+                                                                                                                <li style="padding-bottom: 0.5rem;">
+                                                                                                                    <input type="hidden" value="0" name="accOpts"><input type="checkbox" class="form-check-input" id="<%=brkAcc.type%>" style="position:relative; top: 2px;" onclick="this.previousSibling.value=1-this.previousSibling.value">
+                                                                                                                    <label class="form-check-label" for="<%=brkAcc.type%>"><%=brkAcc.name%></label>
+                                                                                                                </li>
+                                                                                                                <% } %>
+                                                                                                            <% } %>
+                                                                                                        </ul>
+                                                                                                    </div>
+                                                                                                </div>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                        <div class="modal-footer justify-content-center">
+                                                                                            <div class="w-50">
+                                                                                                <input id="editBreakerModalButton" type="submit" value="Save" class="btn-block btn btn-outline-info waves-effect waves-light" />
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    </form>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <!-- END EDIT CURRENT SUBMITTAL MODAL -->
+
+
+
+
+
+
+
+
                                                         <% } %>
                                                         </tbody>
                                                     </table>
