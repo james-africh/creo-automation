@@ -90,6 +90,7 @@ exports.setWD = function(req, res) {
             data: {}
         });
 
+        if (dir.data != undefined) {
         if (dir.data.dirname != workingDir) {
             await creo(sessionId, {
                 command: "creo",
@@ -110,7 +111,7 @@ exports.setWD = function(req, res) {
                 await creo(sessionId, {
                     command: "creo",
                     function: "mkdir",
-                    data : {
+                    data: {
                         "dirname": "_outputDir"
                     }
                 });
@@ -159,7 +160,7 @@ exports.setWD = function(req, res) {
                 await creo(sessionId, {
                     command: "creo",
                     function: "mkdir",
-                    data : {
+                    data: {
                         "dirname": "_outputDir"
                     }
                 });
@@ -196,6 +197,7 @@ exports.setWD = function(req, res) {
             }
 
         }
+    }
         return null
     }
 
@@ -626,7 +628,10 @@ exports.loadDesign = function(req, res) {
                         "name": "WEIGHT"
                     }
                 });
-                WEIGHT = weightParam.data.paramlist[0].value.toFixed(2);
+                console.log(part);
+                if (weightParam.data.paramlist[0].value.length != 0) {
+                    WEIGHT = weightParam.data.paramlist[0].value.toFixed(2);
+                }
             }
 
             //get MATERIAL parameter
@@ -2993,6 +2998,9 @@ exports.generateBinBoms = function(req, res) {
     for (let layout of layouts) {
         if (req.body['title_' + layout.layout + '-SS'] != undefined) {
             existingLayoutBoms.push(layout.layout + '-SS');
+        }
+        if (req.body['title_' + layout.layout + '-AL'] != undefined) {
+            existingLayoutBoms.push(layout.layout + '-AL');
         }
         if (req.body['title_' + layout.layout + '-7GA'] != undefined) {
             existingLayoutBoms.push(layout.layout + '-7GA');

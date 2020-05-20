@@ -241,6 +241,7 @@ exports.searchSubmittal = function(req, res) {
     let brkAccData = [];
     let sectionData = [];
     let sectionTypeData = [];
+    let restrictionData = [];
 
     submittalLookup([null, null, subID])
         .then(async function(submittals) {
@@ -335,6 +336,7 @@ exports.searchSubmittal = function(req, res) {
                         boots: layout.boots,
                         iccbPlatform: layout.iccbPlatform,
                         mccbPlatform: layout.mccbPlatform,
+                        vcbPlatform: layout.vcbPlatform,
                         keyInterlocks: layout.keyInterlocks,
                         seismic: layout.seismic,
                         mimic: layout.mimic,
@@ -392,7 +394,7 @@ exports.searchSubmittal = function(req, res) {
         .then(async function() {
             for (let data of deviceData) {
                 const devAccs = await querySql("SELECT * FROM " + database + "." + dbConfig.submittal_brkAcc_table + " WHERE devID = ?", data.devID);
-                const devAccOptions = await querySql("SELECT * FROM " + database + "." + dbConfig.submittal_brkAcc_options);
+                const devAccOptions = await querySql("SELECT * FROM " + database + "." + dbConfig.brkAcc_options_table);
                 for (let devAcc of devAccs) {
                     for  (let devAccOpt of devAccOptions) {
                         if (devAcc.brkAccDropdownID == devAccOpt.brkAccDropdownID) {
@@ -410,8 +412,8 @@ exports.searchSubmittal = function(req, res) {
 
         })
         .then(async function() {
-            const layoutDropdowns = await querySql("SELECT * FROM " + database + "." + dbConfig.submittal_layout_dropdowns);
-            const brkAccDropdowns = await querySql("SELECT * FROM " + database + "." + dbConfig.submittal_brkAcc_options);
+            const layoutDropdowns = await querySql("SELECT * FROM " + database + "." + dbConfig.layout_paramTypes_table);
+            const brkAccDropdowns = await querySql("SELECT * FROM " + database + "." + dbConfig.brkAcc_options_table);
             return {layoutDropdowns, brkAccDropdowns}
         })
         .then(async function({layoutDropdowns, brkAccDropdowns}) {
@@ -466,13 +468,23 @@ exports.searchSubmittal = function(req, res) {
             return null
         })
         .then(async function() {
-            const secTypes = await querySql("SELECT * FROM " + database + "." + dbConfig.submittal_secType_table);
+            const secTypes = await querySql("SELECT * FROM " + database + "." + dbConfig.secType_table);
             for (let secType of secTypes) {
                 sectionTypeData.push({
                     secType: secType.type
                 });
             }
             return null
+        })
+        .then(async function() {
+            const layoutParamRestrictions = await querySql("SELECT * FROM " + database + "." + dbConfig.layout_paramType_restrictions);
+            for (let restriction of layoutParamRestrictions) {
+                restrictionData.push({
+                    type: restriction.dropdownType,
+                    value: restriction.dropdownValue,
+                    restrictions: JSON.parse(restriction.dropdownRestrictions)
+                });
+            }
         })
         .then(() => {
             res.locals = {title: 'Submittal'};
@@ -495,6 +507,7 @@ exports.searchSubmittal = function(req, res) {
                 deviceData: deviceData,
                 brkAccData: brkAccData,
                 brkAccDropdown: [],
+                restrictionData: restrictionData,
                 currentSlide: 1
             })
         })
@@ -919,6 +932,119 @@ exports.quoteDetail = function (req, res) {
 };
 
 
+/***********************************************
+ LAYOUTS IN SUBMITTAL
+ ***********************************************/
+
+exports.addLayout = function(req, res) {
+    let urlObj = url.parse(req.originalUrl);
+    urlObj.protocol = req.protocol;
+    urlObj.host = req.get('host');
+    let qs = queryString.parse(urlObj.search);
+    let jobNumReleaseNum = qs.subID.split('_')[0];
+    let subID = qs.subID.split('_')[1];
+    let checkArray = [];
+    let reqChecks = [req.body.insulatedBus, req.body.boots, req.body.seismic, req.body.mimic, req.body.IR, req.body.wireway, req.body.trolley];
+    for (let i = 0; i < reqChecks.length; i++) {
+        if(reqChecks[i]) {
+            checkArray.push("Y");
+        } else {
+            checkArray.push("N");
+        }
+    }
+    let newLayoutData = {
+        subID: subID,
+        layoutName: req.body.layoutName,
+        ulListing: req.body.ulListing,
+        systemType: req.body.systemType,
+        systemAmp: req.body.systemAmp,
+        mainBusAmp: req.body.mainBusAmp,
+        enclosure: req.body.enclosure,
+        accessibility: req.body.accessibility,
+        cableAccess: req.body.cableAccess,
+        paint: req.body.paint,
+        interruptRating: req.body.interruptRating,
+        busBracing: req.body.busBracing,
+        busType: req.body.busType,
+        insulatedBus: checkArray[0],
+        boots: checkArray[1],
+        keyInterlocks: req.body.keyInterlocks,
+        seismic: checkArray[2],
+        mimic: checkArray[3],
+        ir: checkArray[4],
+        wireway: checkArray[5],
+        trolley: checkArray[6],
+        numSections: 0
+    };
+
+    async function createLayout(layoutData) {
+        return await querySql("INSERT INTO " + database + "." + dbConfig.submittal_layout_table + " SET ?", layoutData);
+    }
+
+    createLayout(newLayoutData)
+        .then(() => {
+            res.redirect('../searchSubmittal/?subID='+jobNumReleaseNum+"_"+subID);
+        })
+        .catch(err => {
+            console.log(err);
+        });
+};
+
+exports.editLayout = function(req, res) {
+    let urlObj = url.parse(req.originalUrl);
+    urlObj.protocol = req.protocol;
+    urlObj.host = req.get('host');
+    let qs = queryString.parse(urlObj.search);
+    let jobNumReleaseNum = qs.subID.split('_')[0];
+    let subID = qs.subID.split('_')[1];
+
+    let checkArray = [];
+    let reqChecks = [req.body.insulatedBus_edit, req.body.boots_edit, req.body.seismic_edit, req.body.mimic_edit, req.body.IR_edit, req.body.wireway_edit, req.body.trolley_edit];
+    for (let i = 0; i < reqChecks.length; i++) {
+        if(reqChecks[i]) {
+            checkArray.push("Y");
+        } else {
+            checkArray.push("N");
+        }
+    }
+    let newLayoutData = {
+        layoutName: req.body.layoutName,
+        ulListing: req.body.ulListing_edit,
+        systemType: req.body.systemType_edit,
+        systemAmp: req.body.systemAmp_edit,
+        mainBusAmp: req.body.mainBusAmp_edit,
+        enclosure: req.body.enclosure_edit,
+        accessibility: req.body.accessibility_edit,
+        cableAccess: req.body.cableAccess_edit,
+        paint: req.body.paint_edit,
+        interruptRating: req.body.interruptRating_edit,
+        busBracing: req.body.busBracing_edit,
+        busType: req.body.busType_edit,
+        insulatedBus: checkArray[0],
+        boots: checkArray[1],
+        keyInterlocks: req.body.keyInterlocks_edit,
+        seismic: checkArray[2],
+        mimic: checkArray[3],
+        ir: checkArray[4],
+        wireway: checkArray[5],
+        trolley: checkArray[6]
+    };
+
+    async function editLayout(layoutData) {
+        return await querySql("UPDATE " + database + "." + dbConfig.submittal_layout_table + " SET ? WHERE subID = ?", [layoutData, subID]);
+    }
+
+    editLayout(newLayoutData)
+        .then(() => {
+            res.redirect('../searchSubmittal/?subID='+jobNumReleaseNum+"_"+subID);
+        })
+        .catch(err => {
+            console.log(err);
+        });
+};
+
+
+
 /*********************************************
  SECTION CONFIGURE
  *********************************************/
@@ -958,7 +1084,50 @@ exports.layoutAddSection = function(req, res){
 
 
 exports.layoutDeleteSection = function(req, res) {
+    let urlObj = url.parse(req.originalUrl);
+    urlObj.protocol = req.protocol;
+    urlObj.host = req.get('host');
+    let qs = queryString.parse(urlObj.search);
+    let selectedSection = qs.selectedSection;
+    let jobRelease = qs.subID.split('_')[0];
+    let subID = qs.subID.split('_')[1];
+    let layoutID;
+    let numSections;
+    let deletedSecID;
 
+    querySql("SELECT * FROM " + database + "." + dbConfig.submittal_layout_table + " WHERE subID = ?", subID)
+        .then(layouts => {
+            if (layouts.length != 0) {
+                layoutID = layouts[0].layoutID;
+                numSections = layouts[0].numSections;
+                if (numSections == 1)
+                    numSections = null;
+                else
+                    numSections -= 1;
+                querySql("UPDATE " + database + "." + dbConfig.submittal_layout_table + " SET numSections = ? WHERE layoutID = ? ", [numSections, layoutID]);
+            }
+            return querySql("SELECT * FROM " + database + "." + dbConfig.submittal_sections_table + " WHERE layoutID = ?", layoutID)
+        })
+        .then(sections => {
+            if (sections.length != 0) {
+                for (let section of sections) {
+                    if (section.sectionNum == selectedSection) {
+                        querySql("DELETE FROM " + database + "." + dbConfig.submittal_sections_table + " WHERE secID = ?",section.secID);
+                    } else if (section.sectionNum > selectedSection) {
+                        querySql("UPDATE " + database + "." + dbConfig.submittal_sections_table + " SET sectionNum = ? WHERE secID = ?", [section.sectionNum - 1, section.secID]);
+                    }
+                }
+            }
+            return null
+        })
+        .then(() => {
+            res.locals = {title: 'Add Section'};
+            res.redirect('../searchSubmittal/?subID='+jobRelease+"_"+subID);
+            return null
+        })
+        .catch((err) => {
+            return Promise.reject(err);
+        });
 };
 
 
@@ -1044,10 +1213,10 @@ exports.layoutSectionProperties = function(req, res) {
                         for(let row of rows){
                             await querySql("UPDATE " + database + "." + dbConfig.submittal_breaker_table + " SET " +
                                 "comp = ?, secID = ? WHERE secID = ?", [null, null, row.secID]);
-                            await querySql("UPDATE " + database + "." + dbConfig.submittal_item_table + " SET " +
+                            /*await querySql("UPDATE " + database + "." + dbConfig.submittal_item_table + " SET " +
                                 "comp = ?, secID = ? WHERE secID = ?", [null, null, row.secID]);
                             await querySql("UPDATE " + database + "." + dbConfig.submittal_control_sum + " SET " +
-                                "comp = ?, secID = ? WHERE secID = ?", [null, null, row.secID]);
+                                "comp = ?, secID = ? WHERE secID = ?", [null, null, row.secID]);*/
                         }
                     })
                     .catch(err => {
@@ -1066,8 +1235,6 @@ exports.layoutSectionProperties = function(req, res) {
         });
 
 };
-
-
 
 
 /***********************************************
@@ -1147,7 +1314,7 @@ exports.addBrk = function(req, res) {
             return temps
         })
         .then(async function(temps) {
-            const accOptions = await querySql("SELECT * FROM " + database + "." + dbConfig.submittal_brkAcc_options);
+            const accOptions = await querySql("SELECT * FROM " + database + "." + dbConfig.brkAcc_options_table);
             for (let temp of temps) {
                 let accData = [];
                 for (let i = 0; i < accOptions.length; i++) {
@@ -1262,7 +1429,60 @@ exports.editBrk = function(req, res) {
     let layoutID = qs.layoutID;
     let devID = qs.devID;
 
+    let newAccOpts = req.body.accOpts;
 
+    let newBrkData = {
+        layoutID: layoutID,
+        devDesignation: req.body.devDesignation,
+        tie: req.body.tie,
+        unitOfIssue: 'EA',
+        catCode: req.body.catCode,
+        brkPN: req.body.brkPN,
+        cradlePN: req.body.cradlePN,
+        devMount: req.body.devMount,
+        rearAdaptType: req.body.rearAdaptType,
+        devUL: req.body.devUL,
+        devLevel: req.body.devLevel,
+        devOperation: req.body.devOperation,
+        devCtrlVolt: req.body.devCtrlVolt,
+        devMaxVolt: req.body.devMaxVolt,
+        devKAIC: req.body.devKAIC,
+        devFrameSet: req.body.devFrameSet,
+        devSensorSet: req.body.devSensorSet,
+        devTripSet: req.body.devTripSet,
+        devTripUnit: req.body.devTripUnit,
+        devTripParam: req.body.devTripParam,
+        devPoles: req.body.devPoles
+    };
+
+    querySql("UPDATE "+database+"."+dbConfig.submittal_breaker_table+" SET ? WHERE devID = ?", [newBrkData, devID])
+        .then(async function() {
+            const accOptions = await querySql("SELECT * FROM " + database + "." + dbConfig.brkAcc_options_table);
+                let accData = [];
+                for (let i = 0; i < accOptions.length; i++) {
+                    if (newAccOpts[i] == 1) {
+                        accData.push({
+                            devID: devID,
+                            brkAccDropdownID: accOptions[i].brkAccDropdownID
+                        });
+                    }
+                }
+
+                await querySql("DELETE FROM " + database + "." + dbConfig.submittal_brkAcc_table + " WHERE devID = ?",devID);
+
+                for (let j = 0; j < accData.length; j++) {
+                    await querySql("INSERT INTO " +  database + "." + dbConfig.submittal_brkAcc_table + " SET ? ", accData[j])
+                }
+
+        })
+        .then(() => {
+        res.locals = {title: 'Submittal'};
+        res.redirect('../searchSubmittal/?subID='+jobRelease+"_"+subID);
+        return null;
+    })
+        .catch(err => {
+            return Promise.reject(err);
+        });
 
 };
 
@@ -1287,117 +1507,171 @@ exports.deleteBrk = function(req, res) {
 };
 
 
+
+
 /***********************************************
- LAYOUTS IN SUBMITTAL
+ CREOSON SUBMITTAL
  ***********************************************/
 
-exports.addLayout = function(req, res) {
+
+//Set Working Directory POST request
+exports.setWD = function(req, res) {
     let urlObj = url.parse(req.originalUrl);
     urlObj.protocol = req.protocol;
     urlObj.host = req.get('host');
     let qs = queryString.parse(urlObj.search);
-    let jobNumReleaseNum = qs.subID.split('_')[0];
+    let jobRelease = qs.subID.split('_')[0];
     let subID = qs.subID.split('_')[1];
-    let checkArray = [];
-    let reqChecks = [req.body.insulatedBus, req.body.boots, req.body.seismic, req.body.mimic, req.body.IR, req.body.wireway, req.body.trolley];
-    for (let i = 0; i < reqChecks.length; i++) {
-        if(reqChecks[i]) {
-            checkArray.push("Y");
-        } else {
-            checkArray.push("N");
+    let message = null;
+    let layoutAsm = req.body.layoutAsm;
+    let oneLineAsm = req.body.oneLineAsm;
+    let layoutDrw = req.body.layoutDrw;
+    let outputPDF = req.body.outputPDF;
+
+    let workingDir = req.body.workingDir;
+    let outputDir = workingDir + '/_outputDir';
+    let startDir = req.body.startDir;
+
+    async function cdAndCreateOutputDir() {
+        let dir = await creo(sessionId, {
+            command: "creo",
+            function: "pwd",
+            data: {}
+        });
+
+        if (dir.data != undefined) {
+            if (dir.data.dirname != workingDir) {
+                await creo(sessionId, {
+                    command: "creo",
+                    function: "cd",
+                    data: {
+                        "dirname": workingDir
+                    }
+                });
+
+                const innerDirs = await creo(sessionId, {
+                    command: "creo",
+                    function: "list_dirs",
+                    data: {
+                        "dirname": "_outputDir"
+                    }
+                });
+                if (!innerDirs.data) {
+                    await creo(sessionId, {
+                        command: "creo",
+                        function: "mkdir",
+                        data: {
+                            "dirname": "_outputDir"
+                        }
+                    });
+                    await creo(sessionId, {
+                        command: "creo",
+                        function: "mkdir",
+                        data: {
+                            "dirname": "_outputDir\\PDF"
+                        }
+                    });
+                    await creo(sessionId, {
+                        command: "creo",
+                        function: "mkdir",
+                        data: {
+                            "dirname": "_outputDir\\DXF"
+                        }
+                    });
+                    await creo(sessionId, {
+                        command: "creo",
+                        function: "mkdir",
+                        data: {
+                            "dirname": "_outputDir\\BIN BOMS"
+                        }
+                    });
+                    await creo(sessionId, {
+                        command: "creo",
+                        function: "mkdir",
+                        data: {
+                            "dirname": "_outputDir\\NAMEPLATES"
+                        }
+                    });
+                } else {
+                    message = "_outputDir already exists within the working directory. Please remove before continuing.";
+                }
+
+            } else {
+                const innerDirs = await creo(sessionId, {
+                    command: "creo",
+                    function: "list_dirs",
+                    data: {
+                        "dirname": "_outputDir"
+                    }
+                });
+
+                if (!innerDirs.data) {
+                    await creo(sessionId, {
+                        command: "creo",
+                        function: "mkdir",
+                        data: {
+                            "dirname": "_outputDir"
+                        }
+                    });
+                    await creo(sessionId, {
+                        command: "creo",
+                        function: "mkdir",
+                        data: {
+                            "dirname": "_outputDir\\PDF"
+                        }
+                    });
+                    await creo(sessionId, {
+                        command: "creo",
+                        function: "mkdir",
+                        data: {
+                            "dirname": "_outputDir\\DXF"
+                        }
+                    });
+                    await creo(sessionId, {
+                        command: "creo",
+                        function: "mkdir",
+                        data: {
+                            "dirname": "_outputDir\\BIN BOMS"
+                        }
+                    });
+                    await creo(sessionId, {
+                        command: "creo",
+                        function: "mkdir",
+                        data: {
+                            "dirname": "_outputDir\\NAMEPLATES"
+                        }
+                    });
+                } else {
+                    message = "_outputDir already exists within the working directory. Please remove before continuing."
+                }
+
+            }
         }
-    }
-    let newLayoutData = {
-        subID: subID,
-        layoutName: req.body.layoutName,
-        ulListing: req.body.ulListing,
-        systemType: req.body.systemType,
-        systemAmp: req.body.systemAmp,
-        mainBusAmp: req.body.mainBusAmp,
-        enclosure: req.body.enclosure,
-        accessibility: req.body.accessibility,
-        cableAccess: req.body.cableAccess,
-        paint: req.body.paint,
-        interruptRating: req.body.interruptRating,
-        busBracing: req.body.busBracing,
-        busType: req.body.busType,
-        insulatedBus: checkArray[0],
-        boots: checkArray[1],
-        iccbPlatform: req.body.iccbPlatform,
-        mccbPlatform: req.body.mccbPlatform,
-        keyInterlocks: req.body.keyInterlocks,
-        seismic: checkArray[2],
-        mimic: checkArray[3],
-        ir: checkArray[4],
-        wireway: checkArray[5],
-        trolley: checkArray[6],
-        numSections: 0
-    };
-
-    async function createLayout(layoutData) {
-        return await querySql("INSERT INTO " + database + "." + dbConfig.submittal_layout_table + " SET ?", layoutData);
+        return null
     }
 
-    createLayout(newLayoutData)
+    cdAndCreateOutputDir()
         .then(() => {
-            res.redirect('../searchSubmittal/?subID='+jobNumReleaseNum+"_"+subID);
+            res.locals = {title: 'Submittal'};
+            res.redirect('../searchSubmittal/?subID='+jobRelease+"_"+subID);
+            return null;
         })
         .catch(err => {
-            console.log(err);
+            return Promise.reject(err);
         });
 };
 
-exports.editLayout = function(req, res) {
+
+
+exports.generateSubmittal = function(req, res) {
+    req.setTimeout(0); //no timeout
+    //initialize variables
     let urlObj = url.parse(req.originalUrl);
     urlObj.protocol = req.protocol;
     urlObj.host = req.get('host');
     let qs = queryString.parse(urlObj.search);
-    let jobNumReleaseNum = qs.subID.split('_')[0];
+    let jobRelease = qs.subID.split('_')[0];
     let subID = qs.subID.split('_')[1];
 
-    let checkArray = [];
-    let reqChecks = [req.body.insulatedBus, req.body.boots, req.body.seismic, req.body.mimic, req.body.IR, req.body.wireway, req.body.trolley];
-    for (let i = 0; i < reqChecks.length; i++) {
-        if(reqChecks[i]) {
-            checkArray.push("Y");
-        } else {
-            checkArray.push("N");
-        }
-    }
-    let newLayoutData = {
-        layoutName: req.body.layoutName,
-        ulListing: req.body.ulListing,
-        systemType: req.body.systemType,
-        systemAmp: req.body.systemAmp,
-        mainBusAmp: req.body.mainBusAmp,
-        enclosure: req.body.enclosure,
-        accessibility: req.body.accessibility,
-        cableAccess: req.body.cableAccess,
-        paint: req.body.paint,
-        interruptRating: req.body.interruptRating,
-        busBracing: req.body.busBracing,
-        busType: req.body.busType,
-        insulatedBus: checkArray[0],
-        boots: checkArray[1],
-        iccbPlatform: req.body.iccbPlatform,
-        mccbPlatform: req.body.mccbPlatform,
-        keyInterlocks: req.body.keyInterlocks,
-        seismic: checkArray[2],
-        mimic: checkArray[3],
-        ir: checkArray[4],
-        wireway: checkArray[5],
-        trolley: checkArray[6]
-    };
 
-    async function editLayout(layoutData) {
-        return await querySql("UPDATE " + database + "." + dbConfig.submittal_layout_table + " SET ? WHERE subID = ?", [layoutData, subID]);
-    }
-
-    editLayout(newLayoutData)
-        .then(() => {
-            res.redirect('../searchSubmittal/?subID='+jobNumReleaseNum+"_"+subID);
-        })
-        .catch(err => {
-            console.log(err);
-        });
 };

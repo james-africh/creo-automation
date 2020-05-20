@@ -36,26 +36,18 @@ module.exports = {
     //Database
     'database': 'sai_test',
     'database2': 'quotePricing',
-    //Jobscope Tables
-    'jobscope_codes_table': 'jobscopeCatCodes',
 
-    //Apps Eng Quote Tables
-    'quote_summary_table':'quoteSum',
-    'quote_layout_table':'quoteLayoutSum',
-    'quote_section_type':'quoteSectionType',
-    'quote_layout_dropdown':'quoteLayoutDropdown',
-    'quote_parts_labor_table':'quotePartsLaborSum',
-    'quote_field_service_table':'quoteFieldServiceSum',
-    'quote_freight_table':'quoteFreightSum',
-    'quote_warranty_table':'quoteWarrantySum',
-    'quote_section_table': 'quoteSectionSum',
-    'quote_breaker_table': 'quoteBrkSum',
-    'quote_brkAcc_table': 'quoteBrkAccSum',
-    'quote_brkAcc_dropdown': 'quoteBrkAccDropdown',
-    'quote_item_table': 'quoteItemSum',
-    'quote_common_items': 'quoteComItem',
-    'quote_user_items': 'quoteUserItem',
-    'quote_control_sum': 'quoteControlSum',
+    //Pre-loaded Static Tables (Shared b/w apps)
+    'permissions_table': 'userPermissions',
+    'jobscope_codes_table': 'jobscopeCatCodes',
+    'layout_paramTypes_table':'layoutParamTypes',
+    'layout_paramType_restrictions': 'layoutParamRestrictions',
+    'secType_table':'sectionType',
+    'brkAcc_options_table': 'brkAccOptions',
+    'control_assemblies_table': 'controlAsmSum',
+    'control_items_table': 'controlItemSum',
+
+    //Standard Design Tables (Shared b/w apps)
     'panelboard_amp_type': 'panelboardAmpType',
     'base_panel_copper_3W': 'basePanelCopper3W',
     'base_panel_copper_4W': 'basePanelCopper4W',
@@ -64,31 +56,50 @@ module.exports = {
     'quote_system_type': 'quoteSystemType',
     'panelboard_width_3W': 'panelboardWidth3W',
     'panelboard_width_4W': 'panelboardWidth4W',
+
+    //User Login and Profile Tables
+    'users_table':'users',
+    'user_profile_table': 'userProfile',
+
+    //Apps Eng Quote Tables
+    'quote_summary_table':'quoteSum',
+    'quote_rev_table': 'quoteRevSum',
+    'quote_layout_table':'quoteLayoutSum',
+    'quote_parts_labor_table':'quotePartsLaborSum',
+    'quote_field_service_table':'quoteFieldServiceSum',
+    'quote_freight_table':'quoteFreightSum',
+    'quote_warranty_table':'quoteWarrantySum',
+    'quote_section_table': 'quoteSectionSum',
+    'quote_breaker_table': 'quoteBrkSum',
+    'quote_brkAcc_table': 'quoteBrkAccSum',
+    'quote_item_table': 'quoteItemSum',
+    'quote_common_items': 'quoteComItem',
+    'quote_user_items': 'quoteUserItem',
+    'quote_control_sum': 'quoteControlSum',
     'panelboard_sum': 'panelboardSum',
 
     //Quote Pricing DB Tables
     'quotePricing_matCost': 'matCost',
     'quotePricing_density': 'density',
     'quotePricing_nemaTypes': 'nemaTypes',
-    'quotePricing_trolleyTrack': 'trolleyTrackOpt',
-    'quotePricing_mimicBus': 'mimicBusOpt',
-    'quotePricing_fanHoods': 'fanHoodsOpt',
-    'quotePricing_rearBarrier': 'rearBarrierOpt',
-    'quotePricing_controlCub': 'controlCubOpt',
-    'quotePricing_seismic': 'seismicOpt',
-    'quotePricing_iccbComp': 'iccbCompOpt',
-    'quotePricing_mccbComp': 'mccbCompOpt',
-    'quotePricing_panel': 'panelOpt',
-    'quotePricing_tvss': 'tvssOpt',
-    'quotePricing_ct': 'ctOpt',
-    'quotePricing_pt': 'ptOpt',
-    'quotePricing_section': 'sectionOpt',
-    'quotePricing_access': 'accessOpt',
-    'quotePricing_copperTypes': 'copperTypes',
-    'quotePricing_bracingTypes': 'bracingTypes',
-    'quotePricing_secBusType': 'secBusType',
+    'quotePricing_trolleyTrack': 'trolleyTrackPricing',
+    'quotePricing_mimicBus': 'mimicBusPricing',
+    'quotePricing_fanHoods': 'fanHoodsPricing',
+    'quotePricing_rearBarrier': 'rearBarrierPricing',
+    'quotePricing_controlCub': 'controlCubPricing',
+    'quotePricing_seismic': 'seismicPricing',
+    'quotePricing_iccbComp': 'iccbCompPricing',
+    'quotePricing_mccbComp': 'mccbCompPricing',
+    'quotePricing_panel': 'panelPricing',
+    'quotePricing_tvss': 'tvssPricing',
+    'quotePricing_ct': 'ctPricing',
+    'quotePricing_pt': 'ptPricing',
+    'quotePricing_section': 'sectionPricing',
+    'quotePricing_access': 'accessPricing',
+    'quotePricing_copperTypes': 'copperPricing',
+    'quotePricing_bracingTypes': 'bracingPricing',
+    'quotePricing_secBusType': 'secBusPricing',
     'quotePricing_laborRates': 'laborRates',
-    'quotePricing_test': 'test',
 
     //Mechanical Eng MBOM Tables
     'MBOM_summary_table': 'mbomSum',
@@ -100,7 +111,6 @@ module.exports = {
     'MBOM_section_sum': 'mbomSectionSum',
     'MBOM_new_section_sum' : 'mbomNewSectionSum',
 
-
     //Mechanical Eng Submittal Tables
     'submittal_summary_table': 'submittalSum',
     'submittal_rev_table': 'submittalRevSum',
@@ -110,14 +120,5 @@ module.exports = {
     'submittal_secType_table': 'sectionTypes',
     'submittal_breaker_table': 'submittalBrkSum',
     'submittal_brkAcc_table': 'submittalBrkAccSum',
-    'submittal_brkAcc_options': 'submittalBrkAccOptions',
-    'submittal_item_table': 'submittalItemSum',
-    'submittal_common_items': 'submittalComItem',
-    'submittal_user_items': 'submittalUserItem',
-    'submittal_control_sum': 'submittalControlSum',
-    'control_assemblies_table': 'controlAsmSum',
-    'control_items_table': 'controlItemSum',
-
-
-
+    'submittal_brkAcc_options': 'submittalBrkAccOptions'
 };

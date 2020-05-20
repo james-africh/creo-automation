@@ -1,0 +1,140 @@
+<div class="col-sm-3">
+    <label for="iccbPlatform" class="col-form-label">ICCB Platform</label>
+    <select class="form-control" name="iccbPlatform" id="iccbPlatform">
+        <option value="Select">Select</option>
+        <%   let iccbPlatforms = layoutDropdownData.filter(e => e.type === 'iccbPlatform') %>
+        <% for (let iccbPlatform of iccbPlatforms) { %>
+        <option value="<%=iccbPlatform.value%>"><%=iccbPlatform.value%></option>
+        <% } %>
+    </select>
+</div>
+<div class="col-sm-3">
+    <label for="mccbPlatform" class="col-form-label">MCCB Platform</label>
+    <select class="form-control" name="mccbPlatform" id="mccbPlatform">
+        <option value="Select">Select</option>
+        <%   let mccbPlatforms = layoutDropdownData.filter(e => e.type === 'mccbPlatform') %>
+        <% for (let mccbPlatform of mccbPlatforms) { %>
+        <option value="<%=mccbPlatform.value%>"><%=mccbPlatform.value%></option>
+        <% } %>
+    </select>
+</div>
+<div class="col-sm-3">
+    <label for="mccbPlatform" class="col-form-label">MV VCB Platform</label>
+    <select class="form-control" name="vcbPlatform" id="vcbPlatform">
+        <option value="Select">Select</option>
+        <%   let vcbPlatforms = layoutDropdownData.filter(e => e.type === 'vcbPlatform') %>
+        <% for (let vcbPlatform of vcbPlatforms) { %>
+        <option value="<%=vcbPlatform.value%>"><%=vcbPlatform.value%></option>
+        <% } %>
+    </select>
+</div>
+
+
+
+
+
+
+
+<div class="col-sm-3">
+    <label for="iccbPlatform" class="col-form-label">ICCB Platform</label>
+    <select class="form-control" name="iccbPlatform" id="iccbPlatform" disabled="disabled">
+        <%   let iccbPlatforms = layoutDropdownData.filter(e => e.type === 'iccbPlatform') %>
+        <% for (let iccbPlatform of iccbPlatforms) { %>
+            <% if (layoutData[0].iccbPlatform == 'N/A') { %>
+                <option value="N/A" selected="selected">N/A</option>
+            <% } else if (layoutData[0].iccbPlatform == iccbPlatform.value) { %>
+            <option value="<%=iccbPlatform.value%>" selected="selected"><%=iccbPlatform.value%></option>
+            <% } else { %>
+            <option value="<%=iccbPlatform.value%>"><%=iccbPlatform.value%></option>
+            <% } %>
+        <% } %>
+    </select>
+</div>
+<div class="col-sm-3">
+    <label for="mccbPlatform" class="col-form-label">MCCB Platform</label>
+    <select class="form-control" name="mccbPlatform" id="mccbPlatform" disabled="disabled">
+        <%   let mccbPlatforms = layoutDropdownData.filter(e => e.type === 'mccbPlatform') %>
+        <% for (let mccbPlatform of mccbPlatforms) { %>
+            <% if (layoutData[0].mccbPlatform == 'N/A') { %>
+                <option value="N/A" selected="selected">N/A</option>
+            <% } else if (layoutData[0].mccbPlatform == mccbPlatform.value) { %>
+            <option value="<%=mccbPlatform.value%>" selected="selected"><%=mccbPlatform.value%></option>
+            <% } else { %>
+            <option value="<%=mccbPlatform.value%>"><%=mccbPlatform.value%></option>
+            <% } %>
+        <% } %>
+    </select>
+</div>
+<div class="col-sm-3">
+    <label for="mccbPlatform" class="col-form-label">MV VCB Platform</label>
+    <select class="form-control" name="vcbPlatform" id="vcbPlatform" disabled="disabled">
+        <%   let vcbPlatforms = layoutDropdownData.filter(e => e.type === 'vcbPlatform') %>
+        <% for (let vcbPlatform of vcbPlatforms) { %>
+            <% if (layoutData[0].vcbPlatform == 'N/A') { %>
+                <option value="N/A" selected="selected">N/A</option>
+            <% } else if (layoutData[0].vcbPlatform == vcbPlatform.value) { %>
+            <option value="<%=vcbPlatform.value%>" selected="selected"><%=vcbPlatform.value%></option>
+            <% } else { %>
+            <option value="<%=vcbPlatform.value%>"><%=vcbPlatform.value%></option>
+            <% } %>
+        <% } %>
+    </select>
+</div>
+
+
+
+
+
+
+<div class="row">
+    <div class="col-sm-6">
+        <label for="iccbPlatform_edit" class="col-form-label">ICCB Platform</label>
+        <select class="form-control" name="iccbPlatform_edit" id="iccbPlatform_edit" >
+            <%   let iccbPlatformTypes = layoutDropdownData.filter(e => e.type === 'iccbPlatform') %>
+            <% for (let iccbPlatform of iccbPlatformTypes) { %>
+                <% if (layoutData[0].iccbPlatform == 'N/A') { %>
+                    <option value="N/A" selected="selected">N/A</option>
+                <% } else if (layoutData[0].iccbPlatform == iccbPlatform.value) { %>
+                <option value="<%=iccbPlatform.value%>" selected="selected"><%=iccbPlatform.value%></option>
+                <% } else { %>
+                <option value="<%=iccbPlatform.value%>"><%=iccbPlatform.value%></option>
+                <% } %>
+            <% } %>
+        </select>
+    </div>
+    <div class="col-sm-6">
+        <label for="mccbPlatform_edit" class="col-form-label">MCCB Platform</label>
+        <select class="form-control" name="mccbPlatform_edit" id="mccbPlatform_edit">
+            <%   let mccbPlatformTypes = layoutDropdownData.filter(e => e.type === 'mccbPlatform') %>
+            <% for (let mccbPlatform of mccbPlatformTypes) { %>
+                <% if (layoutData[0].mccbPlatform == 'N/A') { %>
+                    <option value="N/A" selected="selected">N/A</option>
+                <% } else if (layoutData[0].mccbPlatform == mccbPlatform.value) { %>
+                <option value="<%=mccbPlatform.value%>" selected="selected"><%=mccbPlatform.value%></option>
+                <% } else { %>
+                <option value="<%=mccbPlatform.value%>"><%=mccbPlatform.value%></option>
+                <% } %>
+            <% } %>
+        </select>
+    </div>
+</div>
+
+
+
+
+
+<div class="col-sm-6">
+    <label for="vcbPlatform_edit" class="col-form-label">VCB Platform</label>
+    <select class="form-control" name="vcbPlatform_edit" id="vcbPlatform_edit">
+        <%   let vcbPlatformTypes = layoutDropdownData.filter(e => e.type === 'vcbPlatform') %>
+        <% for (let vcbPlatform of vcbPlatformTypes) { %>
+            <% if (layoutData[0].vcbPlatform == 'N/A') { %>
+                <option value="N/A" selected="selected">N/A</option>
+            <% } else if (layoutData[0].vcbPlatform == vcbPlatform.value) { %>
+            <option value="<%=vcbPlatform.value%>" selected="selected"><%=vcbPlatform.value%></option>
+            <% } else { %>
+            <option value="<%=vcbPlatform.value%>"><%=vcbPlatform.value%></option>
+            <% } %>
+        <% } %>
+    </select>
+</div>

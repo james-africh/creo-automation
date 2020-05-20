@@ -22,8 +22,6 @@ app.use(cookieParser());
 app.use(session({ secret: 'saiapsportal',resave: true, saveUninitialized:true})); // session secret
 
 
-/*
-
 //Database dependencies
 let mysql = require('mysql');
 let myConnection = require('express-myconnection');
@@ -40,14 +38,9 @@ let dbOptions = {
     port: port,
     database: database
 };
-*/
-
-/*
 
 //Connection to DB
 app.use(myConnection(mysql, dbOptions, 'pool'));
-*/
-
 
 
 // Setting up the views
@@ -72,7 +65,7 @@ app.use(flash());
 require('./app/routes/main.js')(app); //Main Router
 //require('./app/routes/creoson.js')(app); //creoSON Router
 require('./app/routes/pdfDxfBinBom.js')(app); //PDF DXF BIN BOM Router
-//require('./app/routes/submittal.js')(app); //Submittal Router
+require('./app/routes/submittal.js')(app); //Submittal Router
 
 
 

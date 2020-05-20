@@ -153,7 +153,24 @@ function accBrk(checkbox) {
     else {
         document.getElementById(checkbox.id + 'Opt').style.display = "none";
         for(let el of document.getElementById(checkbox.id + 'Opt').getElementsByTagName('li')){
-            //el.children[0].checked = false;
+            if (el.children[1].checked == true) {
+                el.children[1].checked = false;
+                el.children[0].value = '0';
+            }
+        }
+    }
+}
+
+function accBrkEdit(checkbox) {
+    if (checkbox.checked == true)
+        document.getElementById(checkbox.id + 'Opt_Edit').style.display = "block";
+    else {
+        document.getElementById(checkbox.id + 'Opt_Edit').style.display = "none";
+        for (let el of document.getElementById(checkbox.id + 'Opt_Edit').getElementsByTagName('li')) {
+            if (el.children[1].checked == true) {
+                el.children[1].checked = false;
+                el.children[0].value = '0';
+            }
         }
     }
 }

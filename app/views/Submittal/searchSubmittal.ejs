@@ -352,7 +352,7 @@
                                             <h6 style="color:red;"><%= message %></h6>
                                             <% if  (creoData.length != 0) { %>
                                                 <% for (let i = 0; i < creoData.length; i++) { %>
-                                                <form id="creoDataForm" class="creoDataForm" action="" method="POST">
+                                                <form id="creoDataForm" class="creoDataForm" action="../setWD/?subID=<%= subData[0].jobNum%><%= subData[0].releaseNum%>_<%= subData[0].subID%>" method="POST">
                                                     <div class="form-group">
                                                         <div class="row">
                                                             <div class="col-sm-6">
@@ -413,9 +413,29 @@
                                     <div class="card m-b-20" style="height:94%;">
                                         <div class="card-body">
                                             <h4 class="mt-0 header-title">Layout Data</h4>
+                                            <form id="layoutRestrictionForm">
+                                                <% let x = 0; %>
+                                                <% for (let restriction of restrictionData) { %>
+                                                <input type="text" name="restriction_<%x%>" class="restriction" value="<%=restriction.type%>_<%=restriction.value%>" hidden="hidden">
+                                                <% let y = 0; %>
+                                                    <% for (let restrictionType of Object.keys(restriction.restrictions)) { %>
+                                                        <input type="text" name="restrictionType_<%x%>_<%y%>" class="restrictionType_<%=restriction.type%>_<%=restriction.value%>" value="<%=restrictionType%>"  hidden="hidden">
+                                                        <% let z = 0; %>
+                                                        <% if (restriction.restrictions[restrictionType].length != 0) { %>
+                                                            <% for (let restrictionVal of restriction.restrictions[restrictionType]) { %>
+                                                            <input type="text" name="restrictionVal_<%x%>_<%y%>_<%z%>" class="restrictionVal_<%=restriction.type%>_<%=restriction.value%>_<%=restrictionType%>"  value="<%=restrictionVal%>"  hidden="hidden">
+                                                            <% } %>
+                                                        <% } else { %>
+                                                            <input type="text" name="restrictionVal_<%x%>_<%y%>_<%z%>" class="restrictionVal_<%=restriction.type%>_<%=restriction.value%>_<%=restrictionType%>"  value="N/A"  hidden="hidden">
+                                                        <% } %>
+                                                    <% } %>
+                                                <% } %>
+                                            </form>
                                             <h6 style="color:red;"><%= message %></h6>
                                             <% if (layoutData.length == 0) { %>
                                             <form id="layoutDataForm" class="layoutDataForm" action="/addLayout/?subID=<%=subData[0].jobNum%><%=subData[0].releaseNum%>_<%=subData[0].subID%>" method="POST">
+                                                <% let selectedUL = ''; %>
+                                                <% let selectedEnclosure = ''; %>
                                                 <div class="form-group">
                                                     <input type="text" value="<%=subData[0].layoutName%>" name="layoutName" hidden="hidden">
                                                     <div class="row">
@@ -424,8 +444,18 @@
                                                             <select class="form-control" name="ulListing" id="ulListing">
                                                                 <option value="Select">Select</option>
                                                                 <%   let ulListings = layoutDropdownData.filter(e => e.type === 'ulListing') %>
-                                                                <% for (let ulListing of ulListings) { %>
-                                                                <option value="<%=ulListing.value%>"><%=ulListing.value%></option>
+                                                                    <% for (let ulListing of ulListings) { %>
+                                                                    <option value="<%=ulListing.value%>" ><%=ulListing.value%></option>
+                                                                <% } %>
+                                                            </select>
+                                                        </div>
+                                                        <div class="col-sm-3">
+                                                            <label for="enclosure" class="col-form-label">Enclosure</label>
+                                                            <select class="form-control" name="enclosure" id="enclosure">
+                                                                <option value="Select">Select</option>
+                                                                <%   let enclosures = layoutDropdownData.filter(e => e.type === 'enclosure') %>
+                                                                <% for (let enclosure of enclosures) { %>
+                                                                <option data-parent value="<%= enclosure.value %>"><%= enclosure.value %></option>
                                                                 <% } %>
                                                             </select>
                                                         </div>
@@ -435,7 +465,7 @@
                                                                 <option value="Select">Select</option>
                                                                 <%   let systemTypes = layoutDropdownData.filter(e => e.type === 'systemType') %>
                                                                 <% for (let systemType of systemTypes) { %>
-                                                                <option value="<%=systemType.value%>"><%=systemType.value%></option>
+                                                                <option data-parent value="<%=systemType.value%>"><%=systemType.value%></option>
                                                                 <% } %>
                                                             </select>
                                                         </div>
@@ -449,6 +479,8 @@
                                                                 <% } %>
                                                             </select>
                                                         </div>
+                                                    </div>
+                                                    <div class="row justify-content-center">
                                                         <div class="col-sm-3">
                                                             <label for="mainBusAmp" class="col-form-label">Main Bus Amp</label>
                                                             <select class="form-control" name="mainBusAmp" id="mainBusAmp">
@@ -456,18 +488,6 @@
                                                                 <%   let mainBusAmps = layoutDropdownData.filter(e => e.type === 'mainBusAmp') %>
                                                                 <% for (let mainBusAmp of mainBusAmps) { %>
                                                                 <option value="<%=mainBusAmp.value%>"><%=mainBusAmp.value%></option>
-                                                                <% } %>
-                                                            </select>
-                                                        </div>
-                                                    </div>
-                                                    <div class="row justify-content-center">
-                                                        <div class="col-sm-3">
-                                                            <label for="enclosure" class="col-form-label">Enclosure</label>
-                                                            <select class="form-control" name="enclosure" id="enclosure">
-                                                                <option value="Select">Select</option>
-                                                                <%   let enclosures = layoutDropdownData.filter(e => e.type === 'enclosure') %>
-                                                                <% for (let enclosure of enclosures) { %>
-                                                                <option value="<%=enclosure.value%>"><%=enclosure.value%></option>
                                                                 <% } %>
                                                             </select>
                                                         </div>
@@ -524,7 +544,7 @@
                                                                 <% } %>
                                                             </select>
                                                         </div>
-                                                        <div class="col-sm-5">
+                                                        <div class="col-sm-4">
                                                             <label for="busType" class="col-form-label">Bussing Type</label>
                                                             <select class="form-control" name="busType" id="busType">
                                                                 <option value="Select">Select</option>
@@ -534,41 +554,7 @@
                                                                 <% } %>
                                                             </select>
                                                         </div>
-                                                        <div class="col-sm-1">
-                                                            <label for="insulatedBusCheck" class="col-form-label"><h3></h3> </label>
-                                                            <div class="form-check">
-                                                                <label for="insulatedBusCheck"><input class="form-check-input insulatedBusCheck" name="insulatedBus" id="insulatedBusCheck" type="checkbox">Insulated Bus</label>
-                                                            </div>
-                                                        </div>
-                                                        <div class="col-sm-1">
-                                                            <label for="bootsCheck" class="col-form-label"><h3></h3> </label>
-                                                            <div class="form-check">
-                                                                <label for="bootsCheck"><input class="form-check-input bootsCheck" name="boots" id="bootsCheck" type="checkbox">Boots</label>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="row">
-                                                        <div class="col-sm-4">
-                                                            <label for="iccbPlatform" class="col-form-label">ICCB Platform</label>
-                                                            <select class="form-control" name="iccbPlatform" id="iccbPlatform">
-                                                                <option value="Select">Select</option>
-                                                                <%   let iccbPlatforms = layoutDropdownData.filter(e => e.type === 'iccbPlatform') %>
-                                                                <% for (let iccbPlatform of iccbPlatforms) { %>
-                                                                <option value="<%=iccbPlatform.value%>"><%=iccbPlatform.value%></option>
-                                                                <% } %>
-                                                            </select>
-                                                        </div>
-                                                        <div class="col-sm-4">
-                                                            <label for="mccbPlatform" class="col-form-label">MCCB Platform</label>
-                                                            <select class="form-control" name="mccbPlatform" id="mccbPlatform">
-                                                                <option value="Select">Select</option>
-                                                                <%   let mccbPlatforms = layoutDropdownData.filter(e => e.type === 'mccbPlatform') %>
-                                                                <% for (let mccbPlatform of mccbPlatforms) { %>
-                                                                <option value="<%=mccbPlatform.value%>"><%=mccbPlatform.value%></option>
-                                                                <% } %>
-                                                            </select>
-                                                        </div>
-                                                        <div class="col-sm-4">
+                                                        <div class="col-sm-3">
                                                             <label for="keyInterlocks" class="col-form-label">Key Interlocks</label>
                                                             <select class="form-control" name="keyInterlocks" id="keyInterlocks">
                                                                 <option value="Select">Select</option>
@@ -577,6 +563,20 @@
                                                                 <option value="<%=keyInterlock.value%>"><%=keyInterlock.value%></option>
                                                                 <% } %>
                                                             </select>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row justify-content-center">
+                                                        <div class="col-sm-2">
+                                                            <label for="insulatedBusCheck" class="col-form-label"><h3></h3> </label>
+                                                            <div class="form-check">
+                                                                <label for="insulatedBusCheck"><input class="form-check-input insulatedBusCheck" name="insulatedBus" id="insulatedBusCheck" type="checkbox">Insulated Bus</label>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-sm-2">
+                                                            <label for="bootsCheck" class="col-form-label"><h3></h3> </label>
+                                                            <div class="form-check">
+                                                                <label for="bootsCheck"><input class="form-check-input bootsCheck" name="boots" id="bootsCheck" type="checkbox">Boots</label>
+                                                            </div>
                                                         </div>
                                                     </div>
 
@@ -640,6 +640,19 @@
                                                             </select>
                                                         </div>
                                                         <div class="col-sm-3">
+                                                            <label for="enclosure" class="col-form-label">Enclosure</label>
+                                                            <select class="form-control" name="enclosure" id="enclosure" disabled="disabled">
+                                                                <%   let enclosures = layoutDropdownData.filter(e => e.type === 'enclosure') %>
+                                                                <% for (let enclosure of enclosures) { %>
+                                                                    <% if (layoutData[0].enclosure == enclosure.value) { %>
+                                                                    <option value="<%=enclosure.value%>" selected="selected"><%=enclosure.value%></option>
+                                                                    <% } else { %>
+                                                                    <option value="<%=enclosure.value%>"><%=enclosure.value%></option>
+                                                                    <% } %>
+                                                                <% } %>
+                                                            </select>
+                                                        </div>
+                                                        <div class="col-sm-3">
                                                             <label for="systemType" class="col-form-label">System Type</label>
                                                             <select class="form-control" name="systemType" id="systemType"  disabled="disabled">
                                                                 <%   let systemTypes = layoutDropdownData.filter(e => e.type === 'systemType') %>
@@ -665,6 +678,8 @@
                                                                 <% } %>
                                                             </select>
                                                         </div>
+                                                    </div>
+                                                    <div class="row justify-content-center">
                                                         <div class="col-sm-3">
                                                             <label for="mainBusAmp" class="col-form-label">Main Bus Amp</label>
                                                             <select class="form-control" name="mainBusAmp" id="mainBusAmp"  disabled="disabled">
@@ -674,21 +689,6 @@
                                                                     <option value="<%=mainBusAmp.value%>" selected="selected"><%=mainBusAmp.value%></option>
                                                                     <% } else { %>
                                                                     <option value="<%=mainBusAmp.value%>"><%=mainBusAmp.value%></option>
-                                                                    <% } %>
-                                                                <% } %>
-                                                            </select>
-                                                        </div>
-                                                    </div>
-                                                    <div class="row justify-content-center">
-                                                        <div class="col-sm-3">
-                                                            <label for="enclosure" class="col-form-label">Enclosure</label>
-                                                            <select class="form-control" name="enclosure" id="enclosure" disabled="disabled">
-                                                                <%   let enclosures = layoutDropdownData.filter(e => e.type === 'enclosure') %>
-                                                                <% for (let enclosure of enclosures) { %>
-                                                                    <% if (layoutData[0].enclosure == enclosure.value) { %>
-                                                                    <option value="<%=enclosure.value%>" selected="selected"><%=enclosure.value%></option>
-                                                                    <% } else { %>
-                                                                    <option value="<%=enclosure.value%>"><%=enclosure.value%></option>
                                                                     <% } %>
                                                                 <% } %>
                                                             </select>
@@ -761,7 +761,7 @@
                                                                 <% } %>
                                                             </select>
                                                         </div>
-                                                        <div class="col-sm-5">
+                                                        <div class="col-sm-4">
                                                             <label for="busType" class="col-form-label">Bussing Type</label>
                                                             <select class="form-control" name="busType" id="busType" disabled="disabled">
                                                                 <%   let busTypes = layoutDropdownData.filter(e => e.type === 'busType') %>
@@ -774,55 +774,7 @@
                                                                 <% } %>
                                                             </select>
                                                         </div>
-                                                        <div class="col-sm-1">
-                                                            <label for="insulatedBusCheck" class="col-form-label"><h3></h3> </label>
-                                                            <div class="form-check">
-                                                                <% if (layoutData[0].insulatedBus == 'Y') { %>
-                                                                    <label for="insulatedBusCheck"><input class="form-check-input insulatedBusCheck" name="insulatedBus" id="insulatedBusCheck" type="checkbox" checked="checked" disabled="disabled">Insulated Bus</label>
-                                                                <% } else { %>
-                                                                    <label for="insulatedBusCheck"><input class="form-check-input insulatedBusCheck" name="insulatedBus" id="insulatedBusCheck" type="checkbox" disabled="disabled">Insulated Bus</label>
-                                                                <% } %>
-                                                            </div>
-                                                        </div>
-                                                        <div class="col-sm-1">
-                                                            <label for="bootsCheck" class="col-form-label"><h3></h3> </label>
-                                                            <div class="form-check">
-                                                                <% if (layoutData[0].boots == 'Y') { %>
-                                                                    <label for="bootsCheck"><input class="form-check-input bootsCheck" name="boots" id="bootsCheck" type="checkbox" checked="checked" disabled="disabled">Boots</label>
-                                                                <% } else { %>
-                                                                    <label for="bootsCheck"><input class="form-check-input bootsCheck" name="boots" id="bootsCheck" type="checkbox" disabled="disabled">Boots</label>
-                                                                <% } %>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="row">
-                                                        <div class="col-sm-4">
-                                                            <label for="iccbPlatform" class="col-form-label">ICCB Platform</label>
-                                                            <select class="form-control" name="iccbPlatform" id="iccbPlatform" disabled="disabled">
-                                                                <%   let iccbPlatforms = layoutDropdownData.filter(e => e.type === 'iccbPlatform') %>
-                                                                <% for (let iccbPlatform of iccbPlatforms) { %>
-                                                                    <% if (layoutData[0].iccbPlatform == iccbPlatform.value) { %>
-                                                                    <option value="<%=iccbPlatform.value%>" selected="selected"><%=iccbPlatform.value%></option>
-                                                                    <% } else { %>
-                                                                    <option value="<%=iccbPlatform.value%>"><%=iccbPlatform.value%></option>
-                                                                    <% } %>
-                                                                <% } %>
-                                                            </select>
-                                                        </div>
-                                                        <div class="col-sm-4">
-                                                            <label for="mccbPlatform" class="col-form-label">MCCB Platform</label>
-                                                            <select class="form-control" name="mccbPlatform" id="mccbPlatform" disabled="disabled">
-                                                                <%   let mccbPlatforms = layoutDropdownData.filter(e => e.type === 'mccbPlatform') %>
-                                                                <% for (let mccbPlatform of mccbPlatforms) { %>
-                                                                    <% if (layoutData[0].mccbPlatform == mccbPlatform.value) { %>
-                                                                    <option value="<%=mccbPlatform.value%>" selected="selected"><%=mccbPlatform.value%></option>
-                                                                    <% } else { %>
-                                                                    <option value="<%=mccbPlatform.value%>"><%=mccbPlatform.value%></option>
-                                                                    <% } %>
-                                                                <% } %>
-                                                            </select>
-                                                        </div>
-                                                        <div class="col-sm-4">
+                                                        <div class="col-sm-3">
                                                             <label for="keyInterlocks" class="col-form-label">Key Interlocks</label>
                                                             <select class="form-control" name="keyInterlocks" id="keyInterlocks" disabled="disabled">
                                                                 <%   let keyInterlocks = layoutDropdownData.filter(e => e.type === 'keyInterlocks') %>
@@ -834,6 +786,29 @@
                                                                     <% } %>
                                                                 <% } %>
                                                             </select>
+                                                        </div>
+
+                                                    </div>
+                                                    <div class="row justify-content-center">
+                                                        <div class="col-sm-2">
+                                                            <label for="insulatedBusCheck" class="col-form-label"><h3></h3> </label>
+                                                            <div class="form-check">
+                                                                <% if (layoutData[0].insulatedBus == 'Y') { %>
+                                                                    <label for="insulatedBusCheck"><input class="form-check-input insulatedBusCheck" name="insulatedBus" id="insulatedBusCheck" type="checkbox" checked="checked" disabled="disabled">Insulated Bus</label>
+                                                                <% } else { %>
+                                                                    <label for="insulatedBusCheck"><input class="form-check-input insulatedBusCheck" name="insulatedBus" id="insulatedBusCheck" type="checkbox" disabled="disabled">Insulated Bus</label>
+                                                                <% } %>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-sm-2">
+                                                            <label for="bootsCheck" class="col-form-label"><h3></h3> </label>
+                                                            <div class="form-check">
+                                                                <% if (layoutData[0].boots == 'Y') { %>
+                                                                    <label for="bootsCheck"><input class="form-check-input bootsCheck" name="boots" id="bootsCheck" type="checkbox" checked="checked" disabled="disabled">Boots</label>
+                                                                <% } else { %>
+                                                                    <label for="bootsCheck"><input class="form-check-input bootsCheck" name="boots" id="bootsCheck" type="checkbox" disabled="disabled">Boots</label>
+                                                                <% } %>
+                                                            </div>
                                                         </div>
                                                     </div>
 
@@ -924,8 +899,8 @@
                                                                             <input type="text" value="<%=subData[0].layoutName%>" name="layoutName" hidden="hidden">
                                                                             <div class="row">
                                                                                 <div class="col-sm-2">
-                                                                                    <label for="ulListing" class="col-form-label">UL Listing</label>
-                                                                                    <select class="form-control" name="ulListing" id="ulListing">
+                                                                                    <label for="ulListing_edit" class="col-form-label">UL Listing</label>
+                                                                                    <select class="form-control" name="ulListing_edit" id="ulListing_edit">
                                                                                         <%   let ulListingTypes = layoutDropdownData.filter(e => e.type === 'ulListing') %>
                                                                                         <% for (let ulListing of ulListingTypes) { %>
                                                                                             <% if (layoutData[0].ulListing == ulListing.value) { %>
@@ -936,50 +911,9 @@
                                                                                         <% } %>
                                                                                     </select>
                                                                                 </div>
-                                                                                <div class="col-sm-4">
-                                                                                    <label for="systemType" class="col-form-label">System Type</label>
-                                                                                    <select class="form-control" name="systemType" id="systemType">
-                                                                                        <%   let systemVoltTypes = layoutDropdownData.filter(e => e.type === 'systemType') %>
-                                                                                        <% for (let systemType of systemVoltTypes) { %>
-                                                                                            <% if (layoutData[0].systemType == systemType.value) { %>
-                                                                                            <option value="<%=systemType.value%>" selected="selected"><%=systemType.value%></option>
-                                                                                            <% } else { %>
-                                                                                            <option value="<%=systemType.value%>"><%=systemType.value%></option>
-                                                                                            <% } %>
-                                                                                        <% } %>
-                                                                                    </select>
-                                                                                </div>
                                                                                 <div class="col-sm-3">
-                                                                                    <label for="systemAmp" class="col-form-label">System Amp</label>
-                                                                                    <select class="form-control" name="systemAmp" id="systemAmp">
-                                                                                        <%   let systemAmpTypes = layoutDropdownData.filter(e => e.type === 'systemAmp') %>
-                                                                                        <% for (let systemAmp of systemAmpTypes) { %>
-                                                                                            <% if (layoutData[0].systemAmp == systemAmp.value) { %>
-                                                                                            <option value="<%=systemAmp.value%>" selected="selected"><%=systemAmp.value%></option>
-                                                                                            <% } else { %>
-                                                                                            <option value="<%=systemAmp.value%>"><%=systemAmp.value%></option>
-                                                                                            <% } %>
-                                                                                        <% } %>
-                                                                                    </select>
-                                                                                </div>
-                                                                                <div class="col-sm-3">
-                                                                                    <label for="mainBusAmp" class="col-form-label">Main Bus Amp</label>
-                                                                                    <select class="form-control" name="mainBusAmp" id="mainBusAmp">
-                                                                                        <%   let mainBusAmpTypes = layoutDropdownData.filter(e => e.type === 'mainBusAmp') %>
-                                                                                        <% for (let mainBusAmp of mainBusAmpTypes) { %>
-                                                                                            <% if (layoutData[0].mainBusAmp == mainBusAmp.value) { %>
-                                                                                            <option value="<%=mainBusAmp.value%>" selected="selected"><%=mainBusAmp.value%></option>
-                                                                                            <% } else { %>
-                                                                                            <option value="<%=mainBusAmp.value%>"><%=mainBusAmp.value%></option>
-                                                                                            <% } %>
-                                                                                        <% } %>
-                                                                                    </select>
-                                                                                </div>
-                                                                            </div>
-                                                                            <div class="row justify-content-center">
-                                                                                <div class="col-sm-2">
-                                                                                    <label for="enclosure" class="col-form-label">Enclosure</label>
-                                                                                    <select class="form-control" name="enclosure" id="enclosure">
+                                                                                    <label for="enclosure_edit" class="col-form-label">Enclosure</label>
+                                                                                    <select class="form-control" name="enclosure_edit" id="enclosure_edit">
                                                                                         <%   let enclosureTypes = layoutDropdownData.filter(e => e.type === 'enclosure') %>
                                                                                         <% for (let enclosure of enclosureTypes) { %>
                                                                                             <% if (layoutData[0].enclosure == enclosure.value) { %>
@@ -991,8 +925,49 @@
                                                                                     </select>
                                                                                 </div>
                                                                                 <div class="col-sm-4">
-                                                                                    <label for="accessibility" class="col-form-label">Accessibility</label>
-                                                                                    <select class="form-control" name="accessibility" id="accessibility">
+                                                                                    <label for="systemType_edit" class="col-form-label">System Type</label>
+                                                                                    <select class="form-control" name="systemType_edit" id="systemType_edit">
+                                                                                        <%   let systemVoltTypes = layoutDropdownData.filter(e => e.type === 'systemType') %>
+                                                                                        <% for (let systemType of systemVoltTypes) { %>
+                                                                                            <% if (layoutData[0].systemType == systemType.value) { %>
+                                                                                            <option value="<%=systemType.value%>" selected="selected"><%=systemType.value%></option>
+                                                                                            <% } else { %>
+                                                                                            <option value="<%=systemType.value%>"><%=systemType.value%></option>
+                                                                                            <% } %>
+                                                                                        <% } %>
+                                                                                    </select>
+                                                                                </div>
+                                                                                <div class="col-sm-3">
+                                                                                    <label for="systemAmp_edit" class="col-form-label">System Amp</label>
+                                                                                    <select class="form-control" name="systemAmp_edit" id="systemAmp_edit">
+                                                                                        <%   let systemAmpTypes = layoutDropdownData.filter(e => e.type === 'systemAmp') %>
+                                                                                        <% for (let systemAmp of systemAmpTypes) { %>
+                                                                                            <% if (layoutData[0].systemAmp == systemAmp.value) { %>
+                                                                                            <option value="<%=systemAmp.value%>" selected="selected"><%=systemAmp.value%></option>
+                                                                                            <% } else { %>
+                                                                                            <option value="<%=systemAmp.value%>"><%=systemAmp.value%></option>
+                                                                                            <% } %>
+                                                                                        <% } %>
+                                                                                    </select>
+                                                                                </div>
+                                                                            </div>
+                                                                            <div class="row justify-content-center">
+                                                                                <div class="col-sm-3">
+                                                                                    <label for="mainBusAmp_edit" class="col-form-label">Main Bus Amp</label>
+                                                                                    <select class="form-control" name="mainBusAmp_edit" id="mainBusAmp_edit">
+                                                                                        <%   let mainBusAmpTypes = layoutDropdownData.filter(e => e.type === 'mainBusAmp') %>
+                                                                                        <% for (let mainBusAmp of mainBusAmpTypes) { %>
+                                                                                            <% if (layoutData[0].mainBusAmp == mainBusAmp.value) { %>
+                                                                                            <option value="<%=mainBusAmp.value%>" selected="selected"><%=mainBusAmp.value%></option>
+                                                                                            <% } else { %>
+                                                                                            <option value="<%=mainBusAmp.value%>"><%=mainBusAmp.value%></option>
+                                                                                            <% } %>
+                                                                                        <% } %>
+                                                                                    </select>
+                                                                                </div>
+                                                                                <div class="col-sm-4">
+                                                                                    <label for="accessibility_edit" class="col-form-label">Accessibility</label>
+                                                                                    <select class="form-control" name="accessibility_edit" id="accessibility_edit">
                                                                                         <%   let accessibilityTypes = layoutDropdownData.filter(e => e.type === 'accessibility') %>
                                                                                         <% for (let accessibility of accessibilityTypes) { %>
                                                                                             <% if (layoutData[0].accessibility == accessibility.value) { %>
@@ -1003,10 +978,9 @@
                                                                                         <% } %>
                                                                                     </select>
                                                                                 </div>
-
                                                                                 <div class="col-sm-3">
-                                                                                    <label for="cableAccess" class="col-form-label">Cable Entry</label>
-                                                                                    <select class="form-control" name="cableAccess" id="cableAccess">
+                                                                                    <label for="cableAccess_edit" class="col-form-label">Cable Entry</label>
+                                                                                    <select class="form-control" name="cableAccess_edit" id="cableAccess_edit">
                                                                                         <%   let cableAccessTypes = layoutDropdownData.filter(e => e.type === 'cableAccess') %>
                                                                                         <% for (let cableAccess of cableAccessTypes) { %>
                                                                                             <% if (layoutData[0].cableAccess == cableAccess.value) { %>
@@ -1017,9 +991,9 @@
                                                                                         <% } %>
                                                                                     </select>
                                                                                 </div>
-                                                                                <div class="col-sm-3">
-                                                                                    <label for="paint" class="col-form-label">Paint</label>
-                                                                                    <select class="form-control" name="paint" id="paint">
+                                                                                <div class="col-sm-2">
+                                                                                    <label for="paint_edit" class="col-form-label">Paint</label>
+                                                                                    <select class="form-control" name="paint_edit" id="paint_edit">
                                                                                         <%   let paintTypes = layoutDropdownData.filter(e => e.type === 'paint') %>
                                                                                         <% for (let paint of paintTypes) { %>
                                                                                             <% if (layoutData[0].paint == paint.value) { %>
@@ -1033,8 +1007,8 @@
                                                                             </div>
                                                                             <div class="row">
                                                                                 <div class="col-sm-3">
-                                                                                    <label for="interruptRating" class="col-form-label">Interrupting Rating</label>
-                                                                                    <select class="form-control" name="interruptRating" id="interruptRating">
+                                                                                    <label for="interruptRating_edit" class="col-form-label">Interrupting Rating</label>
+                                                                                    <select class="form-control" name="interruptRating_edit" id="interruptRating_edit">
                                                                                         <%   let interruptRatingTypes = layoutDropdownData.filter(e => e.type === 'interruptRating') %>
                                                                                         <% for (let interruptRating of interruptRatingTypes) { %>
                                                                                             <% if (layoutData[0].interruptRating == interruptRating.value) { %>
@@ -1046,8 +1020,8 @@
                                                                                     </select>
                                                                                 </div>
                                                                                 <div class="col-sm-3">
-                                                                                    <label for="busBracing" class="col-form-label">Bus Bracing</label>
-                                                                                    <select class="form-control" name="busBracing" id="busBracing">
+                                                                                    <label for="busBracing_edit" class="col-form-label">Bus Bracing</label>
+                                                                                    <select class="form-control" name="busBracing_edit" id="busBracing_edit">
                                                                                         <%   let busBracingTypes = layoutDropdownData.filter(e => e.type === 'busBracing') %>
                                                                                         <% for (let busBracing of busBracingTypes) { %>
                                                                                             <% if (layoutData[0].busBracing == busBracing.value) { %>
@@ -1059,8 +1033,8 @@
                                                                                     </select>
                                                                                 </div>
                                                                                 <div class="col-sm-6">
-                                                                                    <label for="busType" class="col-form-label">Bussing Type</label>
-                                                                                    <select class="form-control" name="busType" id="busType">
+                                                                                    <label for="busType_edit" class="col-form-label">Bussing Type</label>
+                                                                                    <select class="form-control" name="busType_edit" id="busType_edit">
                                                                                         <%   let busMatTypes = layoutDropdownData.filter(e => e.type === 'busType') %>
                                                                                         <% for (let busType of busMatTypes) { %>
                                                                                             <% if (layoutData[0].busType == busType.value) { %>
@@ -1073,36 +1047,11 @@
                                                                                 </div>
                                                                             </div>
 
+
                                                                             <div class="row">
-                                                                                <div class="col-sm-4">
-                                                                                    <label for="iccbPlatform" class="col-form-label">ICCB Platform</label>
-                                                                                    <select class="form-control" name="iccbPlatform" id="iccbPlatform" >
-                                                                                        <%   let iccbPlatformTypes = layoutDropdownData.filter(e => e.type === 'iccbPlatform') %>
-                                                                                        <% for (let iccbPlatform of iccbPlatformTypes) { %>
-                                                                                            <% if (layoutData[0].iccbPlatform == iccbPlatform.value) { %>
-                                                                                            <option value="<%=iccbPlatform.value%>" selected="selected"><%=iccbPlatform.value%></option>
-                                                                                            <% } else { %>
-                                                                                            <option value="<%=iccbPlatform.value%>"><%=iccbPlatform.value%></option>
-                                                                                            <% } %>
-                                                                                        <% } %>
-                                                                                    </select>
-                                                                                </div>
-                                                                                <div class="col-sm-4">
-                                                                                    <label for="mccbPlatform" class="col-form-label">MCCB Platform</label>
-                                                                                    <select class="form-control" name="mccbPlatform" id="mccbPlatform">
-                                                                                        <%   let mccbPlatformTypes = layoutDropdownData.filter(e => e.type === 'mccbPlatform') %>
-                                                                                        <% for (let mccbPlatform of mccbPlatformTypes) { %>
-                                                                                            <% if (layoutData[0].mccbPlatform == mccbPlatform.value) { %>
-                                                                                            <option value="<%=mccbPlatform.value%>" selected="selected"><%=mccbPlatform.value%></option>
-                                                                                            <% } else { %>
-                                                                                            <option value="<%=mccbPlatform.value%>"><%=mccbPlatform.value%></option>
-                                                                                            <% } %>
-                                                                                        <% } %>
-                                                                                    </select>
-                                                                                </div>
-                                                                                <div class="col-sm-4">
-                                                                                    <label for="keyInterlocks" class="col-form-label">Key Interlocks</label>
-                                                                                    <select class="form-control" name="keyInterlocks" id="keyInterlocks">
+                                                                                <div class="col-sm-6">
+                                                                                    <label for="keyInterlocks_edit" class="col-form-label">Key Interlocks</label>
+                                                                                    <select class="form-control" name="keyInterlocks_edit" id="keyInterlocks_edit">
                                                                                         <%   let keyInterlockTypes = layoutDropdownData.filter(e => e.type === 'keyInterlocks') %>
                                                                                         <% for (let keyInterlock of keyInterlockTypes) { %>
                                                                                             <% if (layoutData[0].keyInterlocks == keyInterlock.value) { %>
@@ -1113,26 +1062,23 @@
                                                                                         <% } %>
                                                                                     </select>
                                                                                 </div>
-                                                                            </div>
-
-                                                                            <div class="row justify-content-center">
                                                                                 <div class="col-sm-3">
-                                                                                    <label for="insulatedBusCheck" class="col-form-label"><h3></h3> </label>
+                                                                                    <label for="insulatedBusCheck_edit" class="col-form-label"><h3></h3> </label>
                                                                                     <div class="form-check">
                                                                                         <% if (layoutData[0].insulatedBus == 'Y') { %>
-                                                                                            <label for="insulatedBusCheck"><input class="form-check-input insulatedBusCheck" name="insulatedBus" id="insulatedBusCheck" type="checkbox" checked="checked">Insulated Bus</label>
+                                                                                            <label for="insulatedBusCheck_edit"><input class="form-check-input insulatedBusCheck_edit" name="insulatedBus_edit" id="insulatedBusCheck_edit" type="checkbox" checked="checked">Insulated Bus</label>
                                                                                         <% } else { %>
-                                                                                            <label for="insulatedBusCheck"><input class="form-check-input insulatedBusCheck" name="insulatedBus" id="insulatedBusCheck" type="checkbox">Insulated Bus</label>
+                                                                                            <label for="insulatedBusCheck_edit"><input class="form-check-input insulatedBusCheck_edit" name="insulatedBus_edit" id="insulatedBusCheck_edit" type="checkbox">Insulated Bus</label>
                                                                                         <% } %>
                                                                                     </div>
                                                                                 </div>
-                                                                                <div class="col-sm-2">
-                                                                                    <label for="bootsCheck" class="col-form-label"><h3></h3> </label>
+                                                                                <div class="col-sm-3">
+                                                                                    <label for="bootsCheck_edit" class="col-form-label"><h3></h3> </label>
                                                                                     <div class="form-check">
                                                                                         <% if (layoutData[0].boots == 'Y') { %>
-                                                                                            <label for="bootsCheck"><input class="form-check-input bootsCheck" name="boots" id="bootsCheck" type="checkbox" checked="checked">Boots</label>
+                                                                                            <label for="bootsCheck_edit"><input class="form-check-input bootsCheck_edit" name="boots_edit" id="bootsCheck_edit" type="checkbox" checked="checked">Boots</label>
                                                                                         <% } else { %>
-                                                                                            <label for="bootsCheck"><input class="form-check-input bootsCheck" name="boots" id="bootsCheck" type="checkbox">Boots</label>
+                                                                                            <label for="bootsCheck_edit"><input class="form-check-input bootsCheck_edit" name="boots_edit" id="bootsCheck_edit" type="checkbox">Boots</label>
                                                                                         <% } %>
                                                                                     </div>
                                                                                 </div>
@@ -1143,10 +1089,10 @@
                                                                                 <div class="col-sm-2">
                                                                                     <div class="form-check">
                                                                                         <% if (layoutData[0].seismic == 'Y') { %>
-                                                                                            <label class="form-check-label" for="seismicCheck"><input type="checkbox" name="seismic" class="form-check-input seismicCheck" id="seismicCheck" checked="checked">
+                                                                                            <label class="form-check-label" for="seismicCheck_edit"><input type="checkbox" name="seismic_edit" class="form-check-input seismicCheck_edit" id="seismicCheck_edit" checked="checked">
                                                                                                 Seismic</label>
                                                                                         <% } else { %>
-                                                                                            <label class="form-check-label" for="seismicCheck"><input type="checkbox" name="seismic" class="form-check-input seismicCheck" id="seismicCheck">
+                                                                                            <label class="form-check-label" for="seismicCheck_edit"><input type="checkbox" name="seismic_edit" class="form-check-input seismicCheck_edit" id="seismicCheck_edit">
                                                                                                 Seismic</label>
                                                                                         <% } %>
                                                                                     </div>
@@ -1154,10 +1100,10 @@
                                                                                 <div class="col-sm-2">
                                                                                     <div class="form-check">
                                                                                         <% if (layoutData[0].mimic == 'Y') { %>
-                                                                                            <label class="form-check-label" for="mimicCheck"><input type="checkbox" name="mimic" class="form-check-input mimicCheck" id="mimicCheck" checked="checked">
+                                                                                            <label class="form-check-label" for="mimicCheck_edit"><input type="checkbox" name="mimic_edit" class="form-check-input mimicCheck_edit" id="mimicCheck_edit" checked="checked">
                                                                                                 Mimic Bus</label>
                                                                                         <% } else { %>
-                                                                                            <label class="form-check-label" for="mimicCheck"><input type="checkbox" name="mimic" class="form-check-input mimicCheck" id="mimicCheck">
+                                                                                            <label class="form-check-label" for="mimicCheck_edit"><input type="checkbox" name="mimic_edit" class="form-check-input mimicCheck_edit" id="mimicCheck_edit">
                                                                                                 Mimic Bus</label>
                                                                                         <% } %>
                                                                                     </div>
@@ -1165,10 +1111,10 @@
                                                                                 <div class="col-sm-2">
                                                                                     <div class="form-check">
                                                                                         <% if (layoutData[0].ir == 'Y') { %>
-                                                                                            <label class="form-check-label" for="IRCheck"><input type="checkbox" name="IR" class="form-check-input IRCheck" id="IRCheck" checked="checked">
+                                                                                            <label class="form-check-label" for="IRCheck_edit"><input type="checkbox" name="IR_edit" class="form-check-input IRCheck_edit" id="IRCheck_edit" checked="checked">
                                                                                                 IR Windows</label>
                                                                                         <% } else { %>
-                                                                                            <label class="form-check-label" for="IRCheck"><input type="checkbox" name="IR" class="form-check-input IRCheck" id="IRCheck">
+                                                                                            <label class="form-check-label" for="IRCheck_edit"><input type="checkbox" name="IR_edit" class="form-check-input IRCheck_edit" id="IRCheck_edit">
                                                                                                 IR Windows</label>
                                                                                         <% } %>
                                                                                     </div>
@@ -1176,10 +1122,10 @@
                                                                                 <div class="col-sm-2">
                                                                                     <div class="form-check">
                                                                                         <% if (layoutData[0].wireway == 'Y') { %>
-                                                                                            <label class="form-check-label" for="wirewayCheck"><input type="checkbox" name="wireway" class="form-check-input wirewayCheck" id="wirewayCheck" checked="checked">
+                                                                                            <label class="form-check-label" for="wirewayCheck_edit"><input type="checkbox" name="wireway_edit" class="form-check-input wirewayCheck_edit" id="wirewayCheck_edit" checked="checked">
                                                                                                 Wireway</label>
                                                                                         <% } else { %>
-                                                                                            <label class="form-check-label" for="wirewayCheck"><input type="checkbox" name="wireway" class="form-check-input wirewayCheck" id="wirewayCheck">
+                                                                                            <label class="form-check-label" for="wirewayCheck_edit"><input type="checkbox" name="wireway_edit" class="form-check-input wirewayCheck_edit" id="wirewayCheck_edit">
                                                                                                 Wireway</label>
                                                                                         <% } %>
                                                                                     </div>
@@ -1187,10 +1133,10 @@
                                                                                 <div class="col-sm-2">
                                                                                     <div class="form-check">
                                                                                         <% if (layoutData[0].trolley == 'Y') { %>
-                                                                                            <label class="form-check-label" for="trolleyCheck"><input type="checkbox" name="trolley" class="form-check-input trolleyCheck" id="trolleyCheck" checked="checked">
+                                                                                            <label class="form-check-label" for="trolleyCheck_edit"><input type="checkbox" name="trolley_edit" class="form-check-input trolleyCheck_edit" id="trolleyCheck_edit" checked="checked">
                                                                                                 Trolley Track</label>
                                                                                         <% } else { %>
-                                                                                            <label class="form-check-label" for="trolleyCheck"><input type="checkbox" name="trolley" class="form-check-input trolleyCheck" id="trolleyCheck">
+                                                                                            <label class="form-check-label" for="trolleyCheck_edit"><input type="checkbox" name="trolley_edit" class="form-check-input trolleyCheck_edit" id="trolleyCheck_edit">
                                                                                                 Trolley Track</label>
                                                                                         <% } %>
                                                                                     </div>
@@ -1243,6 +1189,12 @@
                                                             <div class="col-sm-2" >
                                                                 <label for="example-text-input" class="col-form-label"></label>
                                                                 <input id="resetSectionBtn" type="button" value="Clear All" class="btn-block btn btn-outline-danger waves-effect waves-light" data-toggle="modal" data-target="#resetModal"/>
+                                                            </div>
+                                                            <div class="col-sm-2">
+                                                                <form id="addSectionForm" class="addSectionForm" action="" method="POST">
+                                                                    <label for="example-text-input" class="col-form-label"></label>
+                                                                    <button id="genCreoBtn" type="submit" class="btn-block btn btn-outline-success waves-effect waves-light" onclick="this.form.action='../creoGenSubmittal/?subID=<%= subData[0].jobNum %><%= subData[0].releaseNum %>_<%= subData[0].subID%>'">Generate Submittal</button>
+                                                                </form>
                                                             </div>
                                                         </div>
                                                         <!-- END BUTTONS -->
@@ -2513,6 +2465,38 @@
                                                                     </div>
                                                                 </div>
                                                                 <div class="row">
+                                                                    <div class="col-sm-4">
+                                                                        <label for="iccbPlatform" class="col-form-label">ICCB Platform</label>
+                                                                        <select class="form-control" name="iccbPlatform" id="iccbPlatform">
+                                                                            <option value="Select">Select</option>
+                                                                            <%   let iccbPlatforms = layoutDropdownData.filter(e => e.type === 'iccbPlatform') %>
+                                                                            <% for (let iccbPlatform of iccbPlatforms) { %>
+                                                                            <option value="<%=iccbPlatform.value%>"><%=iccbPlatform.value%></option>
+                                                                            <% } %>
+                                                                        </select>
+                                                                    </div>
+                                                                    <div class="col-sm-4">
+                                                                        <label for="mccbPlatform" class="col-form-label">MCCB Platform</label>
+                                                                        <select class="form-control" name="mccbPlatform" id="mccbPlatform">
+                                                                            <option value="Select">Select</option>
+                                                                            <%   let mccbPlatforms = layoutDropdownData.filter(e => e.type === 'mccbPlatform') %>
+                                                                            <% for (let mccbPlatform of mccbPlatforms) { %>
+                                                                            <option value="<%=mccbPlatform.value%>"><%=mccbPlatform.value%></option>
+                                                                            <% } %>
+                                                                        </select>
+                                                                    </div>
+                                                                    <div class="col-sm-4">
+                                                                        <label for="mccbPlatform" class="col-form-label">MV VCB Platform</label>
+                                                                        <select class="form-control" name="vcbPlatform" id="vcbPlatform">
+                                                                            <option value="Select">Select</option>
+                                                                            <%   let vcbPlatforms = layoutDropdownData.filter(e => e.type === 'vcbPlatform') %>
+                                                                            <% for (let vcbPlatform of vcbPlatforms) { %>
+                                                                            <option value="<%=vcbPlatform.value%>"><%=vcbPlatform.value%></option>
+                                                                            <% } %>
+                                                                        </select>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="row">
                                                                     <div class="col-sm-6">
                                                                         <div class="form-group">
                                                                             <label for="" class="col-form-label">Breaker P/N</label>
@@ -2662,10 +2646,10 @@
                                                                                 <option value="80A">80A</option>
                                                                                 <option value="90A">90A</option>
                                                                                 <option value="100A">100A</option>
-                                                                                <option value="110A">100A</option>
-                                                                                <option value="120A">100A</option>
-                                                                                <option value="130A">100A</option>
-                                                                                <option value="140A">100A</option>
+                                                                                <option value="110A">110A</option>
+                                                                                <option value="120A">120A</option>
+                                                                                <option value="130A">130A</option>
+                                                                                <option value="140A">140A</option>
                                                                                 <option value="150A">150A</option>
                                                                                 <option value="160A">160A</option>
                                                                                 <option value="170A">170A</option>
@@ -2874,7 +2858,7 @@
                                                             </form>
 
 
-                                                            <!-- EDIT CURRENT LAYOUT MODAL -->
+                                                            <!-- EDIT CURRENT BREAKER MODAL -->
                                                             <div class="row justify-content-center" style="padding-bottom:1%;">
                                                                 <div class="col-12">
                                                                     <div class="modal fade" id="editBreakerModal" tabindex="-1" role="dialog" aria-labelledby="editBreakerModalTitle" aria-hidden="true">
@@ -2887,15 +2871,13 @@
                                                                                     </button>
                                                                                 </div>
                                                                                 <div class="modal-body">
-                                                                                    <form id="editBreakerForm" class="editBreakerForm" action="../editBreaker/?subID=<%= subData[0].jobNum%><%= subData[0].releaseNum%>_<%= subData[0].subID%>&layoutID=<%=deviceData[i].layoutID%>&devID=<%= deviceData[i].devID%>" method="POST">
+                                                                                    <form id="editBreakerForm" class="editBreakerForm" action="../submittalEditDevice/?subID=<%= subData[0].jobNum%><%= subData[0].releaseNum%>_<%= subData[0].subID%>&layoutID=<%=deviceData[i].layoutID%>&devID=<%= deviceData[i].devID%>" method="POST">
                                                                                         <div class="form-group">
                                                                                             <p class="mb-0">
                                                                                                 Please fill out the following and click "Save" afterwards
                                                                                             </p>
-                                                                                            <p class="text-muted m-b-5"></p>
                                                                                             <div class="row">
                                                                                                 <div class="col-sm-12">
-                                                                                                    <h4 class="mt-0 header-title">Circuit Breakers</h4>
                                                                                                     <div class="card-body">
                                                                                                         <div class="row">
                                                                                                             <div class="col-sm-2">
@@ -2914,27 +2896,26 @@
                                                                                                                     <% } %>
                                                                                                                 </div>
                                                                                                             </div>
-                                                                                                            <div class="col-sm-2"  style="margin-top: 0.5rem;">
+                                                                                                            <div class="col-sm-3"  style="margin-top: 0.5rem;">
                                                                                                                 <div class="form-group">
                                                                                                                     <label for="" class="control-label">Cat. Code</label>
                                                                                                                     <select class="form-control" id="" name="catCode">
                                                                                                                         <option>Select</option>
-                                                                                                                        <option value="36-CB MC">36-CB MC</option>
-                                                                                                                        <option value="37-CB IC">37-CB IC</option>
-                                                                                                                        <option value="38-DISC SW">38-DISC SW</option>
+                                                                                                                        <% let catCodes = ["36-CB MC", "37-CB IC", "38-DISC SW"]; %>
+                                                                                                                        <% for (let catCode of catCodes) { %>
+                                                                                                                            <% if (deviceData[i].catCode == catCode) { %>
+                                                                                                                                <option value="<%=catCode%>" selected="selected"><%=deviceData[i].catCode%></option>
+                                                                                                                            <% } else { %>
+                                                                                                                                <option value="<%=catCode%>"><%=catCode%></option>
+                                                                                                                            <% } %>
+                                                                                                                        <% } %>
                                                                                                                     </select>
                                                                                                                 </div>
                                                                                                             </div>
                                                                                                             <div class="col-sm-5">
                                                                                                                 <div class="form-group">
                                                                                                                     <label for="example-text-input" class="col-form-label">Device Designation<i style="color: red;">&nbsp;*</i></label>
-                                                                                                                    <input type="text" name="devDesignation" class="form-control" value="" data-toggle="tooltip" data-placement="top" title="To declare multiple breakers (i.e. CB-1A, CB-2A, ..., CB-6A), use the following convention: CB-(1-6)A" placeholder="Type Designation Here" autocomplete="off" required/>
-                                                                                                                </div>
-                                                                                                            </div>
-                                                                                                            <div class="col-sm-1">
-                                                                                                                <div class="form-group">
-                                                                                                                    <input type="checkbox" name="tieBrkCheck" id="tieBrkCheck" class="form-check-input" style="margin-top: 2.7rem; margin-left: .2rem;"/>
-                                                                                                                    <label class="form-check-label" for="tieBrkCheck" style="margin-top: 2.5rem; margin-left: 1.4rem;">TIE<i style="color: red;">&nbsp;*</i></label>
+                                                                                                                    <input type="text" name="devDesignation" class="form-control" value="<%= deviceData[i].devDesignation%>" data-toggle="tooltip" data-placement="top" title="To declare multiple breakers (i.e. CB-1A, CB-2A, ..., CB-6A), use the following convention: CB-(1-6)A" placeholder="Type Designation Here" autocomplete="off" required/>
                                                                                                                 </div>
                                                                                                             </div>
                                                                                                         </div>
@@ -2942,13 +2923,13 @@
                                                                                                             <div class="col-sm-6">
                                                                                                                 <div class="form-group">
                                                                                                                     <label for="" class="col-form-label">Breaker P/N</label>
-                                                                                                                    <input type="text" id="" name="brkPN" class="form-control" value="" placeholder="Type Breaker P/N Here" autocomplete="off"/>
+                                                                                                                    <input type="text" id="" name="brkPN" class="form-control" value="<%= deviceData[i].brkPN%>" placeholder="Type Breaker P/N Here" autocomplete="off"/>
                                                                                                                 </div>
                                                                                                             </div>
                                                                                                             <div class="col-sm-6">
                                                                                                                 <div class="form-group">
                                                                                                                     <label for="" class="col-form-label">Cradle P/N</label>
-                                                                                                                    <input type="text" id="" name="cradlePN" class="form-control" value="" placeholder="Type Cradle P/N Here" autocomplete="off"/>
+                                                                                                                    <input type="text" id="" name="cradlePN" class="form-control" value="<%= deviceData[i].cradlePN%>" placeholder="Type Cradle P/N Here" autocomplete="off"/>
                                                                                                                 </div>
                                                                                                             </div>
                                                                                                         </div>
@@ -2957,9 +2938,15 @@
                                                                                                                 <div class="form-group">
                                                                                                                     <label for="" class="control-label">UL Rating</label>
                                                                                                                     <select class="form-control" id="" name="devUL">
+                                                                                                                        <% let devULs = ["UL1066", "UL489"]; %>
                                                                                                                         <option>Select</option>
-                                                                                                                        <option value="UL1066">UL1066</option>
-                                                                                                                        <option value="UL489">UL489</option>
+                                                                                                                        <% for (let devUL of devULs) { %>
+                                                                                                                            <% if (deviceData[i].devUL == devUL) { %>
+                                                                                                                            <option value="<%=devUL%>" selected="selected"><%=deviceData[i].devUL%></option>
+                                                                                                                            <% } else { %>
+                                                                                                                            <option value="<%=devUL%>"><%=devUL%></option>
+                                                                                                                            <% } %>
+                                                                                                                        <% } %>
                                                                                                                     </select>
                                                                                                                 </div>
                                                                                                             </div>
@@ -2967,10 +2954,15 @@
                                                                                                                 <div class="form-group">
                                                                                                                     <label for="" class="control-label">Device Mounting</label>
                                                                                                                     <select class="form-control" id="" name="devMount">
+                                                                                                                        <% let devMounts = ["DRAW-OUT", "FIXED", "PLUG-IN"]; %>
                                                                                                                         <option>Select</option>
-                                                                                                                        <option value="DRAW-OUT">Draw-Out</option>
-                                                                                                                        <option value="FIXED">Fixed</option>
-                                                                                                                        <option value="PLUG-IN">Plug-in</option>
+                                                                                                                        <% for (let devMount of devMounts) { %>
+                                                                                                                            <% if (deviceData[i].devMount == devMount) { %>
+                                                                                                                            <option value="<%=devMount%>" selected="selected"><%=deviceData[i].devMount%></option>
+                                                                                                                            <% } else { %>
+                                                                                                                            <option value="<%=devMount%>"><%=devMount%></option>
+                                                                                                                            <% } %>
+                                                                                                                        <% } %>
                                                                                                                     </select>
                                                                                                                 </div>
                                                                                                             </div>
@@ -2978,9 +2970,15 @@
                                                                                                                 <div class="form-group">
                                                                                                                     <label for="" class="control-label">Rear Adapter Type</label>
                                                                                                                     <select class="form-control" id="" name="rearAdaptType">
+                                                                                                                        <% let rearAdaptTypes = ["Horizontal", "Vertical"]; %>
                                                                                                                         <option>Select</option>
-                                                                                                                        <option value="Horizontal">Horizontal</option>
-                                                                                                                        <option value="Vertical">Vertical</option>
+                                                                                                                        <% for (let rearAdaptType of rearAdaptTypes) { %>
+                                                                                                                            <% if (deviceData[i].rearAdaptType == rearAdaptType) { %>
+                                                                                                                            <option value="<%=rearAdaptType%>" selected="selected"><%=deviceData[i].rearAdaptType%></option>
+                                                                                                                            <% } else { %>
+                                                                                                                            <option value="<%=rearAdaptType%>"><%=rearAdaptType%></option>
+                                                                                                                            <% } %>
+                                                                                                                        <% } %>
                                                                                                                     </select>
                                                                                                                 </div>
                                                                                                             </div>
@@ -2988,9 +2986,15 @@
                                                                                                                 <div class="form-group">
                                                                                                                     <label for="" class="control-label">Operation</label>
                                                                                                                     <select class="form-control" id="" name="devOperation">
+                                                                                                                        <% let devOperations = ["ELECTRICAL", "MANUAL"]; %>
                                                                                                                         <option>Select</option>
-                                                                                                                        <option value="ELECTRICAL">Electrical</option>
-                                                                                                                        <option value="MANUAL">Manual</option>
+                                                                                                                        <% for (let devOperation of devOperations) { %>
+                                                                                                                            <% if (deviceData[i].devOperation == devOperation) { %>
+                                                                                                                            <option value="<%=devOperation%>" selected="selected"><%=deviceData[i].devOperation%></option>
+                                                                                                                            <% } else { %>
+                                                                                                                            <option value="<%=devOperation%>"><%=devOperation%></option>
+                                                                                                                            <% } %>
+                                                                                                                        <% } %>
                                                                                                                     </select>
                                                                                                                 </div>
                                                                                                             </div>
@@ -3000,10 +3004,15 @@
                                                                                                                 <div class="form-group">
                                                                                                                     <label for="" class="control-label">Poles</label>
                                                                                                                     <select class="form-control" id="" name="devPoles">
+                                                                                                                        <% let devPoles = ["2", "3", "4"]; %>
                                                                                                                         <option>Select</option>
-                                                                                                                        <option value="2">2</option>
-                                                                                                                        <option value="3">3</option>
-                                                                                                                        <option value="4">4</option>
+                                                                                                                        <% for (let devPole of devPoles) { %>
+                                                                                                                            <% if (deviceData[i].devPoles == devPole) { %>
+                                                                                                                            <option value="<%=devPole%>" selected="selected"><%=deviceData[i].devPoles%></option>
+                                                                                                                            <% } else { %>
+                                                                                                                            <option value="<%=devPole%>"><%=devPole%></option>
+                                                                                                                            <% } %>
+                                                                                                                        <% } %>
                                                                                                                     </select>
                                                                                                                 </div>
                                                                                                             </div>
@@ -3011,11 +3020,15 @@
                                                                                                                 <div class="form-group">
                                                                                                                     <label for="" class="control-label">Max. System Voltage</label>
                                                                                                                     <select class="form-control" id="" name="devMaxVolt">
+                                                                                                                        <% let devMaxVolts = ["240VAC", "480VAC", "600VAC", "500VDC"]; %>
                                                                                                                         <option>Select</option>
-                                                                                                                        <option value="240VAC">240VAC</option>
-                                                                                                                        <option value="480VAC">480VAC</option>
-                                                                                                                        <option value="600VAC">600VAC</option>
-                                                                                                                        <option value="500VDC">500VDC</option>
+                                                                                                                        <% for (let devMaxVolt of devMaxVolts) { %>
+                                                                                                                            <% if (deviceData[i].devMaxVolt == devMaxVolt) { %>
+                                                                                                                            <option value="<%=devMaxVolt%>" selected="selected"><%=deviceData[i].devMaxVolt%></option>
+                                                                                                                            <% } else { %>
+                                                                                                                            <option value="<%=devMaxVolt%>"><%=devMaxVolt%></option>
+                                                                                                                            <% } %>
+                                                                                                                        <% } %>
                                                                                                                     </select>
                                                                                                                 </div>
                                                                                                             </div>
@@ -3023,13 +3036,15 @@
                                                                                                                 <div class="form-group">
                                                                                                                     <label for="" class="control-label">kAIC</label>
                                                                                                                     <select class="form-control" id="" name="devKAIC">
+                                                                                                                        <% let devKAICs = ["55kAIC", "65kAIC", "85kAIC", "100kAIC", "150kAIC", "200kAIC"]; %>
                                                                                                                         <option>Select</option>
-                                                                                                                        <option value="55kAIC">55kAIC</option>
-                                                                                                                        <option value="65kAIC">65kAIC</option>
-                                                                                                                        <option value="85kAIC">85kAIC</option>
-                                                                                                                        <option value="100kAIC">100kAIC</option>
-                                                                                                                        <option value="150kAIC">150kAIC</option>
-                                                                                                                        <option value="200kAIC">200kAIC</option>
+                                                                                                                        <% for (let devKAIC of devKAICs) { %>
+                                                                                                                            <% if (deviceData[i].devKAIC == devKAIC) { %>
+                                                                                                                            <option value="<%=devKAIC%>" selected="selected"><%=deviceData[i].devKAIC%></option>
+                                                                                                                            <% } else { %>
+                                                                                                                            <option value="<%=devKAIC%>"><%=devKAIC%></option>
+                                                                                                                            <% } %>
+                                                                                                                        <% } %>
                                                                                                                     </select>
                                                                                                                 </div>
                                                                                                             </div>
@@ -3037,10 +3052,15 @@
                                                                                                                 <div class="form-group">
                                                                                                                     <label for="" class="control-label">Control Voltage</label>
                                                                                                                     <select class="form-control" id="" name="devCtrlVolt">
+                                                                                                                        <% let devCtrlVolts = ["120VAC", "24VDC", "Mixed"]; %>
                                                                                                                         <option>Select</option>
-                                                                                                                        <option value="120VAC">120VAC</option>
-                                                                                                                        <option value="24VDC">24VDC</option>
-                                                                                                                        <option value="Mixed">Mixed</option>
+                                                                                                                        <% for (let devCtrlVolt of devCtrlVolts) { %>
+                                                                                                                            <% if (deviceData[i].devCtrlVolt == devCtrlVolt) { %>
+                                                                                                                            <option value="<%=devCtrlVolt%>" selected="selected"><%=deviceData[i].devCtrlVolt%></option>
+                                                                                                                            <% } else { %>
+                                                                                                                            <option value="<%=devCtrlVolt%>"><%=devCtrlVolt%></option>
+                                                                                                                            <% } %>
+                                                                                                                        <% } %>
                                                                                                                     </select>
                                                                                                                 </div>
                                                                                                             </div>
@@ -3050,25 +3070,17 @@
                                                                                                                 <div class="form-group">
                                                                                                                     <label for="" class="control-label">Frame Amperage</label>
                                                                                                                     <select class="form-control" id="" name="devFrameSet">
+                                                                                                                        <% let devFrameSets = ["15A", "30A", "60A", "100A", "150A",
+                                                                                                                            "225A", "250A", "400A", "600A", "800A", "1200A", "1600A",
+                                                                                                                            "2000A", "2500A", "3000A", "3200A", "4000A", "5000A"]; %>
                                                                                                                         <option>Select</option>
-                                                                                                                        <option value="15A">15A</option>
-                                                                                                                        <option value="30A">30A</option>
-                                                                                                                        <option value="60A">60A</option>
-                                                                                                                        <option value="100A">100A</option>
-                                                                                                                        <option value="150A">150A</option>
-                                                                                                                        <option value="225A">225A</option>
-                                                                                                                        <option value="250A">250A</option>
-                                                                                                                        <option value="400A">400A</option>
-                                                                                                                        <option value="600A">600A</option>
-                                                                                                                        <option value="800A">800A</option>
-                                                                                                                        <option value="1200A">1200A</option>
-                                                                                                                        <option value="1600A">1600A</option>
-                                                                                                                        <option value="2000A">2000A</option>
-                                                                                                                        <option value="2500A">2500A</option>
-                                                                                                                        <option value="3000A">3000A</option>
-                                                                                                                        <option value="3200A">3200A</option>
-                                                                                                                        <option value="4000A">4000A</option>
-                                                                                                                        <option value="5000A">5000A</option>
+                                                                                                                        <% for (let devFrameSet of devFrameSets) { %>
+                                                                                                                            <% if (deviceData[i].devFrameSet == devFrameSet) { %>
+                                                                                                                            <option value="<%=devFrameSet%>" selected="selected"><%=deviceData[i].devFrameSet%></option>
+                                                                                                                            <% } else { %>
+                                                                                                                            <option value="<%=devFrameSet%>"><%=devFrameSet%></option>
+                                                                                                                            <% } %>
+                                                                                                                        <% } %>
                                                                                                                     </select>
                                                                                                                 </div>
                                                                                                             </div>
@@ -3076,61 +3088,41 @@
                                                                                                                 <div class="form-group">
                                                                                                                     <label for="" class="control-label">Sensor Amperage</label>
                                                                                                                     <select class="form-control" id="" name="devSensorSet">
+                                                                                                                        <% let devSensorSets = ["10A", "15A", "20A", "30A", "40A", "50A", "60A",
+                                                                                                                            "70A", "80A", "90A", "100A", "110A", "120A", "130A", "140A", "150A",
+                                                                                                                            "160A", "170A", "180A", "190A", "200A", "225A", "250A", "300A", "400A",
+                                                                                                                            "600A", "800A", "1000A", "1200A", "1250A", "1600A", "2000A", "2500A",
+                                                                                                                            "3000A", "3200A", "4000A", "5000A"]; %>
                                                                                                                         <option>Select</option>
-                                                                                                                        <option value="10A">10A</option>
-                                                                                                                        <option value="15A">15A</option>
-                                                                                                                        <option value="20A">20A</option>
-                                                                                                                        <option value="30A">30A</option>
-                                                                                                                        <option value="40A">40A</option>
-                                                                                                                        <option value="50A">50A</option>
-                                                                                                                        <option value="60A">60A</option>
-                                                                                                                        <option value="70A">70A</option>
-                                                                                                                        <option value="80A">80A</option>
-                                                                                                                        <option value="90A">90A</option>
-                                                                                                                        <option value="100A">100A</option>
-                                                                                                                        <option value="110A">100A</option>
-                                                                                                                        <option value="120A">100A</option>
-                                                                                                                        <option value="130A">100A</option>
-                                                                                                                        <option value="140A">100A</option>
-                                                                                                                        <option value="150A">150A</option>
-                                                                                                                        <option value="160A">160A</option>
-                                                                                                                        <option value="170A">170A</option>
-                                                                                                                        <option value="180A">180A</option>
-                                                                                                                        <option value="190A">190A</option>
-                                                                                                                        <option value="200A">200A</option>
-                                                                                                                        <option value="225A">225A</option>
-                                                                                                                        <option value="250A">250A</option>
-                                                                                                                        <option value="300A">300A</option>
-                                                                                                                        <option value="400A">400A</option>
-                                                                                                                        <option value="600A">600A</option>
-                                                                                                                        <option value="800A">800A</option>
-                                                                                                                        <option value="1000A">1000A</option>
-                                                                                                                        <option value="1200A">1200A</option>
-                                                                                                                        <option value="1250A">1250A</option>
-                                                                                                                        <option value="1600A">1600A</option>
-                                                                                                                        <option value="2000A">2000A</option>
-                                                                                                                        <option value="2500A">2500A</option>
-                                                                                                                        <option value="3000A">3000A</option>
-                                                                                                                        <option value="3200A">3200A</option>
-                                                                                                                        <option value="4000A">4000A</option>
-                                                                                                                        <option value="5000A">5000A</option>
+                                                                                                                        <% for (let devSensorSet of devSensorSets) { %>
+                                                                                                                            <% if (deviceData[i].devSensorSet == devSensorSet) { %>
+                                                                                                                            <option value="<%=devSensorSet%>" selected="selected"><%=deviceData[i].devSensorSet%></option>
+                                                                                                                            <% } else { %>
+                                                                                                                            <option value="<%=devSensorSet%>"><%=devSensorSet%></option>
+                                                                                                                            <% } %>
+                                                                                                                        <% } %>
                                                                                                                     </select>
                                                                                                                 </div>
                                                                                                             </div>
                                                                                                             <div class="col-sm-3">
                                                                                                                 <div class="form-group">
                                                                                                                     <label for="example-number-input" class="control-label">Trip Amperage</label>
-                                                                                                                    <input class="form-control" name="devTripSet" type="number" value="0" id="example-number-input">
+                                                                                                                    <input class="form-control" name="devTripSet" type="number" value="<%= deviceData[i].devTripSet%>" id="example-number-input">
                                                                                                                 </div>
                                                                                                             </div>
                                                                                                             <div class="col-sm-3">
                                                                                                                 <div class="form-group">
                                                                                                                     <label for="" class="control-label">Breaker Level</label>
                                                                                                                     <select class="form-control" id="" name="devLevel">
+                                                                                                                        <% let devLevels = ["Level 1", "Level 2", "Level 3"]; %>
                                                                                                                         <option>Select</option>
-                                                                                                                        <option value="Level 1">Level 1</option>
-                                                                                                                        <option value="Level 2">Level 2</option>
-                                                                                                                        <option value="Level 3">Level 3</option>
+                                                                                                                        <% for (let devLevel of devLevels) { %>
+                                                                                                                            <% if (deviceData[i].devLevel == devLevel) { %>
+                                                                                                                            <option value="<%=devLevel%>" selected="selected"><%=deviceData[i].devLevel%></option>
+                                                                                                                            <% } else { %>
+                                                                                                                            <option value="<%=devLevel%>"><%=devLevel%></option>
+                                                                                                                            <% } %>
+                                                                                                                        <% } %>
                                                                                                                     </select>
                                                                                                                 </div>
                                                                                                             </div>
@@ -3140,10 +3132,15 @@
                                                                                                                 <div class="form-group">
                                                                                                                     <label for="" class="control-label">Trip Param</label>
                                                                                                                     <select class="form-control" id="" name="devTripParam">
+                                                                                                                        <% let devTripParams = ["LI", "LSI", "LSIG"]; %>
                                                                                                                         <option>Select</option>
-                                                                                                                        <option value="LI">LI</option>
-                                                                                                                        <option value="LSI">LSI</option>
-                                                                                                                        <option value="LSIG">LSIG</option>
+                                                                                                                        <% for (let devTripParam of devTripParams) { %>
+                                                                                                                            <% if (deviceData[i].devTripParam == devTripParam) { %>
+                                                                                                                            <option value="<%=devTripParam%>" selected="selected"><%=deviceData[i].devTripParam%></option>
+                                                                                                                            <% } else { %>
+                                                                                                                            <option value="<%=devTripParam%>"><%=devTripParam%></option>
+                                                                                                                            <% } %>
+                                                                                                                        <% } %>
                                                                                                                     </select>
                                                                                                                 </div>
                                                                                                             </div>
@@ -3151,14 +3148,22 @@
                                                                                                                 <div class="form-group">
                                                                                                                     <label for="" class="control-label">Trip Unit</label>
                                                                                                                     <select class="form-control" id="" name="devTripUnit">
+                                                                                                                        <% let devTripUnits = ["Micrologic 3.0", "Micrologic 5.0", "Micrologic 5.0A", "Micrologic 6.0A", "Micrologic 6.0P", "Micrologic 6.0H"]; %>
                                                                                                                         <option>Select</option>
-                                                                                                                        <option value="Micrologic 3.0">Micrologic 3.0</option>
-                                                                                                                        <option value="Micrologic 5.0">Micrologic 5.0</option>
-                                                                                                                        <option value="Micrologic 5.0A">Micrologic 5.0A</option>
-                                                                                                                        <option value="Micrologic 6.0A">Micrologic 6.0A</option>
-                                                                                                                        <option value="Micrologic 6.0P">Micrologic 6.0P</option>
-                                                                                                                        <option value="Micrologic 6.0H">Micrologic 6.0H</option>
+                                                                                                                        <% for (let devTripUnit of devTripUnits) { %>
+                                                                                                                            <% if (deviceData[i].devTripUnit == devTripUnit) { %>
+                                                                                                                            <option value="<%=devTripUnit%>" selected="selected"><%=deviceData[i].devTripUnit%></option>
+                                                                                                                            <% } else { %>
+                                                                                                                            <option value="<%=devTripUnit%>"><%=devTripUnit%></option>
+                                                                                                                            <% } %>
+                                                                                                                        <% } %>
                                                                                                                     </select>
+                                                                                                                </div>
+                                                                                                            </div>
+                                                                                                            <div class="col-sm-2">
+                                                                                                                <div class="form-group">
+                                                                                                                    <input type="checkbox" name="tieBrkCheck" id="tieBrkCheck" class="form-check-input" style="margin-top: 2.7rem; margin-left: .2rem;"/>
+                                                                                                                    <label class="form-check-label" for="tieBrkCheck" style="margin-top: 2.5rem; margin-left: 1.4rem;">TIE<i style="color: red;">&nbsp;*</i></label>
                                                                                                                 </div>
                                                                                                             </div>
                                                                                                         </div>
@@ -3169,27 +3174,65 @@
                                                                                                 <div class="col-sm-9">
                                                                                                     <label class="control-label">Accessories (Select all that apply):</label>
                                                                                                     <div class="container" id="accContainer" style="height: 28.4rem; border-style: solid; border-color: #cccccc; border-width: 0.09rem; padding: 1rem;  overflow-y: scroll;">
-                                                                                                        <ul id="brkAccTable" style="display: block">
+                                                                                                        <ul id="brkAccTable" style="display: inline-block">
+                                                                                                            <% let checkedAcc = []; %>
+                                                                                                            <% for (let devAcc of brkAccData) { %>
+                                                                                                                <% if (devAcc.devID == deviceData[i].devID) { %>
+                                                                                                                    <% checkedAcc.push({
+                                                                                                                        name: devAcc.name,
+                                                                                                                        opt: devAcc.opt
+                                                                                                                    }); %>
+                                                                                                                <% } %>
+                                                                                                            <% } %>
                                                                                                             <% for (let brkAcc of brkAccDropdownData) { %>
                                                                                                                 <% if (brkAcc.value.length != 0 && brkAcc.value[0] != null) { %>
-                                                                                                                <li style="padding-bottom: 0.5rem;">
-                                                                                                                    <input type="checkbox" class="form-check-input" id="<%=brkAcc.type%>" value="<%=brkAcc.name%>" style="position:relative; top: 2px;" onclick="accBrk(this)">
-                                                                                                                    <label class="form-check-label" for="<%=brkAcc.type%>"><%=brkAcc.name%></label>
-                                                                                                                    <ul id="<%=brkAcc.type%>Opt" style="display: none;">
-                                                                                                                        <% for (let brkAccOpt of brkAcc.value) { %>
-                                                                                                                        <li style="margin-left: 1.2rem; padding-bottom: 0.5rem; width: 15rem;">
-                                                                                                                            <input type="hidden" value="0" name="accOpts"><input type="checkbox" class="form-check-input" id="<%=brkAcc.type%>_Opt_<%brkAccOpt%>" style="position:relative; top: 2px;" onclick="this.previousSibling.value=1-this.previousSibling.value">
-                                                                                                                            <label class="form-check-label" for="<%=brkAcc.type%>_Opt_<%brkAccOpt%>"><%=brkAccOpt%></label>
+                                                                                                                    <% if (checkedAcc.filter(e => e.name == brkAcc.name).length > 0) { %>
+                                                                                                                        <li>
+                                                                                                                            <input type="checkbox" class="form-check-input" id="<%=brkAcc.type%>" value="<%=brkAcc.name%>" checked="checked" style="position:relative; top: 2px;" onclick="accBrkEdit(this)">
+                                                                                                                            <label class="form-check-label" for="<%=brkAcc.type%>"><%=brkAcc.name%></label>
+                                                                                                                            <ul id="<%=brkAcc.type%>Opt_Edit" style="display: block;">
+                                                                                                                                <% for (let brkAccOpt of brkAcc.value) { %>
+                                                                                                                                    <% if (checkedAcc.filter(e => e.opt == brkAccOpt).length > 0) { %>
+                                                                                                                                    <li>
+                                                                                                                                        <input type="hidden" value="1" name="accOpts"><input type="checkbox" class="form-check-input" id="<%=brkAcc.type%>_Opt_<%brkAccOpt%>" style="position:relative; top: 2px;" checked="checked" onclick="this.previousSibling.value=1-this.previousSibling.value">
+                                                                                                                                        <label class="form-check-label" for="<%=brkAcc.type%>_Opt_<%brkAccOpt%>"><%=brkAccOpt%></label>
+                                                                                                                                    </li>
+                                                                                                                                    <% } else { %>
+                                                                                                                                    <li>
+                                                                                                                                        <input type="hidden" value="0" name="accOpts"><input type="checkbox" class="form-check-input" id="<%=brkAcc.type%>_Opt_<%brkAccOpt%>" style="position:relative; top: 2px;" onclick="this.previousSibling.value=1-this.previousSibling.value">
+                                                                                                                                        <label class="form-check-label" for="<%=brkAcc.type%>_Opt_<%brkAccOpt%>"><%=brkAccOpt%></label>
+                                                                                                                                    </li>
+                                                                                                                                    <% } %>
+                                                                                                                                <% } %>
+                                                                                                                            </ul>
+                                                                                                                        </li>
+                                                                                                                    <% } else { %>
+                                                                                                                        <li>
+                                                                                                                            <input type="checkbox" class="form-check-input" id="<%=brkAcc.type%>" value="<%=brkAcc.name%>" style="position:relative; top: 2px;" onclick="accBrkEdit(this)">
+                                                                                                                            <label class="form-check-label" for="<%=brkAcc.type%>"><%=brkAcc.name%></label>
+                                                                                                                            <ul id="<%=brkAcc.type%>Opt_Edit" style="display: none;">
+                                                                                                                                <% for (let brkAccOpt of brkAcc.value) { %>
+                                                                                                                                    <li>
+                                                                                                                                        <input type="hidden" value="0" name="accOpts"><input type="checkbox" class="form-check-input" id="<%=brkAcc.type%>_Opt_<%brkAccOpt%>" style="position:relative; top: 2px;" onclick="this.previousSibling.value=1-this.previousSibling.value">
+                                                                                                                                        <label class="form-check-label" for="<%=brkAcc.type%>_Opt_<%brkAccOpt%>"><%=brkAccOpt%></label>
+                                                                                                                                    </li>
+                                                                                                                                    <% } %>
+                                                                                                                                <% } %>
+                                                                                                                            </ul>
+                                                                                                                        </li>
+                                                                                                                    <% } else { %>
+                                                                                                                        <% if (checkedAcc.filter(e => e.name == brkAcc.name).length > 0) { %>
+                                                                                                                        <li>
+                                                                                                                            <input type="hidden" value="1" name="accOpts"><input type="checkbox" class="form-check-input" id="<%=brkAcc.type%>" style="position:relative; top: 2px;" checked="checked" onclick="this.previousSibling.value=1-this.previousSibling.value">
+                                                                                                                            <label class="form-check-label" for="<%=brkAcc.type%>"><%=brkAcc.name%></label>
+                                                                                                                        </li>
+                                                                                                                        <% } else { %>
+                                                                                                                        <li>
+                                                                                                                            <input type="hidden" value="0" name="accOpts"><input type="checkbox" class="form-check-input" id="<%=brkAcc.type%>" style="position:relative; top: 2px;" onclick="this.previousSibling.value=1-this.previousSibling.value">
+                                                                                                                            <label class="form-check-label" for="<%=brkAcc.type%>"><%=brkAcc.name%></label>
                                                                                                                         </li>
                                                                                                                         <% } %>
-                                                                                                                    </ul>
-                                                                                                                </li>
-                                                                                                                <% } else { %>
-                                                                                                                <li style="padding-bottom: 0.5rem;">
-                                                                                                                    <input type="hidden" value="0" name="accOpts"><input type="checkbox" class="form-check-input" id="<%=brkAcc.type%>" style="position:relative; top: 2px;" onclick="this.previousSibling.value=1-this.previousSibling.value">
-                                                                                                                    <label class="form-check-label" for="<%=brkAcc.type%>"><%=brkAcc.name%></label>
-                                                                                                                </li>
-                                                                                                                <% } %>
+                                                                                                                    <% } %>
                                                                                                             <% } %>
                                                                                                         </ul>
                                                                                                     </div>
@@ -3278,6 +3321,7 @@
 <script src="/public/assets/js/quoteDragDrop.js"></script>
 <script src="/public/assets/js/quoteFilterDropdown.js"></script>
 <script src="/public/assets/js/quoteCheckbox.js"></script>
+<script src="/public/assets/js/submittalLayoutRestrictions.js"></script>
 
 
 </body>

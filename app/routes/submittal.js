@@ -28,4 +28,8 @@ module.exports = function(app) {
     app.post('/submittalEditDevice/', submittalController.editBrk);
 
     app.post('/submittalDeleteDevice/', submittalController.deleteBrk);
+
+    app.post('/creoGenSubmittal/', submittalController.generateSubmittal);
+
+    app.post('/setWD/', submittalController.setWD);
 };
