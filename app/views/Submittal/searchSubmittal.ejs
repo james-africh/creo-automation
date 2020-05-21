@@ -352,7 +352,7 @@
                                             <h6 style="color:red;"><%= message %></h6>
                                             <% if  (creoData.length != 0) { %>
                                                 <% for (let i = 0; i < creoData.length; i++) { %>
-                                                <form id="creoDataForm" class="creoDataForm" action="../setWD/?subID=<%= subData[0].jobNum%><%= subData[0].releaseNum%>_<%= subData[0].subID%>" method="POST">
+                                                <form id="creoDataForm" class="creoDataForm" action="../submittalSetWD/?subID=<%= subData[0].jobNum%><%= subData[0].releaseNum%>_<%= subData[0].subID%>" method="POST">
                                                     <div class="form-group">
                                                         <div class="row">
                                                             <div class="col-sm-6">
@@ -382,21 +382,15 @@
                                                         </div>
                                                         <div class="row">
                                                             <div class="col-sm-12">
-                                                                <label for="example-text-input" class="col-form-label">Output Directory</label>
-                                                                <input type="text" name="outputDir" class="form-control" value="<%=creoData[i].outputDir%>" placeholder="Type Output Directory Here" id="example-text-input" autocomplete="off">
-                                                            </div>
-                                                        </div>
-                                                        <div class="row">
-                                                            <div class="col-sm-12">
-                                                                <label for="example-text-input" class="col-form-label">Start Directory</label>
-                                                                <input type="text" name="startDir" class="form-control" value="<%=creoData[i].startDir%>" placeholder="Type Start Directory Here" id="example-text-input" autocomplete="off">
+                                                                <label for="example-text-input" class="col-form-label">Standard Library</label>
+                                                                <input type="text" name="standardLib" class="form-control" value="<%=creoData[i].standardLib%>" placeholder="Type Standard Library Here" id="example-text-input" autocomplete="off">
                                                             </div>
                                                         </div>
                                                     </div>
                                                     <div class="form-group">
                                                         <div class="row justify-content-center">
                                                             <div class="col-4">
-                                                                <input id="setWDBtn" type="submit" value="Set Working Directory" class="btn-block btn btn-outline-secondary waves-effect waves-light" onclick="this.form.action='/setWD'" />
+                                                                <input id="setWDBtn" type="submit" value="Set Working Directory" class="btn-block btn btn-outline-secondary waves-effect waves-light" />
                                                             </div>
                                                         </div>
                                                     </div>
@@ -1192,6 +1186,40 @@
                                                             </div>
                                                             <div class="col-sm-2">
                                                                 <form id="addSectionForm" class="addSectionForm" action="" method="POST">
+                                                                    <div class="form-group" style="display:none;">
+                                                                        <div class="row">
+                                                                            <div class="col-sm-6">
+                                                                                <label for="example-text-input" class="col-form-label">Layout Assembly</label>
+                                                                                <input type="text" name="layoutAsm" class="form-control" value="<%=creoData[i].layoutAsm%>" placeholder="Type Layout Assembly Here" id="example-text-input" autocomplete="off" readonly="readonly">
+                                                                            </div>
+                                                                            <div class="col-sm-6">
+                                                                                <label for="example-text-input" class="col-form-label">One Line Assembly</label>
+                                                                                <input type="text" name="oneLineAsm" class="form-control" value="<%=creoData[i].oneLineAsm%>" placeholder="Type One Line Assembly Here" id="example-text-input" autocomplete="off" readonly="readonly">
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="row">
+                                                                            <div class="col-sm-6">
+                                                                                <label for="example-text-input" class="col-form-label">Layout Drawing</label>
+                                                                                <input type="text" name="layoutDrw" class="form-control" value="<%=creoData[i].layoutDrw%>" placeholder="Type Layout Drawing Here" id="example-text-input" autocomplete="off" readonly="readonly">
+                                                                            </div>
+                                                                            <div class="col-sm-6">
+                                                                                <label for="example-text-input" class="col-form-label">Output Drawing</label>
+                                                                                <input type="text" name="outputPDF" class="form-control" value="<%=creoData[i].outputPDF%>" placeholder="Type Output Drawing Here" id="example-text-input" autocomplete="off" readonly="readonly">
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="row">
+                                                                            <div class="col-sm-12">
+                                                                                <label for="example-text-input" class="col-form-label">Working Directory</label>
+                                                                                <input type="text" name="workingDir" class="form-control" value="<%=creoData[i].workingDir%>" placeholder="Type Working Directory Here" id="example-text-input" autocomplete="off">
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="row">
+                                                                            <div class="col-sm-12">
+                                                                                <label for="example-text-input" class="col-form-label">Standard Library</label>
+                                                                                <input type="text" name="standardLib" class="form-control" value="<%=creoData[i].standardLib%>" placeholder="Type Standard Library Here" id="example-text-input" autocomplete="off">
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
                                                                     <label for="example-text-input" class="col-form-label"></label>
                                                                     <button id="genCreoBtn" type="submit" class="btn-block btn btn-outline-success waves-effect waves-light" onclick="this.form.action='../creoGenSubmittal/?subID=<%= subData[0].jobNum %><%= subData[0].releaseNum %>_<%= subData[0].subID%>'">Generate Submittal</button>
                                                                 </form>

@@ -284,11 +284,21 @@ exports.searchSubmittal = function(req, res) {
             let latestRevNum = revData[revData.length - 1].revNum;
 
             let layoutNum = releaseNum.toLowerCase().charCodeAt(0) - 96;
-            let creoWorkingDir = null;
+            let creoWorkingDir;
+            let dir = await creo(sessionId, {
+                command: "creo",
+                function: "pwd",
+                data: {}
+            });
+            if (dir.data == undefined) {
+                creoWorkingDir = null;
+            } else {
+                creoWorkingDir = dir.data.dirname;
+            }
             let creoLayoutAsm;
             let creoLayoutDrw;
             let creoOneLineAsm;
-            let creoStartDir = 'C:\\PTC CREO\\SAI-START\\SAI-PARTS\\';
+            let creoStandardLib = 'C:\\PTC CREO\\SAI-START\\SAI-PARTS\\';
             let creoOutputDir = null;
             let creoOutputPDF;
             if (layoutNum < 10) {
@@ -305,7 +315,7 @@ exports.searchSubmittal = function(req, res) {
                 layoutAsm: creoLayoutAsm,
                 layoutDrw: creoLayoutDrw,
                 oneLineAsm: creoOneLineAsm,
-                startDir: creoStartDir,
+                standardLib: creoStandardLib,
                 outputDir: creoOutputDir,
                 outputPDF: creoOutputPDF
             });
@@ -1522,15 +1532,15 @@ exports.setWD = function(req, res) {
     let qs = queryString.parse(urlObj.search);
     let jobRelease = qs.subID.split('_')[0];
     let subID = qs.subID.split('_')[1];
-    let message = null;
+    //let message = null;
     let layoutAsm = req.body.layoutAsm;
     let oneLineAsm = req.body.oneLineAsm;
     let layoutDrw = req.body.layoutDrw;
     let outputPDF = req.body.outputPDF;
 
     let workingDir = req.body.workingDir;
-    let outputDir = workingDir + '/_outputDir';
-    let startDir = req.body.startDir;
+    //let outputDir = workingDir + '/_outputDir';
+    let standardLib = req.body.standardLib;
 
     async function cdAndCreateOutputDir() {
         let dir = await creo(sessionId, {
@@ -1548,103 +1558,6 @@ exports.setWD = function(req, res) {
                         "dirname": workingDir
                     }
                 });
-
-                const innerDirs = await creo(sessionId, {
-                    command: "creo",
-                    function: "list_dirs",
-                    data: {
-                        "dirname": "_outputDir"
-                    }
-                });
-                if (!innerDirs.data) {
-                    await creo(sessionId, {
-                        command: "creo",
-                        function: "mkdir",
-                        data: {
-                            "dirname": "_outputDir"
-                        }
-                    });
-                    await creo(sessionId, {
-                        command: "creo",
-                        function: "mkdir",
-                        data: {
-                            "dirname": "_outputDir\\PDF"
-                        }
-                    });
-                    await creo(sessionId, {
-                        command: "creo",
-                        function: "mkdir",
-                        data: {
-                            "dirname": "_outputDir\\DXF"
-                        }
-                    });
-                    await creo(sessionId, {
-                        command: "creo",
-                        function: "mkdir",
-                        data: {
-                            "dirname": "_outputDir\\BIN BOMS"
-                        }
-                    });
-                    await creo(sessionId, {
-                        command: "creo",
-                        function: "mkdir",
-                        data: {
-                            "dirname": "_outputDir\\NAMEPLATES"
-                        }
-                    });
-                } else {
-                    message = "_outputDir already exists within the working directory. Please remove before continuing.";
-                }
-
-            } else {
-                const innerDirs = await creo(sessionId, {
-                    command: "creo",
-                    function: "list_dirs",
-                    data: {
-                        "dirname": "_outputDir"
-                    }
-                });
-
-                if (!innerDirs.data) {
-                    await creo(sessionId, {
-                        command: "creo",
-                        function: "mkdir",
-                        data: {
-                            "dirname": "_outputDir"
-                        }
-                    });
-                    await creo(sessionId, {
-                        command: "creo",
-                        function: "mkdir",
-                        data: {
-                            "dirname": "_outputDir\\PDF"
-                        }
-                    });
-                    await creo(sessionId, {
-                        command: "creo",
-                        function: "mkdir",
-                        data: {
-                            "dirname": "_outputDir\\DXF"
-                        }
-                    });
-                    await creo(sessionId, {
-                        command: "creo",
-                        function: "mkdir",
-                        data: {
-                            "dirname": "_outputDir\\BIN BOMS"
-                        }
-                    });
-                    await creo(sessionId, {
-                        command: "creo",
-                        function: "mkdir",
-                        data: {
-                            "dirname": "_outputDir\\NAMEPLATES"
-                        }
-                    });
-                } else {
-                    message = "_outputDir already exists within the working directory. Please remove before continuing."
-                }
-
             }
         }
         return null
@@ -1672,6 +1585,66 @@ exports.generateSubmittal = function(req, res) {
     let qs = queryString.parse(urlObj.search);
     let jobRelease = qs.subID.split('_')[0];
     let subID = qs.subID.split('_')[1];
+
+    let layoutAsm = req.body.layoutAsm;
+    let oneLineAsm = req.body.oneLineAsm;
+    let layoutDrw = req.body.layoutDrw;
+    let outputPDF = req.body.outputPDF;
+
+    let workingDir = req.body.workingDir;
+    //let outputDir = workingDir + '/_outputDir';
+    let standardLib = req.body.standardLib;
+
+    async function openStandardFrame() {
+        await creo(sessionId, {
+            command: "file",
+            function: "open",
+            data: {
+                file: "123456-0006-200.asm",
+                dirname: standardLib,
+                display: true,
+                activate: true
+            }
+        });
+
+       await creo(sessionId, {
+           command: "interface",
+           function: "mapkey",
+           data: {
+               script: "~ Close `main_dlg_cur` `appl_casc`;" +
+                   "~ Command `ProCmdModelSaveAs` ;" +
+                   "~ LButtonArm `file_saveas` `tb_EMBED_BROWSER_TB_SAB_LAYOUT` 3 471 14 0;" +
+                   "~ LButtonDisarm `file_saveas` `tb_EMBED_BROWSER_TB_SAB_LAYOUT` 3 471 14 0;" +
+                   "~ LButtonActivate `file_saveas` `tb_EMBED_BROWSER_TB_SAB_LAYOUT` 3 471 14 0;" +
+                   "~ Input `file_saveas` `opt_EMBED_BROWSER_TB_SAB_LAYOUT` " + "`" + workingDir + "`;" +
+                   "~ Update `file_saveas` `opt_EMBED_BROWSER_TB_SAB_LAYOUT` " + "`" + workingDir + "`;" +
+                   "~ FocusOut `file_saveas` `opt_EMBED_BROWSER_TB_SAB_LAYOUT`;" +
+                   "~ Update `file_saveas` `Inputname` `000001-0006-200`;" +
+                   "~ Activate `file_saveas` `OK`;~ Activate `assyrename` `OpenBtn`;"
+           }
+       });
+
+       /* let asmComponents = await creo(sessionId, {
+            command: "bom",
+            function: "get_paths",
+            data: {
+                file: "123456-0006-200.asm"
+            }
+        });
+        console.log(asmComponents);*/
+        return null
+    }
+
+    openStandardFrame()
+        .then(() => {
+            res.locals = {title: 'Submittal'};
+            res.redirect('../searchSubmittal/?subID='+jobRelease+"_"+subID);
+            return null;
+        })
+        .catch(err => {
+            return Promise.reject(err);
+        });
+
 
 
 };
