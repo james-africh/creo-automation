@@ -59,7 +59,7 @@ function creo(sessionId, functionData) {
 //BASE FRAME AUTOMATION
 xlsxFile('modules/LV_Master_Creo_Library.xlsx').then(async function(rows)  {
 
-    let workingDir = "C:\\Users\\james.africh\\Desktop\\frameWidget_200520";
+    let workingDir = "C:\\Users\\james.africh\\Desktop\\200610_CREO";
     console.table(rows);
     for (let i in rows) {
         if (i == 0) {

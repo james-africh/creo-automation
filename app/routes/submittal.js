@@ -32,4 +32,6 @@ module.exports = function(app) {
     app.post('/creoGenSubmittal/', submittalController.generateSubmittal);
 
     app.post('/submittalSetWD/', submittalController.setWD);
+
+    app.post('/verifySubmittal/', submittalController.verifySubmittal);
 };

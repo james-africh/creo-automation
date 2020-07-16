@@ -268,9 +268,13 @@ function showPB(checkbox){
             noChecks = false;
             document.getElementById('pb' + secNum).style.display = "flex";
             document.getElementById('configurePB' + secNum).style.display = "flex";
+            document.getElementById('pbButtons_' + secNum + "_1" ).style.display = "flex";
+            document.getElementById('pbButtons_' + secNum + "_2" ).style.display = "flex";
         } else {
             document.getElementById('pbBrk' + secNum).style.display = "none";
             document.getElementById('notPB' + secNum).style.display = "none";
+            document.getElementById('pbBrkButtons_' + secNum).style.display = "none";
+
         }
     });
 
@@ -278,6 +282,8 @@ function showPB(checkbox){
         document.getElementById('notPB' + secNum).style.display = "flex";
         document.getElementById('pb' + secNum).style.display = "none";
         document.getElementById('configurePB' + secNum).style.display = "none";
+        document.getElementById('pbButtons_' + secNum + "_1").style.display = "none";
+        document.getElementById('pbButtons_' + secNum + "_2").style.display = "none";
     }
 }
 
@@ -294,9 +300,12 @@ function showPBbrk(checkbox){
             noChecks = false;
             document.getElementById('pbBrk' + secNum).style.display = "flex";
             document.getElementById('configurePB' + secNum).style.display = "flex";
+            document.getElementById('pbBrkButtons_' + secNum).style.display = "flex";
         } else {
             document.getElementById('pb' + secNum).style.display = "none";
             document.getElementById('notPB' + secNum).style.display = "none";
+            document.getElementById('pbButtons_' + secNum + "_1").style.display = "none";
+            document.getElementById('pbButtons_' + secNum + "_2").style.display = "none";
         }
     });
 
@@ -304,6 +313,7 @@ function showPBbrk(checkbox){
         document.getElementById('notPB' + secNum).style.display = "flex";
         document.getElementById('pbBrk' + secNum).style.display = "none";
         document.getElementById('configurePB' + secNum).style.display = "none";
+        document.getElementById('pbBrkButtons_' + secNum).style.display = "none";
     }
 }
 
@@ -314,6 +324,8 @@ function checkForPB(secNum, compType){
         document.getElementById('pbBrk' + secNum).style.display = "none";
         document.getElementById('notPB' + secNum).style.display = "none";
         document.getElementById('panelboard_' + secNum).checked = true;
+        document.getElementById('pbButtons_' + secNum + "_1").style.display='flex';
+        document.getElementById('pbButtons_' + secNum + "_2").style.display='flex';
 
     } else if(compType.A == 'panelboard' && compType.D == 'brk'){
         document.getElementById('pbBrk' + secNum).style.display = "flex";
@@ -321,7 +333,611 @@ function checkForPB(secNum, compType){
         document.getElementById('pb' + secNum).style.display = "none";
         document.getElementById('notPB' + secNum).style.display = "none";
         document.getElementById('panelboardbrk_' + secNum).checked = true;
+        document.getElementById('pbBrkButtons_' + secNum).style.display='flex';
     }
 }
 
+let count = 0;
+function addDualRowNew(secNum) {
+    count += 1;
+
+    if (document.getElementById("totalRows_"+secNum)) {
+        document.getElementById("totalRows_"+secNum).value = count;
+    } else {
+        let input = document.createElement("input");
+        input.name = "totalRows_"+secNum;
+        input.id = "totalRows_"+secNum;
+        input.value = count;
+        input.hidden = true;
+        document.getElementById('pbMain' + secNum).appendChild(input);
+    }
+
+    let rowDiv = document.createElement("div");
+    rowDiv.className = "row justify-content-center";
+    rowDiv.id = "pbRow"+secNum+"_"+count;
+
+    let div1 = document.createElement("div");
+    div1.className = "col-sm-4";
+    div1.style.backgroundColor = "#e6e1e1";
+    div1.style.border = "2px solid lightslategrey";
+    div1.style.borderRadius = "3px";
+    div1.id = "pbRow"+secNum+"_"+count+"_brkL";
+
+    let div2 = document.createElement("div");
+    div2.className = "col-sm-4";
+    div2.style.backgroundColor = "#e6e1e1";
+    div2.style.border = "2px solid lightslategrey";
+    div2.style.borderRadius = "3px";
+    div2.id = "pbRow"+secNum+"_"+count+"_brkR";
+
+
+    let selectL = document.createElement("select");
+    selectL.id = "pb"+secNum+"_row"+count+"_frameL";
+    selectL.name = "row"+count+"_frameL";
+    selectL.class = "form-control";
+
+    let selectR = document.createElement("select");
+    selectR.id = "pb"+secNum+"_row"+count+"_frameR";
+    selectR.name = "row"+count+"_frameR";
+    selectR.class = "form-control";
+
+
+    let input2 = document.createElement("input");
+    input2.name = "rowType_"+count;
+    input2.id = "rowType_"+count;
+    input2.value = "DUAL";
+    input2.hidden = true;
+    document.getElementById('pbMain' + secNum).appendChild(input2);
+
+
+    document.getElementById('pbMain' + secNum).appendChild(rowDiv);
+    document.getElementById("pbRow"+secNum+"_"+count).appendChild(div1);
+    document.getElementById("pbRow"+secNum+"_"+count).appendChild(div2);
+    document.getElementById("pbRow"+secNum+"_"+count+"_brkL").appendChild(selectL);
+    document.getElementById("pbRow"+secNum+"_"+count+"_brkR").appendChild(selectR);
+
+    let selectList = ["H/J", "L"];
+
+    for (let i = 0; i < selectList.length; i++) {
+        let option = document.createElement("option");
+        option.value = selectList[i];
+        option.text = selectList[i];
+        document.getElementById("pb"+secNum+"_row"+count+"_frameL").appendChild(option);
+    }
+
+    for (let i = 0; i < selectList.length; i++) {
+        let option = document.createElement("option");
+        option.value = selectList[i];
+        option.text = selectList[i];
+        document.getElementById("pb"+secNum+"_row"+count+"_frameR").appendChild(option);
+    }
+}
+
+function addSingleRowCenterLeftNew(secNum) {
+
+    count += 1;
+
+    if (document.getElementById("totalRows_"+secNum)) {
+        document.getElementById("totalRows_"+secNum).value = count;
+    } else {
+        let input = document.createElement("input");
+        input.name = "totalRows_"+secNum;
+        input.id = "totalRows_"+secNum;
+        input.value = count;
+        input.hidden = true;
+        document.getElementById('pbMain' + secNum).appendChild(input);
+    }
+
+    let rowDiv = document.createElement("div");
+    rowDiv.className = "row justify-content-center";
+    rowDiv.id = "pbRow"+secNum+"_"+count;
+
+
+    let div = document.createElement("div");
+    div.className = "col-sm-4";
+    div.style.backgroundColor = "#e6e1e1";
+    div.style.border = "2px solid lightslategrey";
+    div.style.borderRadius = "3px";
+    div.id = "pbRow"+secNum+"_"+count+"_brkCL";
+
+
+    let select = document.createElement("select");
+    select.id = "pb"+secNum+"_row"+count+"_frameCL";
+    select.name = "row"+count+"_frameCL";
+    select.class = "form-control";
+
+    let input2 = document.createElement("input");
+    input2.name = "rowType_"+count;
+    input2.id = "rowType_"+count;
+    input2.value = "SINGLE";
+    input2.hidden = true;
+    document.getElementById('pbMain' + secNum).appendChild(input2);
+
+
+    document.getElementById('pbMain' + secNum).appendChild(rowDiv);
+    document.getElementById("pbRow"+secNum+"_"+count).appendChild(div);
+    document.getElementById("pbRow"+secNum+"_"+count+"_brkCL").appendChild(select);
+
+
+    let selectList = ["L", "P"];
+
+    for (let i = 0; i < selectList.length; i++) {
+        let option = document.createElement("option");
+        option.value = selectList[i];
+        option.text = selectList[i];
+        document.getElementById("pb"+secNum+"_row"+count+"_frameCL").appendChild(option);
+    }
+
+}
+
+function addSingleRowCenterRightNew(secNum) {
+    count += 1;
+
+    if (document.getElementById("totalRows_"+secNum)) {
+        document.getElementById("totalRows_"+secNum).value = count;
+    } else {
+        let input = document.createElement("input");
+        input.name = "totalRows_"+secNum;
+        input.id = "totalRows_"+secNum;
+        input.value = count;
+        input.hidden = true;
+        document.getElementById('pbMain' + secNum).appendChild(input);
+    }
+
+    let rowDiv = document.createElement("div");
+    rowDiv.className = "row justify-content-center";
+    rowDiv.id = "pbRow"+secNum+"_"+count;
+
+
+    let div = document.createElement("div");
+    div.className = "col-sm-4";
+    div.style.backgroundColor = "#e6e1e1";
+    div.style.border = "2px solid lightslategrey";
+    div.style.borderRadius = "3px";
+    div.id = "pbRow"+secNum+"_"+count+"_brkCR";
+
+
+    let select = document.createElement("select");
+    select.id = "pb"+secNum+"_row"+count+"_frameCR";
+    select.name = "row"+count+"_frameCR";
+    select.class = "form-control";
+
+    let input2 = document.createElement("input");
+    input2.name = "rowType_"+count;
+    input2.id = "rowType_"+count;
+    input2.value = "SINGLE";
+    input2.hidden = true;
+    document.getElementById('pbMain' + secNum).appendChild(input2);
+
+
+    document.getElementById('pbMain' + secNum).appendChild(rowDiv);
+    document.getElementById("pbRow"+secNum+"_"+count).appendChild(div);
+    document.getElementById("pbRow"+secNum+"_"+count+"_brkCR").appendChild(select);
+
+
+    let selectList = ["L", "P"];
+
+    for (let i = 0; i < selectList.length; i++) {
+        let option = document.createElement("option");
+        option.value = selectList[i];
+        option.text = selectList[i];
+        document.getElementById("pb"+secNum+"_row"+count+"_frameCR").appendChild(option);
+    }
+}
+
+function addSingleLeftRowNew(secNum) {
+    count += 1;
+
+    if (document.getElementById("totalRows_"+secNum)) {
+        document.getElementById("totalRows_"+secNum).value = count;
+    } else {
+        let input = document.createElement("input");
+        input.name = "totalRows_"+secNum;
+        input.id = "totalRows_"+secNum;
+        input.value = count;
+        input.hidden = true;
+        document.getElementById('pbMain' + secNum).appendChild(input);
+    }
+
+    let rowDiv = document.createElement("div");
+    rowDiv.className = "row justify-content-center";
+    rowDiv.id = "pbRow"+secNum+"_"+count;
+
+    let div1 = document.createElement("div");
+    div1.className = "col-sm-4";
+    div1.style.backgroundColor = "#e6e1e1";
+    div1.style.border = "2px solid lightslategrey";
+    div1.style.borderRadius = "3px";
+    div1.id = "pbRow"+secNum+"_"+count+"_brkL";
+
+    let div2 = document.createElement("div");
+    div2.className = "col-sm-4";
+    div2.style.backgroundColor = "#e6e1e1";
+    div2.style.border = "2px solid lightslategrey";
+    div2.style.borderRadius = "3px";
+
+
+    let selectL = document.createElement("select");
+    selectL.id = "pb"+secNum+"_row"+count+"_frameL";
+    selectL.name = "row"+count+"_frameL";
+    selectL.class = "form-control";
+
+
+    let input2 = document.createElement("input");
+    input2.name = "rowType_"+count;
+    input2.id = "rowType_"+count;
+    input2.value = "SINGLE";
+    input2.hidden = true;
+    document.getElementById('pbMain' + secNum).appendChild(input2);
+
+    document.getElementById('pbMain' + secNum).appendChild(rowDiv);
+    document.getElementById("pbRow"+secNum+"_"+count).appendChild(div1);
+    document.getElementById("pbRow"+secNum+"_"+count).appendChild(div2);
+    document.getElementById("pbRow"+secNum+"_"+count+"_brkL").appendChild(selectL);
+
+    let selectList = ["H/J", "L"];
+
+    for (let i = 0; i < selectList.length; i++) {
+        let option = document.createElement("option");
+        option.value = selectList[i];
+        option.text = selectList[i];
+        document.getElementById("pb"+secNum+"_row"+count+"_frameL").appendChild(option);
+    }
+
+}
+
+function addSingleRightRowNew(secNum) {
+    count += 1;
+
+    if (document.getElementById("totalRows_"+secNum)) {
+        document.getElementById("totalRows_"+secNum).value = count;
+    } else {
+        let input = document.createElement("input");
+        input.name = "totalRows_"+secNum;
+        input.id = "totalRows_"+secNum;
+        input.value = count;
+        input.hidden = true;
+        document.getElementById('pbMain' + secNum).appendChild(input);
+    }
+
+    let rowDiv = document.createElement("div");
+    rowDiv.className = "row justify-content-center";
+    rowDiv.id = "pbRow"+secNum+"_"+count;
+
+    let div1 = document.createElement("div");
+    div1.className = "col-sm-4";
+    div1.style.backgroundColor = "#e6e1e1";
+    div1.style.border = "2px solid lightslategrey";
+    div1.style.borderRadius = "3px";
+
+
+    let div2 = document.createElement("div");
+    div2.className = "col-sm-4";
+    div2.style.backgroundColor = "#e6e1e1";
+    div2.style.border = "2px solid lightslategrey";
+    div2.style.borderRadius = "3px";
+    div2.id = "pbRow"+secNum+"_"+count+"_brkR";
+
+
+    let selectR = document.createElement("select");
+    selectR.id = "pb"+secNum+"_row"+count+"_frameR";
+    selectR.name = "row"+count+"_frameR";
+    selectR.class = "form-control";
+
+    let input2 = document.createElement("input");
+    input2.name = "rowType_"+count;
+    input2.id = "rowType_"+count;
+    input2.value = "SINGLE";
+    input2.hidden = true;
+    document.getElementById('pbMain' + secNum).appendChild(input2);
+
+    document.getElementById('pbMain' + secNum).appendChild(rowDiv);
+    document.getElementById("pbRow"+secNum+"_"+count).appendChild(div1);
+    document.getElementById("pbRow"+secNum+"_"+count).appendChild(div2);
+    document.getElementById("pbRow"+secNum+"_"+count+"_brkR").appendChild(selectR);
+
+
+    let selectList = ["H/J", "L"];
+
+    for (let i = 0; i < selectList.length; i++) {
+        let option = document.createElement("option");
+        option.value = selectList[i];
+        option.text = selectList[i];
+        document.getElementById("pb"+secNum+"_row"+count+"_frameR").appendChild(option);
+    }
+}
+
+function removeLastRowNew(secNum) {
+    count -= 1;
+
+    if (document.getElementById("totalRows_"+secNum)) {
+        document.getElementById("totalRows_"+secNum).value = count;
+    }
+    document.getElementById("pbRow"+secNum+"_"+count).remove();
+
+}
+
+
+let tempCount = 0;
+function addDualRowExisting(secNum, currentTotalRows) {
+    tempCount += 1;
+    let count = tempCount + parseInt(currentTotalRows);
+    if (document.getElementById("totalRows_"+secNum)) {
+        document.getElementById("totalRows_"+secNum).value = count;
+    }
+
+    let rowDiv = document.createElement("div");
+    rowDiv.className = "row justify-content-center";
+    rowDiv.id = "pbRow"+secNum+"_"+count;
+
+    let div1 = document.createElement("div");
+    div1.className = "col-sm-4";
+    div1.style.backgroundColor = "#e6e1e1";
+    div1.style.border = "2px solid lightslategrey";
+    div1.style.borderRadius = "3px";
+    div1.id = "pbRow"+secNum+"_"+count+"_brkL";
+
+    let div2 = document.createElement("div");
+    div2.className = "col-sm-4";
+    div2.style.backgroundColor = "#e6e1e1";
+    div2.style.border = "2px solid lightslategrey";
+    div2.style.borderRadius = "3px";
+    div2.id = "pbRow"+secNum+"_"+count+"_brkR";
+
+
+    let selectL = document.createElement("select");
+    selectL.id = "pb"+secNum+"_row"+count+"_frameL";
+    selectL.name = "row"+count+"_frameL";
+    selectL.class = "form-control";
+
+    let selectR = document.createElement("select");
+    selectR.id = "pb"+secNum+"_row"+count+"_frameR";
+    selectR.name = "row"+count+"_frameR";
+    selectR.class = "form-control";
+
+
+    let input2 = document.createElement("input");
+    input2.name = "rowType_"+count;
+    input2.id = "rowType_"+count;
+    input2.value = "DUAL";
+    input2.hidden = true;
+    document.getElementById('pbMain' + secNum).appendChild(input2);
+
+
+    document.getElementById('pbMain' + secNum).appendChild(rowDiv);
+    document.getElementById("pbRow"+secNum+"_"+count).appendChild(div1);
+    document.getElementById("pbRow"+secNum+"_"+count).appendChild(div2);
+    document.getElementById("pbRow"+secNum+"_"+count+"_brkL").appendChild(selectL);
+    document.getElementById("pbRow"+secNum+"_"+count+"_brkR").appendChild(selectR);
+
+    let selectList = ["H/J", "L"];
+
+    for (let i = 0; i < selectList.length; i++) {
+        let option = document.createElement("option");
+        option.value = selectList[i];
+        option.text = selectList[i];
+        document.getElementById("pb"+secNum+"_row"+count+"_frameL").appendChild(option);
+    }
+
+    for (let i = 0; i < selectList.length; i++) {
+        let option = document.createElement("option");
+        option.value = selectList[i];
+        option.text = selectList[i];
+        document.getElementById("pb"+secNum+"_row"+count+"_frameR").appendChild(option);
+    }
+}
+
+function addSingleRowCenterLeftExisting(secNum, currentTotalRows) {
+    tempCount += 1;
+    let count = tempCount + parseInt(currentTotalRows);
+    if (document.getElementById("totalRows_"+secNum)) {
+        document.getElementById("totalRows_"+secNum).value = count;
+    }
+
+    let rowDiv = document.createElement("div");
+    rowDiv.className = "row justify-content-center";
+    rowDiv.id = "pbRow"+secNum+"_"+count;
+
+
+    let div = document.createElement("div");
+    div.className = "col-sm-4";
+    div.style.backgroundColor = "#e6e1e1";
+    div.style.border = "2px solid lightslategrey";
+    div.style.borderRadius = "3px";
+    div.id = "pbRow"+secNum+"_"+count+"_brkCL";
+
+
+    let select = document.createElement("select");
+    select.id = "pb"+secNum+"_row"+count+"_frameCL";
+    select.name = "row"+count+"_frameCL";
+    select.class = "form-control";
+
+    let input2 = document.createElement("input");
+    input2.name = "rowType_"+count;
+    input2.id = "rowType_"+count;
+    input2.value = "SINGLE";
+    input2.hidden = true;
+    document.getElementById('pbMain' + secNum).appendChild(input2);
+
+
+    document.getElementById('pbMain' + secNum).appendChild(rowDiv);
+    document.getElementById("pbRow"+secNum+"_"+count).appendChild(div);
+    document.getElementById("pbRow"+secNum+"_"+count+"_brkCL").appendChild(select);
+
+
+    let selectList = ["L", "P"];
+
+    for (let i = 0; i < selectList.length; i++) {
+        let option = document.createElement("option");
+        option.value = selectList[i];
+        option.text = selectList[i];
+        document.getElementById("pb"+secNum+"_row"+count+"_frameCL").appendChild(option);
+    }
+}
+
+function addSingleRowCenterRightExisting(secNum, currentTotalRows) {
+    tempCount += 1;
+    let count = tempCount + parseInt(currentTotalRows);
+    if (document.getElementById("totalRows_"+secNum)) {
+        document.getElementById("totalRows_"+secNum).value = count;
+    }
+
+    let rowDiv = document.createElement("div");
+    rowDiv.className = "row justify-content-center";
+    rowDiv.id = "pbRow"+secNum+"_"+count;
+
+
+    let div = document.createElement("div");
+    div.className = "col-sm-4";
+    div.style.backgroundColor = "#e6e1e1";
+    div.style.border = "2px solid lightslategrey";
+    div.style.borderRadius = "3px";
+    div.id = "pbRow"+secNum+"_"+count+"_brkCR";
+
+
+    let select = document.createElement("select");
+    select.id = "pb"+secNum+"_row"+count+"_frameCR";
+    select.name = "row"+count+"_frameCR";
+    select.class = "form-control";
+
+    let input2 = document.createElement("input");
+    input2.name = "rowType_"+count;
+    input2.id = "rowType_"+count;
+    input2.value = "SINGLE";
+    input2.hidden = true;
+    document.getElementById('pbMain' + secNum).appendChild(input2);
+
+
+    document.getElementById('pbMain' + secNum).appendChild(rowDiv);
+    document.getElementById("pbRow"+secNum+"_"+count).appendChild(div);
+    document.getElementById("pbRow"+secNum+"_"+count+"_brkCR").appendChild(select);
+
+
+    let selectList = ["L", "P"];
+
+    for (let i = 0; i < selectList.length; i++) {
+        let option = document.createElement("option");
+        option.value = selectList[i];
+        option.text = selectList[i];
+        document.getElementById("pb"+secNum+"_row"+count+"_frameCR").appendChild(option);
+    }
+}
+
+function addSingleLeftRowExisting(secNum, currentTotalRows) {
+    tempCount += 1;
+    let count = tempCount + parseInt(currentTotalRows);
+    if (document.getElementById("totalRows_"+secNum)) {
+        document.getElementById("totalRows_"+secNum).value = count;
+    }
+
+    let rowDiv = document.createElement("div");
+    rowDiv.className = "row justify-content-center";
+    rowDiv.id = "pbRow"+secNum+"_"+count;
+
+    let div1 = document.createElement("div");
+    div1.className = "col-sm-4";
+    div1.style.backgroundColor = "#e6e1e1";
+    div1.style.border = "2px solid lightslategrey";
+    div1.style.borderRadius = "3px";
+    div1.id = "pbRow"+secNum+"_"+count+"_brkL";
+
+    let div2 = document.createElement("div");
+    div2.className = "col-sm-4";
+    div2.style.backgroundColor = "#e6e1e1";
+    div2.style.border = "2px solid lightslategrey";
+    div2.style.borderRadius = "3px";
+
+
+    let selectL = document.createElement("select");
+    selectL.id = "pb"+secNum+"_row"+count+"_frameL";
+    selectL.name = "row"+count+"_frameL";
+    selectL.class = "form-control";
+
+
+    let input2 = document.createElement("input");
+    input2.name = "rowType_"+count;
+    input2.id = "rowType_"+count;
+    input2.value = "SINGLE";
+    input2.hidden = true;
+    document.getElementById('pbMain' + secNum).appendChild(input2);
+
+    document.getElementById('pbMain' + secNum).appendChild(rowDiv);
+    document.getElementById("pbRow"+secNum+"_"+count).appendChild(div1);
+    document.getElementById("pbRow"+secNum+"_"+count).appendChild(div2);
+    document.getElementById("pbRow"+secNum+"_"+count+"_brkL").appendChild(selectL);
+
+    let selectList = ["H/J", "L"];
+
+    for (let i = 0; i < selectList.length; i++) {
+        let option = document.createElement("option");
+        option.value = selectList[i];
+        option.text = selectList[i];
+        document.getElementById("pb"+secNum+"_row"+count+"_frameL").appendChild(option);
+    }
+
+}
+
+function addSingleRightRowExisting(secNum, currentTotalRows) {
+    tempCount += 1;
+    let count = tempCount + parseInt(currentTotalRows);
+    if (document.getElementById("totalRows_"+secNum)) {
+        document.getElementById("totalRows_"+secNum).value = count;
+    }
+
+    let rowDiv = document.createElement("div");
+    rowDiv.className = "row justify-content-center";
+    rowDiv.id = "pbRow"+secNum+"_"+count;
+
+    let div1 = document.createElement("div");
+    div1.className = "col-sm-4";
+    div1.style.backgroundColor = "#e6e1e1";
+    div1.style.border = "2px solid lightslategrey";
+    div1.style.borderRadius = "3px";
+
+
+    let div2 = document.createElement("div");
+    div2.className = "col-sm-4";
+    div2.style.backgroundColor = "#e6e1e1";
+    div2.style.border = "2px solid lightslategrey";
+    div2.style.borderRadius = "3px";
+    div2.id = "pbRow"+secNum+"_"+count+"_brkR";
+
+
+    let selectR = document.createElement("select");
+    selectR.id = "pb"+secNum+"_row"+count+"_frameR";
+    selectR.name = "row"+count+"_frameR";
+    selectR.class = "form-control";
+
+    let input2 = document.createElement("input");
+    input2.name = "rowType_"+count;
+    input2.id = "rowType_"+count;
+    input2.value = "SINGLE";
+    input2.hidden = true;
+    document.getElementById('pbMain' + secNum).appendChild(input2);
+
+    document.getElementById('pbMain' + secNum).appendChild(rowDiv);
+    document.getElementById("pbRow"+secNum+"_"+count).appendChild(div1);
+    document.getElementById("pbRow"+secNum+"_"+count).appendChild(div2);
+    document.getElementById("pbRow"+secNum+"_"+count+"_brkR").appendChild(selectR);
+
+
+    let selectList = ["H/J", "L"];
+
+    for (let i = 0; i < selectList.length; i++) {
+        let option = document.createElement("option");
+        option.value = selectList[i];
+        option.text = selectList[i];
+        document.getElementById("pb"+secNum+"_row"+count+"_frameR").appendChild(option);
+    }
+
+}
+
+function removeLastRowExisting(secNum, currentTotalRows) {
+    tempCount -= 1;
+    let count = tempCount + parseInt(currentTotalRows);
+    if (document.getElementById("totalRows_"+secNum)) {
+        document.getElementById("totalRows_"+secNum).value = count;
+    }
+    document.getElementById("pbRow"+secNum+"_"+(count+1)).remove();
+}
 

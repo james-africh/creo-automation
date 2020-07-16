@@ -1,140 +1,222 @@
-<div class="col-sm-3">
-    <label for="iccbPlatform" class="col-form-label">ICCB Platform</label>
-    <select class="form-control" name="iccbPlatform" id="iccbPlatform">
-        <option value="Select">Select</option>
-        <%   let iccbPlatforms = layoutDropdownData.filter(e => e.type === 'iccbPlatform') %>
-        <% for (let iccbPlatform of iccbPlatforms) { %>
-        <option value="<%=iccbPlatform.value%>"><%=iccbPlatform.value%></option>
-        <% } %>
-    </select>
-</div>
-<div class="col-sm-3">
-    <label for="mccbPlatform" class="col-form-label">MCCB Platform</label>
-    <select class="form-control" name="mccbPlatform" id="mccbPlatform">
-        <option value="Select">Select</option>
-        <%   let mccbPlatforms = layoutDropdownData.filter(e => e.type === 'mccbPlatform') %>
-        <% for (let mccbPlatform of mccbPlatforms) { %>
-        <option value="<%=mccbPlatform.value%>"><%=mccbPlatform.value%></option>
-        <% } %>
-    </select>
-</div>
-<div class="col-sm-3">
-    <label for="mccbPlatform" class="col-form-label">MV VCB Platform</label>
-    <select class="form-control" name="vcbPlatform" id="vcbPlatform">
-        <option value="Select">Select</option>
-        <%   let vcbPlatforms = layoutDropdownData.filter(e => e.type === 'vcbPlatform') %>
-        <% for (let vcbPlatform of vcbPlatforms) { %>
-        <option value="<%=vcbPlatform.value%>"><%=vcbPlatform.value%></option>
-        <% } %>
-    </select>
-</div>
-
-
-
-
-
-
-
-<div class="col-sm-3">
-    <label for="iccbPlatform" class="col-form-label">ICCB Platform</label>
-    <select class="form-control" name="iccbPlatform" id="iccbPlatform" disabled="disabled">
-        <%   let iccbPlatforms = layoutDropdownData.filter(e => e.type === 'iccbPlatform') %>
-        <% for (let iccbPlatform of iccbPlatforms) { %>
-            <% if (layoutData[0].iccbPlatform == 'N/A') { %>
-                <option value="N/A" selected="selected">N/A</option>
-            <% } else if (layoutData[0].iccbPlatform == iccbPlatform.value) { %>
-            <option value="<%=iccbPlatform.value%>" selected="selected"><%=iccbPlatform.value%></option>
-            <% } else { %>
-            <option value="<%=iccbPlatform.value%>"><%=iccbPlatform.value%></option>
-            <% } %>
-        <% } %>
-    </select>
-</div>
-<div class="col-sm-3">
-    <label for="mccbPlatform" class="col-form-label">MCCB Platform</label>
-    <select class="form-control" name="mccbPlatform" id="mccbPlatform" disabled="disabled">
-        <%   let mccbPlatforms = layoutDropdownData.filter(e => e.type === 'mccbPlatform') %>
-        <% for (let mccbPlatform of mccbPlatforms) { %>
-            <% if (layoutData[0].mccbPlatform == 'N/A') { %>
-                <option value="N/A" selected="selected">N/A</option>
-            <% } else if (layoutData[0].mccbPlatform == mccbPlatform.value) { %>
-            <option value="<%=mccbPlatform.value%>" selected="selected"><%=mccbPlatform.value%></option>
-            <% } else { %>
-            <option value="<%=mccbPlatform.value%>"><%=mccbPlatform.value%></option>
-            <% } %>
-        <% } %>
-    </select>
-</div>
-<div class="col-sm-3">
-    <label for="mccbPlatform" class="col-form-label">MV VCB Platform</label>
-    <select class="form-control" name="vcbPlatform" id="vcbPlatform" disabled="disabled">
-        <%   let vcbPlatforms = layoutDropdownData.filter(e => e.type === 'vcbPlatform') %>
-        <% for (let vcbPlatform of vcbPlatforms) { %>
-            <% if (layoutData[0].vcbPlatform == 'N/A') { %>
-                <option value="N/A" selected="selected">N/A</option>
-            <% } else if (layoutData[0].vcbPlatform == vcbPlatform.value) { %>
-            <option value="<%=vcbPlatform.value%>" selected="selected"><%=vcbPlatform.value%></option>
-            <% } else { %>
-            <option value="<%=vcbPlatform.value%>"><%=vcbPlatform.value%></option>
-            <% } %>
-        <% } %>
-    </select>
-</div>
-
-
-
-
-
-
-<div class="row">
-    <div class="col-sm-6">
-        <label for="iccbPlatform_edit" class="col-form-label">ICCB Platform</label>
-        <select class="form-control" name="iccbPlatform_edit" id="iccbPlatform_edit" >
-            <%   let iccbPlatformTypes = layoutDropdownData.filter(e => e.type === 'iccbPlatform') %>
-            <% for (let iccbPlatform of iccbPlatformTypes) { %>
-                <% if (layoutData[0].iccbPlatform == 'N/A') { %>
-                    <option value="N/A" selected="selected">N/A</option>
-                <% } else if (layoutData[0].iccbPlatform == iccbPlatform.value) { %>
-                <option value="<%=iccbPlatform.value%>" selected="selected"><%=iccbPlatform.value%></option>
-                <% } else { %>
-                <option value="<%=iccbPlatform.value%>"><%=iccbPlatform.value%></option>
+<% for (let compartment of compArray) { %>
+    <% if (compartment.compType == 'brk') { %>
+        <% let brkCompID = "comp" + compartment.position + "brk"; %>
+        <ol data-draggable="target" class="<%-brkCompID%>" id="<%-sectionID%>-<%=compartment.position%>-brk" style="width: 100%; height: 23%; background-color:#e6e1e1; border-width:medium; border-color: #b1e7d5;">
+            <% for (let el of deviceData) { %>
+                <% if(el.comp == compartment.position && el.secID == section.secID) { %>
+                    <% if (el.catCode.includes('MC')){ %>
+                        <li data-draggable="item" id="B<%= el.devID%>_brk" class="mccbItem"  style="background-color: #fcca9c;">
+                            <%= el.devDesignation %>
+                        </li>
+                    <% } else { %>
+                        <li data-draggable="item" id="B<%= el.devID%>_brk" class="iccbItem" style="background-color: #b1e7d5;">
+                            <%= el.devDesignation %>
+                        </li>
+                    <% } %>
                 <% } %>
             <% } %>
-        </select>
-    </div>
-    <div class="col-sm-6">
-        <label for="mccbPlatform_edit" class="col-form-label">MCCB Platform</label>
-        <select class="form-control" name="mccbPlatform_edit" id="mccbPlatform_edit">
-            <%   let mccbPlatformTypes = layoutDropdownData.filter(e => e.type === 'mccbPlatform') %>
-            <% for (let mccbPlatform of mccbPlatformTypes) { %>
-                <% if (layoutData[0].mccbPlatform == 'N/A') { %>
-                    <option value="N/A" selected="selected">N/A</option>
-                <% } else if (layoutData[0].mccbPlatform == mccbPlatform.value) { %>
-                <option value="<%=mccbPlatform.value%>" selected="selected"><%=mccbPlatform.value%></option>
-                <% } else { %>
-                <option value="<%=mccbPlatform.value%>"><%=mccbPlatform.value%></option>
+        </ol>
+    <% } else if (compartment.compType == 'control') { %>
+        <% if (compartment.position == 'A') { %>
+            <% if (compArray[1].compType != 'control') { %>
+            <ol data-draggable="target" class="comp<%=compartment.position%>control controlComp" id="<%=sectionID%>-<%=compartment.position%>-control">
+            </ol>
+            <% } %>
+        <% } else if (compartment.position == 'B') { %>
+            <% if (compArray[2].compType != 'control') { %>
+                <% if (compArray[0].compType == 'control') { %>
+                <ol data-draggable="target" class="comp<%=compartment.position%>control controlComp" id="<%=sectionID%>-<%=compartment.position%>-control" style="height: 46%;">
+                </ol>
+                <% } else if (compArray[0].compType != 'control') { %>
+                <ol data-draggable="target" class="comp<%=compartment.position%>control controlComp" id="<%=sectionID%>-<%=compartment.position%>-control">
+                </ol>
                 <% } %>
             <% } %>
-        </select>
-    </div>
-</div>
-
-
-
-
-
-<div class="col-sm-6">
-    <label for="vcbPlatform_edit" class="col-form-label">VCB Platform</label>
-    <select class="form-control" name="vcbPlatform_edit" id="vcbPlatform_edit">
-        <%   let vcbPlatformTypes = layoutDropdownData.filter(e => e.type === 'vcbPlatform') %>
-        <% for (let vcbPlatform of vcbPlatformTypes) { %>
-            <% if (layoutData[0].vcbPlatform == 'N/A') { %>
-                <option value="N/A" selected="selected">N/A</option>
-            <% } else if (layoutData[0].vcbPlatform == vcbPlatform.value) { %>
-            <option value="<%=vcbPlatform.value%>" selected="selected"><%=vcbPlatform.value%></option>
-            <% } else { %>
-            <option value="<%=vcbPlatform.value%>"><%=vcbPlatform.value%></option>
+        <% } else if (compartment.position == 'C') { %>
+            <% if (compArray[3].compType != 'control') { %>
+                <% if (compArray[0].compType == 'control' && compArray[1].compType == 'control') { %>
+                <ol data-draggable="target" class="comp<%=compartment.position%>control controlComp" id="<%=sectionID%>-<%=compartment.position%>-control" style="height: 69%;">
+                </ol>
+                <% } else if (compArray[0].compType != 'control' && compArray[1].compType == 'control') { %>
+                <ol data-draggable="target" class="comp<%=compartment.position%>control controlComp" id="<%=sectionID%>-<%=compartment.position%>-control" style="height: 46%;">
+                </ol>
+                <% } else if (compArray[1].compType != 'control') { %>
+                <ol data-draggable="target" class="comp<%=compartment.position%>control controlComp" id="<%=sectionID%>-<%=compartment.position%>-control">
+                </ol>
+                <% } %>
+            <% } %>
+        <% } else if (compartment.position == 'D') { %>
+            <% if (compArray[0].compType == 'control' && compArray[1].compType == 'control' && compArray[2].compType == 'control') { %>
+            <ol data-draggable="target" class="comp<%=compartment.position%>control controlComp" id="<%=sectionID%>-<%=compartment.position%>-control" style="height: 100%;">
+            </ol>
+            <% } else if (compArray[0].compType != 'control' && compArray[1].compType == 'control' && compArray[2].compType == 'control') { %>
+            <ol data-draggable="target" class="comp<%=compartment.position%>control controlComp" id="<%=sectionID%>-<%=compartment.position%>-control" style="height: 69%;">
+            </ol>
+            <% } else if (compArray[1].compType != 'control' && compArray[2].compType == 'control') { %>
+            <ol data-draggable="target" class="comp<%=compartment.position%>control controlComp" id="<%=sectionID%>-<%=compartment.position%>-control" style="height: 46%;">
+            </ol>
+            <% } else if (compArray[2].compType != 'control') { %>
+            <ol data-draggable="target" class="comp<%=compartment.position%>control controlComp" id="<%=sectionID%>-<%=compartment.position%>-control">
+            </ol>
             <% } %>
         <% } %>
-    </select>
-</div>
+    <% } else if (compartment.compType == 'panelboard') { %>
+        <% if (compartment.position == 'A') { %>
+            <% if (compArray[1].compType != 'panelboard') { %>
+            <ol data-draggable="target" class="comp<%=compartment.position%>panelboard" id="<%=sectionID%>-<%=compartment.position%>-panelboard">
+                <% for(let el of deviceData){ %>
+                    <% if(el.comp == compartment.position && el.secID == section.secID){ %>
+                        <% if(el.catCode.includes('MC')){ %>
+                            <li data-draggable="item" id="B<%= el.devID%>_panelboard" class="mccbItem"  style="background-color: #fcca9c;">
+                                <%= el.devDesignation %>
+                            </li>
+                        <% } else {  %>
+                            <li data-draggable="item" id="B<%= el.devID%>_panelboard" class="iccbItem" style="background-color: #b1e7d5;">
+                                <%= el.devDesignation %>
+                            </li>
+                        <% } %>
+                    <% } %>
+                <% } %>
+            </ol>
+            <% } %>
+        <% } else if (compartment.position == 'B') { %>
+            <% if (compArray[2].compType != 'panelboard') { %>
+                <% if (compArray[0].compType == 'panelboard') { %>
+                <ol data-draggable="target" class="comp<%=compartment.position%>panelboard" id="<%=sectionID%>-<%=compartment.position%>-panelboard" style="height: 46%;">
+                    <% for(let el of deviceData){ %>
+                        <% if(el.comp == compartment.position && el.secID == section.secID){ %>
+                            <% if(el.catCode.includes('MC')){ %>
+                                <li data-draggable="item" id="B<%= el.devID%>_panelboard" class="mccbItem"  style="background-color: #fcca9c;">
+                                    <%= el.devDesignation %>
+                                </li>
+                            <% } else {  %>
+                                <li data-draggable="item" id="B<%= el.devID%>_panelboard" class="iccbItem" style="background-color: #b1e7d5;">
+                                    <%= el.devDesignation %>
+                                </li>
+                            <% } %>
+                        <% } %>
+                    <% } %>
+                </ol>
+                <% } else if (compArray[0].compType != 'panelboard') { %>
+                <ol data-draggable="target" class="comp<%=compartment.position%>panelboard" id="<%=sectionID%>-<%=compartment.position%>-panelboard">
+                    <% for(let el of deviceData){ %>
+                        <% if(el.comp == compartment.position && el.secID == section.secID){ %>
+                            <% if(el.catCode.includes('MC')){ %>
+                                <li data-draggable="item" id="B<%= el.devID%>_panelboard" class="mccbItem"  style="background-color: #fcca9c;">
+                                    <%= el.devDesignation %>
+                                </li>
+                            <% } else {  %>
+                                <li data-draggable="item" id="B<%= el.devID%>_panelboard" class="iccbItem" style="background-color: #b1e7d5;">
+                                    <%= el.devDesignation %>
+                                </li>
+                            <% } %>
+                        <% } %>
+                    <% } %>
+                </ol>
+                <% } %>
+            <% } %>
+        <% } else if (compartment.position == 'C') { %>
+            <% if (compArray[3].compType != 'panelboard') { %>
+                <% if (compArray[0].compType == 'panelboard' && compArray[1].compType == 'panelboard') { %>
+                <ol data-draggable="target" class="comp<%=compartment.position%>panelboard" id="<%=sectionID%>-<%=compartment.position%>-panelboard" style="height:69%;">
+                    <% for(let el of deviceData){ %>
+                        <% if(el.comp == compartment.position && el.secID == section.secID){ %>
+                            <% if(el.catCode.includes('MC')){ %>
+                                <li data-draggable="item" id="B<%= el.devID%>_panelboard" class="mccbItem"  style="background-color: #fcca9c;">
+                                    <%= el.devDesignation %>
+                                </li>
+                            <% } else {  %>
+                                <li data-draggable="item" id="B<%= el.devID%>_panelboard" class="iccbItem" style="background-color: #b1e7d5;">
+                                    <%= el.devDesignation %>
+                                </li>
+                            <% } %>
+                        <% } %>
+                    <% } %>
+                </ol>
+                <% } else if (compArray[0].compType != 'panelboard' && compArray[1].compType == 'panelboard') { %>
+                <ol data-draggable="target" class="comp<%=compartment.position%>panelboard" id="<%=sectionID%>-<%=compartment.position%>-panelboard" style="height:46%;">
+                    <% for(let el of deviceData){ %>
+                        <% if(el.comp == compartment.position && el.secID == section.secID){ %>
+                            <% if(el.catCode.includes('MC')){ %>
+                                <li data-draggable="item" id="B<%= el.devID%>_panelboard" class="mccbItem"  style="background-color: #fcca9c;">
+                                    <%= el.devDesignation %>
+                                </li>
+                            <% } else {  %>
+                                <li data-draggable="item" id="B<%= el.devID%>_panelboard" class="iccbItem" style="background-color: #b1e7d5;">
+                                    <%= el.devDesignation %>
+                                </li>
+                            <% } %>
+                        <% } %>
+                    <% } %>
+                </ol>
+                <% } %>
+            <% } %>
+        <% } else if (compartment.position == 'D') { %>
+            <% if (compArray[0].compType == 'panelboard' && compArray[1].compType == 'panelboard' && compArray[2].compType == 'panelboard') { %>
+            <ol data-draggable="target" class="comp<%=compartment.position%>panelboard" id="<%=sectionID%>-<%=compartment.position%>-panelboard" style="height:100%;">
+                <% for(let el of deviceData){ %>
+                    <% if(el.comp == compartment.position && el.secID == section.secID){ %>
+                        <% if(el.catCode.includes('MC')){ %>
+                            <li data-draggable="item" id="B<%= el.devID%>_panelboard" class="mccbItem"  style="background-color: #fcca9c;">
+                                <%= el.devDesignation %>
+                            </li>
+                        <% } else {  %>
+                            <li data-draggable="item" id="B<%= el.devID%>_panelboard" class="iccbItem" style="background-color: #b1e7d5;">
+                                <%= el.devDesignation %>
+                            </li>
+                        <% } %>
+                    <% } %>
+                <% } %>
+            </ol>
+            <% } else if (compArray[0].compType != 'panelboard' && compArray[1].compType == 'panelboard' && compArray[2].compType == 'panelboard') { %>
+            <ol data-draggable="target" class="comp<%=compartment.position%>panelboard" id="<%=sectionID%>-<%=compartment.position%>-panelboard" style="height:69%;">
+                <% for(let el of deviceData){ %>
+                    <% if(el.comp == compartment.position && el.secID == section.secID){ %>
+                        <% if(el.catCode.includes('MC')){ %>
+                            <li data-draggable="item" id="B<%= el.devID%>_panelboard" class="mccbItem"  style="background-color: #fcca9c;">
+                                <%= el.devDesignation %>
+                            </li>
+                        <% } else {  %>
+                            <li data-draggable="item" id="B<%= el.devID%>_panelboard" class="iccbItem" style="background-color: #b1e7d5;">
+                                <%= el.devDesignation %>
+                            </li>
+                        <% } %>
+                    <% } %>
+                <% } %>
+            </ol>
+            <% } else if (compArray[1].compType != 'panelboard' && compArray[2].compType == 'panelboard') { %>
+            <ol data-draggable="target" class="comp<%=compartment.position%>panelboard" id="<%=sectionID%>-<%=compartment.position%>-panelboard" style="height:46%;">
+                <% for(let el of deviceData){ %>
+                    <% if(el.comp == compartment.position && el.secID == section.secID){ %>
+                        <% if(el.catCode.includes('MC')){ %>
+                            <li data-draggable="item" id="B<%= el.devID%>_panelboard" class="mccbItem"  style="background-color: #fcca9c;">
+                                <%= el.devDesignation %>
+                            </li>
+                        <% } else {  %>
+                            <li data-draggable="item" id="B<%= el.devID%>_panelboard" class="iccbItem" style="background-color: #b1e7d5;">
+                                <%= el.devDesignation %>
+                            </li>
+                        <% } %>
+                    <% } %>
+                <% } %>
+            </ol>
+            <% } else if (compArray[2].compType != 'panelboard') { %>
+            <ol data-draggable="target" class="comp<%=compartment.position%>panelboard" id="<%=sectionID%>-<%=compartment.position%>-panelboard">
+                <% for(let el of deviceData){ %>
+                    <% if(el.comp == compartment.position && el.secID == section.secID){ %>
+                        <% if(el.catCode.includes('MC')){ %>
+                            <li data-draggable="item" id="B<%= el.devID%>_panelboard" class="mccbItem"  style="background-color: #fcca9c;">
+                                <%= el.devDesignation %>
+                            </li>
+                        <% } else {  %>
+                            <li data-draggable="item" id="B<%= el.devID%>_panelboard" class="iccbItem" style="background-color: #b1e7d5;">
+                                <%= el.devDesignation %>
+                            </li>
+                        <% } %>
+                    <% } %>
+                <% } %>
+            </ol>
+            <% } %>
+        <% } %>
+    <% } %>
+<% } %>

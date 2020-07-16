@@ -1,14 +1,14 @@
 const fs = require('fs');
 
 module.exports = {
-    /*"connection": {
+    "connection": {
         'user': 'doadmin',
         'password': 'xaikjabounn01k3i',
         'host': 'saidb-do-user-6679940-0.db.ondigitalocean.com',
-        'port':' 25060,
+        'port': 25060,
         'database': 'saidb',
         'dialect': 'mysql',
-        'logging': false,
+        'logging': true,
         'force': false,
         'timezone': '+00:00',
         'pool': {
@@ -21,21 +21,23 @@ module.exports = {
         'dialectOptions': {
             ssl: {
                 ssl: true,
-                cert: fs.readFileSync('./ca-certificate.crt')
+                cert: fs.readFileSync('app/config/ca-certificate.crt')
             }
         },
-    },*/
-    'connection': {
+    },
+    /*'connection': {
         'host': 'localhost',
         'user': 'root',
         'port' : 3306,
         'password': 'E5i5wks15',
         'multipleStatements': true
-    },
+    },*/
 
     //Database
-    'database': 'sai_test',
+    'database': 'saidb',
+    /*'creoDatabase': 'creoDB',
     'database2': 'quotePricing',
+    'masterDatabase': 'saidb',*/
 
     //Pre-loaded Static Tables (Shared b/w apps)
     'permissions_table': 'userPermissions',
@@ -43,6 +45,7 @@ module.exports = {
     'layout_paramTypes_table':'layoutParamTypes',
     'layout_paramType_restrictions': 'layoutParamRestrictions',
     'secType_table':'sectionType',
+    'brkType_table': 'brkType',
     'brkAcc_options_table': 'brkAccOptions',
     'control_assemblies_table': 'controlAsmSum',
     'control_items_table': 'controlItemSum',
@@ -56,6 +59,17 @@ module.exports = {
     'quote_system_type': 'quoteSystemType',
     'panelboard_width_3W': 'panelboardWidth3W',
     'panelboard_width_4W': 'panelboardWidth4W',
+
+    //Creo Tables
+    'baseFrame_table': 'baseFrames',
+    'cornerPost_table': 'cornerPosts',
+    'brkCompartment_NW_table': 'brkCompartments_NW',
+    'brk_NW_table': 'iccbNW',
+    'brk_powerpact_table': 'mccbPowerpact',
+    'brk_lugLanding_table': 'brkLugLandings',
+    'oneLineParts_table': 'oneLineParts',
+    'standardPanel_table': 'standardPanels',
+    'panel_enclosureRules_table':'panelEnclosureRules',
 
     //User Login and Profile Tables
     'users_table':'users',
@@ -117,6 +131,8 @@ module.exports = {
     'submittal_layout_table': 'submittalLayoutSum',
     'submittal_layout_dropdowns': 'layoutDropdownSum',
     'submittal_sections_table': 'submittalSectionSum',
+    'submittal_panels_table': 'submittalPanelSum',
+    'submittal_panel_breakers': 'submittalPanelBrkSum',
     'submittal_secType_table': 'sectionTypes',
     'submittal_breaker_table': 'submittalBrkSum',
     'submittal_brkAcc_table': 'submittalBrkAccSum',
