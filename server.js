@@ -26,7 +26,7 @@ app.use(session({ secret: 'saiapsportal',resave: true, saveUninitialized:true}))
 let mysql = require('mysql');
 let myConnection = require('express-myconnection');
 let dbConfig = require('./app/config/database.js');
-let database = dbConfig.database;
+let database = dbConfig.connection.database;
 let host = dbConfig.connection.host;
 let user = dbConfig.connection.user;
 let password = dbConfig.connection.password;

@@ -15,9 +15,9 @@ let connection = mysql.createConnection({
 });
 
 
-//connection.query('DROP SCHEMA IF EXISTS ' + dbConfig.database, function(err,rows) { if(err) throw err; }); // DROPS RESIDUAL DATABASE/TABLES
+connection.query('DROP SCHEMA IF EXISTS ' + dbConfig.database, function(err,rows) { if(err) throw err; }); // DROPS RESIDUAL DATABASE/TABLES
 
-//connection.query('CREATE DATABASE ' + dbConfig.database, function(err,rows) { if(err) throw err; }); // CREATES mechSubDB SCHEMA
+connection.query('CREATE DATABASE ' + dbConfig.database, function(err,rows) { if(err) throw err; }); // CREATES mechSubDB SCHEMA
 
 connection.query('USE ' + database, function(err,rows) { if(err) throw err; });
 

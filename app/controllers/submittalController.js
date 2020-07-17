@@ -2683,7 +2683,7 @@ exports.generateSubmittal = function(req, res) {
                                 }
                             }
                         } else if (devFrameL == 'H/J') {
-                            if (parseInt(breakerInfoL[0].devFrameSet.slice(0, breakerInfoL[0].devFrameSet.length - 1)) <= 150) {
+                            if (parseInt(breakerInfoL[0].devFrameSet.slice(0, breakerInfoL[0].devFrameSet.length - 1)) <= 250) {
                                 if (parseInt(breakerInfoL[0].devFrameSet.slice(0, breakerInfoL[0].devFrameSet.length - 1)) <= 150) {
                                     cbLeftFrame = 'H';
                                     cbLeftMaxAmps = 150;

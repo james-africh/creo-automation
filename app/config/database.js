@@ -29,6 +29,7 @@ module.exports = {
         'host': 'localhost',
         'user': 'root',
         'port' : 3306,
+        'database': 'sai_test',
         'password': 'E5i5wks15',
         'multipleStatements': true
     },*/
