@@ -1373,6 +1373,10 @@ exports.editBrk = function(req, res) {
                     devFrame = 'XT4';
                     frameAmp = 250;
                     break;
+                case 400:
+                    devFrame = 'XT5';
+                    frameAmp = 600;
+                    break;
                 case 600:
                     devFrame = 'XT5';
                     frameAmp = 600;
@@ -1622,11 +1626,11 @@ exports.generateSubmittal = function(req, res) {
         return null;
     }
     async function getPanelDetails() {
-        let panelData = [];
         const sections = await querySql("SELECT * FROM " +database + "." + dbConfig.submittal_sections_table + " WHERE layoutID = ?",[layoutID]);
         for (let section of sections) {
             if (section.secType.includes(' - ') == true) {
                 if (section.secType.split(' - ')[0] == 'PANELBOARD') {
+                    let panelData = [];
                     let panels = await querySql("SELECT * FROM " + database + "." + dbConfig.submittal_panel_breakers + " WHERE secID = ?", [section.secID]);
                     if (panels.length > 0) {
                         let panelType = section.secType.split(' - ')[1];
@@ -2345,6 +2349,8 @@ exports.generateSubmittal = function(req, res) {
     async function findPanelAndBreakerRows() {
         const standardPanels = await querySql("SELECT * FROM " + database + "." + dbConfig.standardPanel_table);
         const powerpactMCCBs = await querySql("SELECT * FROM " +database + "." + dbConfig.brk_powerpact_table);
+        const tmaxMCCBs = await querySql("SELECT * FROM " + database + "." + dbConfig.brk_tmax_table);
+        console.log(creoPanelData);
         for (let creoPanel of creoPanelData) {
             let creoPanelLookupData = [];
             let breakerData = await querySql("SELECT * FROM " + database + "." + dbConfig.submittal_breaker_table + " WHERE secID = ?", creoPanel.secID);
@@ -2371,112 +2377,231 @@ exports.generateSubmittal = function(req, res) {
                     let devID = creoPanelRow.breakers[0].devID;
                     let devFrame = creoPanelRow.breakers[0].frame;
                     let breakerInfo = breakerData.filter(e => e.devID == devID);
+                    let platform = breakerInfo[0].platform;
                     if (breakerInfo[0].brkPN.length == 0) {
-                        //PROVISION
-                        if (devFrame == 'P') {
-                            creoPanelRowMount = 'SINGLE';
-                            if (parseInt(breakerInfo[0].devFrameSet.slice(0, breakerInfo[0].devFrameSet.length - 1)) <= 1200) {
-                                if (parseInt(breakerInfo[0].devFrameSet.slice(0, breakerInfo[0].devFrameSet.length - 1)) <= 800) {
-                                    if (devMount == 'CENTER - LEFT') {
-                                        cbLeftFrame = 'P-PROV';
-                                        cbLeftMaxAmps = 800;
-                                        cbRightFrame = null;
-                                        cbRightMaxAmps = null;
-                                    } else if (devMount == 'CENTER - RIGHT') {
-                                        cbLeftFrame = null;
-                                        cbLeftMaxAmps = null;
-                                        cbRightFrame = 'P-PROV';
-                                        cbRightMaxAmps = 800;
+                        if (platform == 'SQUARE D POWERPACT') {
+                            //PROVISION - SQUARE D POWERPACT
+                            if (devFrame == 'P') {
+                                creoPanelRowMount = 'SINGLE';
+                                if (parseInt(breakerInfo[0].devFrameSet.slice(0, breakerInfo[0].devFrameSet.length - 1)) <= 1200) {
+                                    if (parseInt(breakerInfo[0].devFrameSet.slice(0, breakerInfo[0].devFrameSet.length - 1)) <= 800) {
+                                        if (devMount == 'CENTER - LEFT') {
+                                            cbLeftFrame = 'P-PROV';
+                                            cbLeftMaxAmps = 800;
+                                            cbRightFrame = null;
+                                            cbRightMaxAmps = null;
+                                        } else if (devMount == 'CENTER - RIGHT') {
+                                            cbLeftFrame = null;
+                                            cbLeftMaxAmps = null;
+                                            cbRightFrame = 'P-PROV';
+                                            cbRightMaxAmps = 800;
+                                        }
+                                    } else {
+                                        if (devMount == 'CENTER - LEFT') {
+                                            cbLeftFrame = 'P-PROV';
+                                            cbLeftMaxAmps = 1200;
+                                            cbRightFrame = null;
+                                            cbRightMaxAmps = null;
+                                        } else if (devMount == 'CENTER - RIGHT') {
+                                            cbLeftFrame = null;
+                                            cbLeftMaxAmps = null;
+                                            cbRightFrame = 'P-PROV';
+                                            cbRightMaxAmps = 1200;
+                                        }
                                     }
-                                } else {
+                                }
+                            } else if (devFrame == 'L') {
+                                if (parseInt(breakerInfo[0].devFrameSet.slice(0, breakerInfo[0].devFrameSet.length - 1)) <= 600) {
+                                    if (parseInt(breakerInfo[0].devFrameSet.slice(0, breakerInfo[0].devFrameSet.length - 1)) <= 400) {
+                                        if (devMount == 'CENTER - LEFT') {
+                                            cbLeftFrame = 'L-PROV';
+                                            cbLeftMaxAmps = 400;
+                                            cbRightFrame = null;
+                                            cbRightMaxAmps = null;
+                                            creoPanelRowMount = 'SINGLE';
+                                        } else if (devMount == 'CENTER - RIGHT') {
+                                            cbLeftFrame = null;
+                                            cbLeftMaxAmps = null;
+                                            cbRightFrame = 'L-PROV';
+                                            cbRightMaxAmps = 400;
+                                            creoPanelRowMount = 'SINGLE';
+                                        } else if (devMount == 'LEFT') {
+                                            cbLeftFrame = 'L-PROV';
+                                            cbLeftMaxAmps = 400;
+                                            cbRightFrame = null;
+                                            cbRightMaxAmps = null;
+                                            creoPanelRowMount = 'TWIN';
+                                        } else if (devMount == 'RIGHT') {
+                                            cbLeftFrame = null;
+                                            cbLeftMaxAmps = null;
+                                            cbRightFrame = 'L-PROV';
+                                            cbRightMaxAmps = 400;
+                                            creoPanelRowMount = 'TWIN';
+                                        }
+                                    } else {
+                                        if (devMount == 'CENTER - LEFT') {
+                                            cbLeftFrame = 'L-PROV';
+                                            cbLeftMaxAmps = 600;
+                                            cbRightFrame = null;
+                                            cbRightMaxAmps = null;
+                                            creoPanelRowMount = 'SINGLE';
+                                        } else if (devMount == 'CENTER - RIGHT') {
+                                            cbLeftFrame = null;
+                                            cbLeftMaxAmps = null;
+                                            cbRightFrame = 'L-PROV';
+                                            cbRightMaxAmps = 600;
+                                            creoPanelRowMount = 'SINGLE';
+                                        } else if (devMount == 'LEFT') {
+                                            cbLeftFrame = 'L-PROV';
+                                            cbLeftMaxAmps = 600;
+                                            cbRightFrame = null;
+                                            cbRightMaxAmps = null;
+                                            creoPanelRowMount = 'TWIN';
+                                        } else if (devMount == 'RIGHT') {
+                                            cbLeftFrame = null;
+                                            cbLeftMaxAmps = null;
+                                            cbRightFrame = 'L-PROV';
+                                            cbRightMaxAmps = 600;
+                                            creoPanelRowMount = 'TWIN';
+                                        }
+                                    }
+                                }
+                            } else if (devFrame == 'H/J') {
+                                if (parseInt(breakerInfo[0].devFrameSet.slice(0, breakerInfo[0].devFrameSet.length - 1)) <= 250) {
+                                    if (parseInt(breakerInfo[0].devFrameSet.slice(0, breakerInfo[0].devFrameSet.length - 1)) <= 150) {
+                                        if (devMount == 'LEFT') {
+                                            cbLeftFrame = 'H-PROV';
+                                            cbLeftMaxAmps = 150;
+                                            cbRightFrame = null;
+                                            cbRightMaxAmps = null;
+                                            creoPanelRowMount = 'TWIN';
+                                        } else if (devMount == 'RIGHT') {
+                                            cbLeftFrame = null;
+                                            cbLeftMaxAmps = null;
+                                            cbRightFrame = 'H-PROV';
+                                            cbRightMaxAmps = 150;
+                                            creoPanelRowMount = 'TWIN';
+                                        }
+                                    } else {
+                                        if (devMount == 'LEFT') {
+                                            cbLeftFrame = 'J-PROV';
+                                            cbLeftMaxAmps = 250;
+                                            cbRightFrame = null;
+                                            cbRightMaxAmps = null;
+                                            creoPanelRowMount = 'TWIN';
+                                        } else if (devMount == 'RIGHT') {
+                                            cbLeftFrame = null;
+                                            cbLeftMaxAmps = null;
+                                            cbRightFrame = 'J-PROV';
+                                            cbRightMaxAmps = 250;
+                                            creoPanelRowMount = 'TWIN';
+                                        }
+                                    }
+                                }
+                            }
+                            creoPanelRowLookupData = {
+                                mfgProductLine: 'SQUARE-D POWERPACT',
+                                cnxnType: 'DIST',
+                                cbRightFrame: cbRightFrame,
+                                cbRightMaxAmps: cbRightMaxAmps,
+                                cbLeftFrame: cbLeftFrame,
+                                cbLeftMaxAmps: cbLeftMaxAmps,
+                                poles: parseInt(breakerInfo[0].devPoles),
+                                panelWires: secPoles,
+                                mount: creoPanelRowMount
+                            };
+                            creoPanelLookupData.push(creoPanelRowLookupData);
+                        } else if (platform == 'ABB TMAX') {
+                            //PROVISION - ABB TMAX
+                            if (devFrame == 'XT7') {
+                                creoPanelRowMount = 'SINGLE';
+                                if (parseInt(breakerInfo[0].devFrameSet.slice(0, breakerInfo[0].devFrameSet.length - 1)) <= 1200) {
                                     if (devMount == 'CENTER - LEFT') {
-                                        cbLeftFrame = 'P-PROV';
+                                        cbLeftFrame = 'XT7-PROV';
                                         cbLeftMaxAmps = 1200;
                                         cbRightFrame = null;
                                         cbRightMaxAmps = null;
                                     } else if (devMount == 'CENTER - RIGHT') {
                                         cbLeftFrame = null;
                                         cbLeftMaxAmps = null;
-                                        cbRightFrame = 'P-PROV';
+                                        cbRightFrame = 'XT7-PROV';
                                         cbRightMaxAmps = 1200;
                                     }
                                 }
-                            }
-                        } else if (devFrame == 'L') {
-                            if (parseInt(breakerInfo[0].devFrameSet.slice(0, breakerInfo[0].devFrameSet.length - 1)) <= 600) {
-                                if (parseInt(breakerInfo[0].devFrameSet.slice(0, breakerInfo[0].devFrameSet.length - 1)) <= 400) {
+                            } else if(devFrame == 'XT6') {
+                                if (parseInt(breakerInfo[0].devFrameSet.slice(0, breakerInfo[0].devFrameSet.length - 1)) <= 800) {
                                     if (devMount == 'CENTER - LEFT') {
-                                        cbLeftFrame = 'L-PROV';
-                                        cbLeftMaxAmps = 400;
+                                        cbLeftFrame = 'XT6-PROV';
+                                        cbLeftMaxAmps = 800;
                                         cbRightFrame = null;
                                         cbRightMaxAmps = null;
-                                        creoPanelRowMount = 'SINGLE';
                                     } else if (devMount == 'CENTER - RIGHT') {
                                         cbLeftFrame = null;
                                         cbLeftMaxAmps = null;
-                                        cbRightFrame = 'L-PROV';
-                                        cbRightMaxAmps = 400;
-                                        creoPanelRowMount = 'SINGLE';
-                                    } else if (devMount == 'LEFT') {
-                                        cbLeftFrame = 'L-PROV';
-                                        cbLeftMaxAmps = 400;
-                                        cbRightFrame = null;
-                                        cbRightMaxAmps = null;
-                                        creoPanelRowMount = 'TWIN';
-                                    } else if (devMount == 'RIGHT') {
-                                        cbLeftFrame = null;
-                                        cbLeftMaxAmps = null;
-                                        cbRightFrame = 'L-PROV';
-                                        cbRightMaxAmps = 400;
-                                        creoPanelRowMount = 'TWIN';
-                                    }
-                                } else {
-                                    if (devMount == 'CENTER - LEFT') {
-                                        cbLeftFrame = 'L-PROV';
-                                        cbLeftMaxAmps = 600;
-                                        cbRightFrame = null;
-                                        cbRightMaxAmps = null;
-                                        creoPanelRowMount = 'SINGLE';
-                                    } else if (devMount == 'CENTER - RIGHT') {
-                                        cbLeftFrame = null;
-                                        cbLeftMaxAmps = null;
-                                        cbRightFrame = 'L-PROV';
-                                        cbRightMaxAmps = 600;
-                                        creoPanelRowMount = 'SINGLE';
-                                    } else if (devMount == 'LEFT') {
-                                        cbLeftFrame = 'L-PROV';
-                                        cbLeftMaxAmps = 600;
-                                        cbRightFrame = null;
-                                        cbRightMaxAmps = null;
-                                        creoPanelRowMount = 'TWIN';
-                                    } else if (devMount == 'RIGHT') {
-                                        cbLeftFrame = null;
-                                        cbLeftMaxAmps = null;
-                                        cbRightFrame = 'L-PROV';
-                                        cbRightMaxAmps = 600;
-                                        creoPanelRowMount = 'TWIN';
+                                        cbRightFrame = 'XT6-PROV';
+                                        cbRightMaxAmps = 800;
                                     }
                                 }
-                            }
-                        } else if (devFrame == 'H/J') {
-                            if (parseInt(breakerInfo[0].devFrameSet.slice(0, breakerInfo[0].devFrameSet.length - 1)) <= 250) {
-                                if (parseInt(breakerInfo[0].devFrameSet.slice(0, breakerInfo[0].devFrameSet.length - 1)) <= 150) {
-                                    if (devMount == 'LEFT') {
-                                        cbLeftFrame = 'H-PROV';
-                                        cbLeftMaxAmps = 150;
-                                        cbRightFrame = null;
-                                        cbRightMaxAmps = null;
-                                        creoPanelRowMount = 'TWIN';
-                                    } else if (devMount == 'RIGHT') {
-                                        cbLeftFrame = null;
-                                        cbLeftMaxAmps = null;
-                                        cbRightFrame = 'H-PROV';
-                                        cbRightMaxAmps = 150;
-                                        creoPanelRowMount = 'TWIN';
+                            } else if (devFrame == 'XT5') {
+                                if (parseInt(breakerInfo[0].devFrameSet.slice(0, breakerInfo[0].devFrameSet.length - 1)) <= 600) {
+                                    if (parseInt(breakerInfo[0].devFrameSet.slice(0, breakerInfo[0].devFrameSet.length - 1)) <= 400) {
+                                        if (devMount == 'CENTER - LEFT') {
+                                            cbLeftFrame = 'XT5-PROV';
+                                            cbLeftMaxAmps = 400;
+                                            cbRightFrame = null;
+                                            cbRightMaxAmps = null;
+                                            creoPanelRowMount = 'SINGLE';
+                                        } else if (devMount == 'CENTER - RIGHT') {
+                                            cbLeftFrame = null;
+                                            cbLeftMaxAmps = null;
+                                            cbRightFrame = 'XT5-PROV';
+                                            cbRightMaxAmps = 400;
+                                            creoPanelRowMount = 'SINGLE';
+                                        } else if (devMount == 'LEFT') {
+                                            cbLeftFrame = 'XT5-PROV';
+                                            cbLeftMaxAmps = 400;
+                                            cbRightFrame = null;
+                                            cbRightMaxAmps = null;
+                                            creoPanelRowMount = 'TWIN';
+                                        } else if (devMount == 'RIGHT') {
+                                            cbLeftFrame = null;
+                                            cbLeftMaxAmps = null;
+                                            cbRightFrame = 'XT5-PROV';
+                                            cbRightMaxAmps = 400;
+                                            creoPanelRowMount = 'TWIN';
+                                        }
+                                    } else {
+                                        if (devMount == 'CENTER - LEFT') {
+                                            cbLeftFrame = 'XT5-PROV';
+                                            cbLeftMaxAmps = 600;
+                                            cbRightFrame = null;
+                                            cbRightMaxAmps = null;
+                                            creoPanelRowMount = 'SINGLE';
+                                        } else if (devMount == 'CENTER - RIGHT') {
+                                            cbLeftFrame = null;
+                                            cbLeftMaxAmps = null;
+                                            cbRightFrame = 'XT5-PROV';
+                                            cbRightMaxAmps = 600;
+                                            creoPanelRowMount = 'SINGLE';
+                                        } else if (devMount == 'LEFT') {
+                                            cbLeftFrame = 'XT5-PROV';
+                                            cbLeftMaxAmps = 600;
+                                            cbRightFrame = null;
+                                            cbRightMaxAmps = null;
+                                            creoPanelRowMount = 'TWIN';
+                                        } else if (devMount == 'RIGHT') {
+                                            cbLeftFrame = null;
+                                            cbLeftMaxAmps = null;
+                                            cbRightFrame = 'XT5-PROV';
+                                            cbRightMaxAmps = 600;
+                                            creoPanelRowMount = 'TWIN';
+                                        }
                                     }
-                                } else {
+                                }
+                            } else if (devFrame == 'XT4') {
+                                if (parseInt(breakerInfo[0].devFrameSet.slice(0, breakerInfo[0].devFrameSet.length - 1)) <= 250) {
                                     if (devMount == 'LEFT') {
-                                        cbLeftFrame = 'J-PROV';
+                                        cbLeftFrame = 'XT4-PROV';
                                         cbLeftMaxAmps = 250;
                                         cbRightFrame = null;
                                         cbRightMaxAmps = null;
@@ -2484,46 +2609,183 @@ exports.generateSubmittal = function(req, res) {
                                     } else if (devMount == 'RIGHT') {
                                         cbLeftFrame = null;
                                         cbLeftMaxAmps = null;
-                                        cbRightFrame = 'J-PROV';
+                                        cbRightFrame = 'XT4-PROV';
                                         cbRightMaxAmps = 250;
                                         creoPanelRowMount = 'TWIN';
                                     }
                                 }
+                            } else if (devFrame == 'XT2') {
+                                if (parseInt(breakerInfo[0].devFrameSet.slice(0, breakerInfo[0].devFrameSet.length - 1)) <= 125) {
+                                    if (devMount == 'LEFT') {
+                                        cbLeftFrame = 'XT2-PROV';
+                                        cbLeftMaxAmps = 125;
+                                        cbRightFrame = null;
+                                        cbRightMaxAmps = null;
+                                        creoPanelRowMount = 'TWIN';
+                                    } else if (devMount == 'RIGHT') {
+                                        cbLeftFrame = null;
+                                        cbLeftMaxAmps = null;
+                                        cbRightFrame = 'XT2-PROV';
+                                        cbRightMaxAmps = 125;
+                                        creoPanelRowMount = 'TWIN';
+                                    }
+                                }
                             }
+                            creoPanelRowLookupData = {
+                                mfgProductLine: 'ABB TMAX',
+                                cnxnType: 'DIST',
+                                cbRightFrame: cbRightFrame,
+                                cbRightMaxAmps: cbRightMaxAmps,
+                                cbLeftFrame: cbLeftFrame,
+                                cbLeftMaxAmps: cbLeftMaxAmps,
+                                poles: parseInt(breakerInfo[0].devPoles),
+                                panelWires: secPoles,
+                                mount: creoPanelRowMount
+                            };
+                            creoPanelLookupData.push(creoPanelRowLookupData);
                         }
-                        creoPanelRowLookupData = {
-                            mfgProductLine: 'SQUARE-D POWERPACT',
-                            cnxnType: 'DIST',
-                            cbRightFrame: cbRightFrame,
-                            cbRightMaxAmps: cbRightMaxAmps,
-                            cbLeftFrame: cbLeftFrame,
-                            cbLeftMaxAmps: cbLeftMaxAmps,
-                            poles: parseInt(breakerInfo[0].devPoles),
-                            panelWires: secPoles,
-                            mount: creoPanelRowMount
-                        };
-                        creoPanelLookupData.push(creoPanelRowLookupData);
                     } else {
-                        //BREAKER
-                        if (devFrame == 'P') {
-                            if (parseInt(breakerInfo[0].devFrameSet.slice(0, breakerInfo[0].devFrameSet.length - 1)) <= 1200) {
-                                if (parseInt(breakerInfo[0].devFrameSet.slice(0, breakerInfo[0].devFrameSet.length - 1)) <= 800) {
-                                    if (devMount == 'CENTER - LEFT') {
-                                        cbLeftFrame = 'P';
-                                        cbLeftMaxAmps = 800;
-                                        cbRightFrame = null;
-                                        cbRightMaxAmps = null;
-                                        creoPanelRowMount = 'SINGLE';
-                                    } else if (devMount == 'CENTER - RIGHT') {
-                                        cbLeftFrame = null;
-                                        cbLeftMaxAmps = null;
-                                        cbRightFrame = 'P';
-                                        cbRightMaxAmps = 800;
-                                        creoPanelRowMount = 'SINGLE';
+                        if (platform == 'SQUARE D POWERPACT') {
+                            //BREAKER - SQUARE D
+                            if (devFrame == 'P') {
+                                if (parseInt(breakerInfo[0].devFrameSet.slice(0, breakerInfo[0].devFrameSet.length - 1)) <= 1200) {
+                                    if (parseInt(breakerInfo[0].devFrameSet.slice(0, breakerInfo[0].devFrameSet.length - 1)) <= 800) {
+                                        if (devMount == 'CENTER - LEFT') {
+                                            cbLeftFrame = 'P';
+                                            cbLeftMaxAmps = 800;
+                                            cbRightFrame = null;
+                                            cbRightMaxAmps = null;
+                                            creoPanelRowMount = 'SINGLE';
+                                        } else if (devMount == 'CENTER - RIGHT') {
+                                            cbLeftFrame = null;
+                                            cbLeftMaxAmps = null;
+                                            cbRightFrame = 'P';
+                                            cbRightMaxAmps = 800;
+                                            creoPanelRowMount = 'SINGLE';
+                                        }
+                                    } else {
+                                        if (devMount == 'CENTER - LEFT') {
+                                            cbLeftFrame = 'P';
+                                            cbLeftMaxAmps = 1200;
+                                            cbRightFrame = null;
+                                            cbRightMaxAmps = null;
+                                            creoPanelRowMount = 'SINGLE';
+                                        } else if (devMount == 'CENTER - RIGHT') {
+                                            cbLeftFrame = null;
+                                            cbLeftMaxAmps = null;
+                                            cbRightFrame = 'P';
+                                            cbRightMaxAmps = 1200;
+                                            creoPanelRowMount = 'SINGLE';
+                                        }
                                     }
-                                } else {
+                                }
+                            } else if (devFrame == 'L') {
+                                if (parseInt(breakerInfo[0].devFrameSet.slice(0, breakerInfo[0].devFrameSet.length - 1)) <= 600) {
+                                    if (parseInt(breakerInfo[0].devFrameSet.slice(0, breakerInfo[0].devFrameSet.length - 1)) <= 400) {
+                                        if (devMount == 'CENTER - LEFT') {
+                                            cbLeftFrame = 'L';
+                                            cbLeftMaxAmps = 400;
+                                            cbRightFrame = null;
+                                            cbRightMaxAmps = null;
+                                            creoPanelRowMount = 'SINGLE';
+                                        } else if (devMount == 'CENTER - RIGHT') {
+                                            cbLeftFrame = null;
+                                            cbLeftMaxAmps = null;
+                                            cbRightFrame = 'L';
+                                            cbRightMaxAmps = 400;
+                                            creoPanelRowMount = 'SINGLE';
+                                        } else if (devMount == 'LEFT') {
+                                            cbLeftFrame = 'L';
+                                            cbLeftMaxAmps = 400;
+                                            cbRightFrame = null;
+                                            cbRightMaxAmps = null;
+                                            creoPanelRowMount = 'TWIN';
+                                        } else if (devMount == 'RIGHT') {
+                                            cbLeftFrame = null;
+                                            cbLeftMaxAmps = null;
+                                            cbRightFrame = 'L';
+                                            cbRightMaxAmps = 400;
+                                            creoPanelRowMount = 'TWIN';
+                                        }
+                                    } else {
+                                        if (devMount == 'CENTER - LEFT') {
+                                            cbLeftFrame = 'L';
+                                            cbLeftMaxAmps = 600;
+                                            cbRightFrame = null;
+                                            cbRightMaxAmps = null;
+                                            creoPanelRowMount = 'SINGLE';
+                                        } else if (devMount == 'CENTER - RIGHT') {
+                                            cbLeftFrame = null;
+                                            cbLeftMaxAmps = null;
+                                            cbRightFrame = 'L';
+                                            cbRightMaxAmps = 600;
+                                            creoPanelRowMount = 'SINGLE';
+                                        } else if (devMount == 'LEFT') {
+                                            cbLeftFrame = 'L';
+                                            cbLeftMaxAmps = 600;
+                                            cbRightFrame = null;
+                                            cbRightMaxAmps = null;
+                                            creoPanelRowMount = 'TWIN';
+                                        } else if (devMount == 'RIGHT') {
+                                            cbLeftFrame = null;
+                                            cbLeftMaxAmps = null;
+                                            cbRightFrame = 'L';
+                                            cbRightMaxAmps = 600;
+                                            creoPanelRowMount = 'TWIN';
+                                        }
+                                    }
+                                }
+                            } else if (devFrame == 'H/J') {
+                                if (parseInt(breakerInfo[0].devFrameSet.slice(0, breakerInfo[0].devFrameSet.length - 1)) <= 250) {
+                                    if (parseInt(breakerInfo[0].devFrameSet.slice(0, breakerInfo[0].devFrameSet.length - 1)) <= 150) {
+                                        if (devMount == 'LEFT') {
+                                            cbLeftFrame = 'H';
+                                            cbLeftMaxAmps = 150;
+                                            cbRightFrame = null;
+                                            cbRightMaxAmps = null;
+                                            creoPanelRowMount = 'TWIN';
+                                        } else if (devMount == 'RIGHT') {
+                                            cbLeftFrame = null;
+                                            cbLeftMaxAmps = null;
+                                            cbRightFrame = 'H';
+                                            cbRightMaxAmps = 150;
+                                            creoPanelRowMount = 'TWIN';
+                                        }
+                                    } else {
+                                        if (devMount == 'LEFT') {
+                                            cbLeftFrame = 'J';
+                                            cbLeftMaxAmps = 250;
+                                            cbRightFrame = null;
+                                            cbRightMaxAmps = null;
+                                            creoPanelRowMount = 'TWIN';
+                                        } else if (devMount == 'RIGHT') {
+                                            cbLeftFrame = null;
+                                            cbLeftMaxAmps = null;
+                                            cbRightFrame = 'J';
+                                            cbRightMaxAmps = 250;
+                                            creoPanelRowMount = 'TWIN';
+                                        }
+                                    }
+                                }
+                            }
+                            creoPanelRowLookupData = {
+                                mfgProductLine: 'SQUARE-D POWERPACT',
+                                cnxnType: 'DIST',
+                                cbRightFrame: cbRightFrame,
+                                cbRightMaxAmps: cbRightMaxAmps,
+                                cbLeftFrame: cbLeftFrame,
+                                cbLeftMaxAmps: cbLeftMaxAmps,
+                                poles: parseInt(breakerInfo[0].devPoles),
+                                panelWires: secPoles,
+                                mount: creoPanelRowMount
+                            };
+                            creoPanelLookupData.push(creoPanelRowLookupData);
+                        } else if (platform == 'ABB TMAX') {
+                            //BREAKER - ABB TMAX
+                            if (devFrame == 'XT7') {
+                                if (parseInt(breakerInfo[0].devFrameSet.slice(0, breakerInfo[0].devFrameSet.length - 1)) <= 1200) {
                                     if (devMount == 'CENTER - LEFT') {
-                                        cbLeftFrame = 'P';
+                                        cbLeftFrame = 'XT7';
                                         cbLeftMaxAmps = 1200;
                                         cbRightFrame = null;
                                         cbRightMaxAmps = null;
@@ -2531,87 +2793,87 @@ exports.generateSubmittal = function(req, res) {
                                     } else if (devMount == 'CENTER - RIGHT') {
                                         cbLeftFrame = null;
                                         cbLeftMaxAmps = null;
-                                        cbRightFrame = 'P';
+                                        cbRightFrame = 'XT7';
                                         cbRightMaxAmps = 1200;
                                         creoPanelRowMount = 'SINGLE';
                                     }
                                 }
-                            }
-                        } else if (devFrame == 'L') {
-                            if (parseInt(breakerInfo[0].devFrameSet.slice(0, breakerInfo[0].devFrameSet.length - 1)) <= 600) {
-                                if (parseInt(breakerInfo[0].devFrameSet.slice(0, breakerInfo[0].devFrameSet.length - 1)) <= 400) {
+                            } else if (devFrame == 'XT6') {
+                                if (parseInt(breakerInfo[0].devFrameSet.slice(0, breakerInfo[0].devFrameSet.length - 1)) <= 800) {
                                     if (devMount == 'CENTER - LEFT') {
-                                        cbLeftFrame = 'L';
-                                        cbLeftMaxAmps = 400;
+                                        cbLeftFrame = 'XT6';
+                                        cbLeftMaxAmps = 800;
                                         cbRightFrame = null;
                                         cbRightMaxAmps = null;
                                         creoPanelRowMount = 'SINGLE';
                                     } else if (devMount == 'CENTER - RIGHT') {
                                         cbLeftFrame = null;
                                         cbLeftMaxAmps = null;
-                                        cbRightFrame = 'L';
-                                        cbRightMaxAmps = 400;
+                                        cbRightFrame = 'XT6';
+                                        cbRightMaxAmps = 800;
                                         creoPanelRowMount = 'SINGLE';
-                                    } else if (devMount == 'LEFT') {
-                                        cbLeftFrame = 'L';
-                                        cbLeftMaxAmps = 400;
-                                        cbRightFrame = null;
-                                        cbRightMaxAmps = null;
-                                        creoPanelRowMount = 'TWIN';
-                                    } else if (devMount == 'RIGHT') {
-                                        cbLeftFrame = null;
-                                        cbLeftMaxAmps = null;
-                                        cbRightFrame = 'L';
-                                        cbRightMaxAmps = 400;
-                                        creoPanelRowMount = 'TWIN';
-                                    }
-                                } else {
-                                    if (devMount == 'CENTER - LEFT') {
-                                        cbLeftFrame = 'L';
-                                        cbLeftMaxAmps = 600;
-                                        cbRightFrame = null;
-                                        cbRightMaxAmps = null;
-                                        creoPanelRowMount = 'SINGLE';
-                                    } else if (devMount == 'CENTER - RIGHT') {
-                                        cbLeftFrame = null;
-                                        cbLeftMaxAmps = null;
-                                        cbRightFrame = 'L';
-                                        cbRightMaxAmps = 600;
-                                        creoPanelRowMount = 'SINGLE';
-                                    } else if (devMount == 'LEFT') {
-                                        cbLeftFrame = 'L';
-                                        cbLeftMaxAmps = 600;
-                                        cbRightFrame = null;
-                                        cbRightMaxAmps = null;
-                                        creoPanelRowMount = 'TWIN';
-                                    } else if (devMount == 'RIGHT') {
-                                        cbLeftFrame = null;
-                                        cbLeftMaxAmps = null;
-                                        cbRightFrame = 'L';
-                                        cbRightMaxAmps = 600;
-                                        creoPanelRowMount = 'TWIN';
                                     }
                                 }
-                            }
-                        } else if (devFrame == 'H/J') {
-                            if (parseInt(breakerInfo[0].devFrameSet.slice(0, breakerInfo[0].devFrameSet.length - 1)) <= 250) {
-                                if (parseInt(breakerInfo[0].devFrameSet.slice(0, breakerInfo[0].devFrameSet.length - 1)) <= 150) {
-                                    if (devMount == 'LEFT') {
-                                        cbLeftFrame = 'H';
-                                        cbLeftMaxAmps = 150;
-                                        cbRightFrame = null;
-                                        cbRightMaxAmps = null;
-                                        creoPanelRowMount = 'TWIN';
-                                    } else if (devMount == 'RIGHT') {
-                                        cbLeftFrame = null;
-                                        cbLeftMaxAmps = null;
-                                        cbRightFrame = 'H';
-                                        cbRightMaxAmps = 150;
-                                        creoPanelRowMount = 'TWIN';
+                            } else if (devFrame == 'XT5') {
+                                if (parseInt(breakerInfo[0].devFrameSet.slice(0, breakerInfo[0].devFrameSet.length - 1)) <= 600) {
+                                    if (parseInt(breakerInfo[0].devFrameSet.slice(0, breakerInfo[0].devFrameSet.length - 1)) <= 400) {
+                                        if (devMount == 'CENTER - LEFT') {
+                                            cbLeftFrame = 'XT5';
+                                            cbLeftMaxAmps = 400;
+                                            cbRightFrame = null;
+                                            cbRightMaxAmps = null;
+                                            creoPanelRowMount = 'SINGLE';
+                                        } else if (devMount == 'CENTER - RIGHT') {
+                                            cbLeftFrame = null;
+                                            cbLeftMaxAmps = null;
+                                            cbRightFrame = 'XT5';
+                                            cbRightMaxAmps = 400;
+                                            creoPanelRowMount = 'SINGLE';
+                                        } else if (devMount == 'LEFT') {
+                                            cbLeftFrame = 'XT5';
+                                            cbLeftMaxAmps = 400;
+                                            cbRightFrame = null;
+                                            cbRightMaxAmps = null;
+                                            creoPanelRowMount = 'TWIN';
+                                        } else if (devMount == 'RIGHT') {
+                                            cbLeftFrame = null;
+                                            cbLeftMaxAmps = null;
+                                            cbRightFrame = 'XT5';
+                                            cbRightMaxAmps = 400;
+                                            creoPanelRowMount = 'TWIN';
+                                        }
+                                    } else {
+                                        if (devMount == 'CENTER - LEFT') {
+                                            cbLeftFrame = 'XT5';
+                                            cbLeftMaxAmps = 600;
+                                            cbRightFrame = null;
+                                            cbRightMaxAmps = null;
+                                            creoPanelRowMount = 'SINGLE';
+                                        } else if (devMount == 'CENTER - RIGHT') {
+                                            cbLeftFrame = null;
+                                            cbLeftMaxAmps = null;
+                                            cbRightFrame = 'XT5';
+                                            cbRightMaxAmps = 600;
+                                            creoPanelRowMount = 'SINGLE';
+                                        } else if (devMount == 'LEFT') {
+                                            cbLeftFrame = 'XT5';
+                                            cbLeftMaxAmps = 600;
+                                            cbRightFrame = null;
+                                            cbRightMaxAmps = null;
+                                            creoPanelRowMount = 'TWIN';
+                                        } else if (devMount == 'RIGHT') {
+                                            cbLeftFrame = null;
+                                            cbLeftMaxAmps = null;
+                                            cbRightFrame = 'XT5';
+                                            cbRightMaxAmps = 600;
+                                            creoPanelRowMount = 'TWIN';
+                                        }
                                     }
-                                } else {
+                                }
+                            } else if (devFrame == 'XT4') {
+                                if (parseInt(breakerInfo[0].devFrameSet.slice(0, breakerInfo[0].devFrameSet.length - 1)) <= 250) {
                                     if (devMount == 'LEFT') {
-                                        cbLeftFrame = 'J';
+                                        cbLeftFrame = 'XT4';
                                         cbLeftMaxAmps = 250;
                                         cbRightFrame = null;
                                         cbRightMaxAmps = null;
@@ -2619,25 +2881,41 @@ exports.generateSubmittal = function(req, res) {
                                     } else if (devMount == 'RIGHT') {
                                         cbLeftFrame = null;
                                         cbLeftMaxAmps = null;
-                                        cbRightFrame = 'J';
+                                        cbRightFrame = 'XT4';
                                         cbRightMaxAmps = 250;
                                         creoPanelRowMount = 'TWIN';
                                     }
                                 }
+                            } else if (devFrame == 'XT2') {
+                                if (parseInt(breakerInfo[0].devFrameSet.slice(0, breakerInfo[0].devFrameSet.length - 1)) <= 125) {
+                                    if (devMount == 'LEFT') {
+                                        cbLeftFrame = 'XT2';
+                                        cbLeftMaxAmps = 125;
+                                        cbRightFrame = null;
+                                        cbRightMaxAmps = null;
+                                        creoPanelRowMount = 'TWIN';
+                                    } else if (devMount == 'RIGHT') {
+                                        cbLeftFrame = null;
+                                        cbLeftMaxAmps = null;
+                                        cbRightFrame = 'XT2';
+                                        cbRightMaxAmps = 125;
+                                        creoPanelRowMount = 'TWIN';
+                                    }
+                                }
                             }
+                            creoPanelRowLookupData = {
+                                mfgProductLine: 'ABB TMAX',
+                                cnxnType: 'DIST',
+                                cbRightFrame: cbRightFrame,
+                                cbRightMaxAmps: cbRightMaxAmps,
+                                cbLeftFrame: cbLeftFrame,
+                                cbLeftMaxAmps: cbLeftMaxAmps,
+                                poles: parseInt(breakerInfo[0].devPoles),
+                                panelWires: secPoles,
+                                mount: creoPanelRowMount
+                            };
+                            creoPanelLookupData.push(creoPanelRowLookupData);
                         }
-                        creoPanelRowLookupData = {
-                            mfgProductLine: 'SQUARE-D POWERPACT',
-                            cnxnType: 'DIST',
-                            cbRightFrame: cbRightFrame,
-                            cbRightMaxAmps: cbRightMaxAmps,
-                            cbLeftFrame: cbLeftFrame,
-                            cbLeftMaxAmps: cbLeftMaxAmps,
-                            poles: parseInt(breakerInfo[0].devPoles),
-                            panelWires: secPoles,
-                            mount: creoPanelRowMount
-                        };
-                        creoPanelLookupData.push(creoPanelRowLookupData);
                     }
                 } else if (creoPanelRow.configuration == 'DUAL') {
                     let devIDL = creoPanelRow.breakers[0].devID;
@@ -2646,104 +2924,213 @@ exports.generateSubmittal = function(req, res) {
                     let devIDR = creoPanelRow.breakers[1].devID;
                     let devFrameR = creoPanelRow.breakers[1].frame;
                     let breakerInfoR = breakerData.filter(e => e.devID == devIDR);
-                    if (breakerInfoL[0].brkPN.length == 0) {
-                        //PROVISION LEFT
-                        if (devFrameL == 'L') {
-                            if (parseInt(breakerInfoL[0].devFrameSet.slice(0, breakerInfoL[0].devFrameSet.length - 1)) <= 600) {
-                                if (parseInt(breakerInfoL[0].devFrameSet.slice(0, breakerInfoL[0].devFrameSet.length - 1)) <= 400) {
-                                    cbLeftFrame = 'L-PROV';
-                                    cbLeftMaxAmps = 400;
-                                } else {
-                                    cbLeftFrame = 'L-PROV';
-                                    cbLeftMaxAmps = 600;
+                    let platformL = breakerInfoL[0].platform;
+                    if (platformL == 'SQUARE D POWERPACT') {
+                        if (breakerInfoL[0].brkPN.length == 0) {
+                            //PROVISION LEFT - SQUARE D POWERPACT
+                            if (devFrameL == 'L') {
+                                if (parseInt(breakerInfoL[0].devFrameSet.slice(0, breakerInfoL[0].devFrameSet.length - 1)) <= 600) {
+                                    if (parseInt(breakerInfoL[0].devFrameSet.slice(0, breakerInfoL[0].devFrameSet.length - 1)) <= 400) {
+                                        cbLeftFrame = 'L-PROV';
+                                        cbLeftMaxAmps = 400;
+                                    } else {
+                                        cbLeftFrame = 'L-PROV';
+                                        cbLeftMaxAmps = 600;
+                                    }
+                                }
+
+                            } else if (devFrameL == 'H/J') {
+                                if (parseInt(breakerInfoL[0].devFrameSet.slice(0, breakerInfoL[0].devFrameSet.length - 1)) <= 250) {
+                                    if (parseInt(breakerInfoL[0].devFrameSet.slice(0, breakerInfoL[0].devFrameSet.length - 1)) <= 150) {
+                                        cbLeftFrame = 'H-PROV';
+                                        cbLeftMaxAmps = 150;
+                                    } else {
+                                        cbLeftFrame = 'J-PROV';
+                                        cbLeftMaxAmps = 250;
+                                    }
                                 }
                             }
-
-                        } else if (devFrameL == 'H/J') {
-                            if (parseInt(breakerInfoL[0].devFrameSet.slice(0, breakerInfoL[0].devFrameSet.length - 1)) <= 250) {
-                                if (parseInt(breakerInfoL[0].devFrameSet.slice(0, breakerInfoL[0].devFrameSet.length - 1)) <= 150) {
-                                    cbLeftFrame = 'H-PROV';
-                                    cbLeftMaxAmps = 150;
-                                } else {
-                                    cbLeftFrame = 'J-PROV';
-                                    cbLeftMaxAmps = 250;
+                        } else {
+                            //BREAKER LEFT - SQUARE D POWERPACT
+                            if (devFrameL == 'L') {
+                                if (parseInt(breakerInfoL[0].devFrameSet.slice(0, breakerInfoL[0].devFrameSet.length - 1)) <= 600) {
+                                    if (parseInt(breakerInfoL[0].devFrameSet.slice(0, breakerInfoL[0].devFrameSet.length - 1)) <= 400) {
+                                        cbLeftFrame = 'L';
+                                        cbLeftMaxAmps = 400;
+                                    } else {
+                                        cbLeftFrame = 'L';
+                                        cbLeftMaxAmps = 600;
+                                    }
+                                }
+                            } else if (devFrameL == 'H/J') {
+                                if (parseInt(breakerInfoL[0].devFrameSet.slice(0, breakerInfoL[0].devFrameSet.length - 1)) <= 250) {
+                                    if (parseInt(breakerInfoL[0].devFrameSet.slice(0, breakerInfoL[0].devFrameSet.length - 1)) <= 150) {
+                                        cbLeftFrame = 'H';
+                                        cbLeftMaxAmps = 150;
+                                    } else {
+                                        cbLeftFrame = 'J';
+                                        cbLeftMaxAmps = 250;
+                                    }
                                 }
                             }
                         }
-                    } else {
-                        //BREAKER LEFT
-                        if (devFrameL == 'L') {
-                            if (parseInt(breakerInfoL[0].devFrameSet.slice(0, breakerInfoL[0].devFrameSet.length - 1)) <= 600) {
-                                if (parseInt(breakerInfoL[0].devFrameSet.slice(0, breakerInfoL[0].devFrameSet.length - 1)) <= 400) {
-                                    cbLeftFrame = 'L';
-                                    cbLeftMaxAmps = 400;
-                                } else {
-                                    cbLeftFrame = 'L';
-                                    cbLeftMaxAmps = 600;
+                    } else if (platformL == 'ABB TMAX') {
+                        if (breakerInfoL[0].brkPN.length == 0) {
+                            //PROVISION LEFT - ABB TMAX
+                            if (devFrameL == 'XT5') {
+                                if (parseInt(breakerInfoL[0].devFrameSet.slice(0, breakerInfoL[0].devFrameSet.length - 1)) <= 600) {
+                                    if (parseInt(breakerInfoL[0].devFrameSet.slice(0, breakerInfoL[0].devFrameSet.length - 1)) <= 400) {
+                                        cbLeftFrame = 'XT5-PROV';
+                                        cbLeftMaxAmps = 400;
+                                    } else {
+                                        cbLeftFrame = 'XT5-PROV';
+                                        cbLeftMaxAmps = 600;
+                                    }
+                                }
+
+                            } else if (devFrameL == 'XT4') {
+                                if (parseInt(breakerInfoL[0].devFrameSet.slice(0, breakerInfoL[0].devFrameSet.length - 1)) <= 250) {
+                                    cbLeftFrame = 'XT4-PROV';
+                                    cbLeftMaxAmps = 250;
+                                }
+                            } else if (devFrameL == 'XT2') {
+                                if (parseInt(breakerInfoL[0].devFrameSet.slice(0, breakerInfoL[0].devFrameSet.length - 1)) <= 150) {
+                                    cbLeftFrame = 'XT2-PROV';
+                                    cbLeftMaxAmps = 125;
                                 }
                             }
-                        } else if (devFrameL == 'H/J') {
-                            if (parseInt(breakerInfoL[0].devFrameSet.slice(0, breakerInfoL[0].devFrameSet.length - 1)) <= 250) {
-                                if (parseInt(breakerInfoL[0].devFrameSet.slice(0, breakerInfoL[0].devFrameSet.length - 1)) <= 150) {
-                                    cbLeftFrame = 'H';
-                                    cbLeftMaxAmps = 150;
-                                } else {
-                                    cbLeftFrame = 'J';
+                        } else {
+                            //BREAKER LEFT - ABB TMAX
+                            if (devFrameL == 'XT5') {
+                                if (parseInt(breakerInfoL[0].devFrameSet.slice(0, breakerInfoL[0].devFrameSet.length - 1)) <= 600) {
+                                    if (parseInt(breakerInfoL[0].devFrameSet.slice(0, breakerInfoL[0].devFrameSet.length - 1)) <= 400) {
+                                        cbLeftFrame = 'XT5';
+                                        cbLeftMaxAmps = 400;
+                                    } else {
+                                        cbLeftFrame = 'XT5';
+                                        cbLeftMaxAmps = 600;
+                                    }
+                                }
+                            } else if (devFrameL == 'XT4') {
+                                if (parseInt(breakerInfoL[0].devFrameSet.slice(0, breakerInfoL[0].devFrameSet.length - 1)) <= 250) {
+                                    cbLeftFrame = 'XT4';
                                     cbLeftMaxAmps = 250;
+                                }
+                            } else if (devFrameL == 'XT2') {
+                                if (parseInt(breakerInfoL[0].devFrameSet.slice(0, breakerInfoL[0].devFrameSet.length - 1)) <= 125) {
+                                    cbLeftFrame = 'XT2';
+                                    cbLeftMaxAmps = 125;
                                 }
                             }
                         }
                     }
-
-                    if (breakerInfoR[0].brkPN.length == 0) {
-                        //PROVISION RIGHT
-                        if (devFrameR == 'L') {
-                            if (parseInt(breakerInfoR[0].devFrameSet.slice(0, breakerInfoR[0].devFrameSet.length - 1)) <= 600) {
-                                if (parseInt(breakerInfoR[0].devFrameSet.slice(0, breakerInfoR[0].devFrameSet.length - 1)) <= 400) {
-                                    cbRightFrame = 'L-PROV';
-                                    cbRightMaxAmps = 400;
-                                } else {
-                                    cbRightFrame = 'L-PROV';
-                                    cbRightMaxAmps = 600;
+                    let platformR = breakerInfoL[0].platform;
+                    if (platformR == 'SQUARE D POWERPACT') {
+                        if (breakerInfoR[0].brkPN.length == 0) {
+                            //PROVISION RIGHT - SQUARE D POWERPACT
+                            if (devFrameR == 'L') {
+                                if (parseInt(breakerInfoR[0].devFrameSet.slice(0, breakerInfoR[0].devFrameSet.length - 1)) <= 600) {
+                                    if (parseInt(breakerInfoR[0].devFrameSet.slice(0, breakerInfoR[0].devFrameSet.length - 1)) <= 400) {
+                                        cbRightFrame = 'L-PROV';
+                                        cbRightMaxAmps = 400;
+                                    } else {
+                                        cbRightFrame = 'L-PROV';
+                                        cbRightMaxAmps = 600;
+                                    }
+                                }
+                            } else if (devFrameR == 'H/J') {
+                                if (parseInt(breakerInfoR[0].devFrameSet.slice(0, breakerInfoR[0].devFrameSet.length - 1)) <= 250) {
+                                    if (parseInt(breakerInfoR[0].devFrameSet.slice(0, breakerInfoR[0].devFrameSet.length - 1)) <= 150) {
+                                        cbRightFrame = 'H-PROV';
+                                        cbRightMaxAmps = 150;
+                                    } else {
+                                        cbRightFrame = 'J-PROV';
+                                        cbRightMaxAmps = 250;
+                                    }
                                 }
                             }
-                        } else if (devFrameR == 'H/J') {
-                            if (parseInt(breakerInfoR[0].devFrameSet.slice(0, breakerInfoR[0].devFrameSet.length - 1)) <= 250) {
-                                if (parseInt(breakerInfoR[0].devFrameSet.slice(0, breakerInfoR[0].devFrameSet.length - 1)) <= 150) {
-                                    cbRightFrame = 'H-PROV';
-                                    cbRightMaxAmps = 150;
-                                } else {
-                                    cbRightFrame = 'J-PROV';
-                                    cbRightMaxAmps = 250;
+                        } else {
+                            //BREAKER RIGHT - SQUARE D POWERPACT
+                            if (devFrameR == 'L') {
+                                if (parseInt(breakerInfoR[0].devFrameSet.slice(0, breakerInfoR[0].devFrameSet.length - 1)) <= 600) {
+                                    if (parseInt(breakerInfoR[0].devFrameSet.slice(0, breakerInfoR[0].devFrameSet.length - 1)) <= 400) {
+                                        cbRightFrame = 'L';
+                                        cbRightMaxAmps = 400;
+                                    } else {
+                                        cbRightFrame = 'L';
+                                        cbRightMaxAmps = 600;
+                                    }
+                                }
+                            } else if (devFrameR == 'H/J') {
+                                if (parseInt(breakerInfoR[0].devFrameSet.slice(0, breakerInfoR[0].devFrameSet.length - 1)) <= 250) {
+                                    if (parseInt(breakerInfoR[0].devFrameSet.slice(0, breakerInfoR[0].devFrameSet.length - 1)) <= 150) {
+                                        cbRightFrame = 'H';
+                                        cbRightMaxAmps = 150;
+                                    } else {
+                                        cbRightFrame = 'J';
+                                        cbRightMaxAmps = 250;
+                                    }
                                 }
                             }
                         }
-                    } else {
-                        //BREAKER RIGHT
-                        if (devFrameR == 'L') {
-                            if (parseInt(breakerInfoR[0].devFrameSet.slice(0, breakerInfoR[0].devFrameSet.length - 1)) <= 600) {
-                                if (parseInt(breakerInfoR[0].devFrameSet.slice(0, breakerInfoR[0].devFrameSet.length - 1)) <= 400) {
-                                    cbRightFrame = 'L';
-                                    cbRightMaxAmps = 400;
-                                } else {
-                                    cbRightFrame = 'L';
-                                    cbRightMaxAmps = 600;
+                    } else if (platformR == 'ABB TMAX') {
+                        if (breakerInfoR[0].brkPN.length == 0) {
+                            //PROVISION RIGHT - ABB TMAX
+                            if (devFrameR == 'XT5') {
+                                if (parseInt(breakerInfoR[0].devFrameSet.slice(0, breakerInfoR[0].devFrameSet.length - 1)) <= 600) {
+                                    if (parseInt(breakerInfoR[0].devFrameSet.slice(0, breakerInfoR[0].devFrameSet.length - 1)) <= 400) {
+                                        cbRightFrame = 'XT5-PROV';
+                                        cbRightMaxAmps = 400;
+                                    } else {
+                                        cbRightFrame = 'XT5-PROV';
+                                        cbRightMaxAmps = 600;
+                                    }
+                                }
+                            } else if (devFrameR == 'XT4') {
+                                if (parseInt(breakerInfoR[0].devFrameSet.slice(0, breakerInfoR[0].devFrameSet.length - 1)) <= 250) {
+                                    cbRightFrame = 'XT4-PROV';
+                                    cbRightMaxAmps = 250;
+                                }
+                            } else if (devFrameR == 'XT2') {
+                                if (parseInt(breakerInfoR[0].devFrameSet.slice(0, breakerInfoR[0].devFrameSet.length - 1)) <= 125) {
+                                    cbRightFrame = 'XT2-PROV';
+                                    cbRightMaxAmps = 125;
                                 }
                             }
-                        } else if (devFrameR == 'H/J') {
-                            if (parseInt(breakerInfoR[0].devFrameSet.slice(0, breakerInfoR[0].devFrameSet.length - 1)) <= 250) {
-                                if (parseInt(breakerInfoR[0].devFrameSet.slice(0, breakerInfoR[0].devFrameSet.length - 1)) <= 150) {
-                                    cbRightFrame = 'H';
-                                    cbRightMaxAmps = 150;
-                                } else {
-                                    cbRightFrame = 'J';
+                        } else {
+                            //BREAKER RIGHT
+                            if (devFrameR == 'XT5') {
+                                if (parseInt(breakerInfoR[0].devFrameSet.slice(0, breakerInfoR[0].devFrameSet.length - 1)) <= 600) {
+                                    if (parseInt(breakerInfoR[0].devFrameSet.slice(0, breakerInfoR[0].devFrameSet.length - 1)) <= 400) {
+                                        cbRightFrame = 'XT5';
+                                        cbRightMaxAmps = 400;
+                                    } else {
+                                        cbRightFrame = 'XT5';
+                                        cbRightMaxAmps = 600;
+                                    }
+                                }
+                            } else if (devFrameR == 'XT4') {
+                                if (parseInt(breakerInfoR[0].devFrameSet.slice(0, breakerInfoR[0].devFrameSet.length - 1)) <= 250) {
+                                    cbRightFrame = 'XT4';
                                     cbRightMaxAmps = 250;
+                                }
+                            } else if (devFrameR == 'XT2') {
+                                if (parseInt(breakerInfoR[0].devFrameSet.slice(0, breakerInfoR[0].devFrameSet.length - 1)) <= 125) {
+                                    cbRightFrame = 'XT2';
+                                    cbRightMaxAmps = 125;
                                 }
                             }
                         }
                     }
+                    let creoMfgProductLine;
+                    if (platformL == 'SQUARE D POWERPACT' && platformR == 'SQUARE D POWERPACT') {
+                        creoMfgProductLine = 'SQUARE-D POWERPACT';
+                    } else if (platformL == 'ABB TMAX' && platformR == 'ABB TMAX') {
+                        creoMfgProductLine = 'ABB TMAX';
+                    }
+
                     creoPanelRowLookupData = {
-                        mfgProductLine: 'SQUARE-D POWERPACT',
+                        mfgProductLine: creoMfgProductLine,
                         cnxnType: 'DIST',
                         cbRightFrame: cbRightFrame,
                         cbRightMaxAmps: cbRightMaxAmps,
@@ -2764,8 +3151,15 @@ exports.generateSubmittal = function(req, res) {
             }
             let creoRowData = [];
             for (let row of creoPanelLookupData) {
-                let creoRow = powerpactMCCBs.filter(e => e.mfgProductLine == row.mfgProductLine && e.cnxnType == row.cnxnType && e.cbRightFrame == row.cbRightFrame && e.cbRightMaxAmps == row.cbRightMaxAmps && e.cbLeftFrame == row.cbLeftFrame && e.cbLeftMaxAmps == row.cbLeftMaxAmps && e.poles == row.poles && e.panelWires == 3 && e.mount == row.mount);
-                creoRowData.push(creoRow);
+                console.log(row);
+                let creoRow;
+                if (row.mfgProductLine == 'SQUARE-D POWERPACT') {
+                    creoRow = powerpactMCCBs.filter(e => e.mfgProductLine == row.mfgProductLine && e.cnxnType == row.cnxnType && e.cbRightFrame == row.cbRightFrame && e.cbRightMaxAmps == row.cbRightMaxAmps && e.cbLeftFrame == row.cbLeftFrame && e.cbLeftMaxAmps == row.cbLeftMaxAmps && e.poles == row.poles && e.panelWires == 3 && e.mount == row.mount);
+                    creoRowData.push(creoRow);
+                } else if (row.mfgProductLine == 'ABB TMAX') {
+                    creoRow = tmaxMCCBs.filter(e => e.mfgProductLine == row.mfgProductLine && e.cnxnType == row.cnxnType && e.cbRightFrame == row.cbRightFrame && e.cbRightMaxAmps == row.cbRightMaxAmps && e.cbLeftFrame == row.cbLeftFrame && e.cbLeftMaxAmps == row.cbLeftMaxAmps && e.poles == row.poles && e.panelWires == 3 && e.mount == row.mount);
+                    creoRowData.push(creoRow);
+                }
             }
             for (let creoRow of creoRowData) {
                 totalUnitSpace += parseInt(creoRow[0].unitSpaceQty);
@@ -2786,9 +3180,12 @@ exports.generateSubmittal = function(req, res) {
         return null;
     }
     async function assemblePanel(creoPanel, panelRow, creoRowData) {
-
         const section = await querySql("SELECT * FROM " + database + "." + dbConfig.submittal_sections_table + " WHERE secID = ?", creoPanel.secID);
+        const fillerData = await querySql("SELECT * FROM " + database + "." + dbConfig.panel_fillers_table);
+        const panelRails = await querySql("SELECT * FROM "+ database + "." + dbConfig.filler_rails_table);
+        const panelSupportRails = await querySql("SELECT * FROM "+ database + "." + dbConfig.panelSupport_rails_table);
 
+        console.log(creoPanel);
         let sectionNum;
         if (section[0].sectionNum < 10) {
             sectionNum = layoutNum.toString() + '0' + section[0].sectionNum.toString();
@@ -2923,7 +3320,74 @@ exports.generateSubmittal = function(req, res) {
             currentUnitSpace += 4;
         }
 
+        await creo(sessionId, {
+            command: "file",
+            function: "open",
+            data: {
+                file: jobNum+"-0100-"+sectionNum+".asm",
+                display: true,
+                activate: true,
+                new_window: true
+            }
+        });
+        let sec32width = 'N';
+        if (section[0].secWidth == 32) {
+            sec32width = 'Y';
+        }
+
+        let panelRail = {
+            unitSpacing: 1.375,
+            secHeight: section[0].secHeight,
+            sec32width: sec32width
+        };
+
+        let panelRailData = panelRails.filter(e => e.unitSpacing == panelRail.unitSpacing && e.secHeight == panelRail.secHeight && e.sec32width == panelRail.sec32width);
+
+        await creo(sessionId, {
+            command: "file",
+            function: "assemble",
+            data: {
+                file: panelRailData[0].railAsm+".asm",
+                into_asm: jobNum+"-0100-"+sectionNum+".asm",
+                constraints: [{
+                    asmref: "ASM_DEF_CSYS",
+                    compref: "ASM_DEF_CSYS",
+                    type: "CSYS"
+                }]
+            }
+        });
+
+        let panelSupportRailData = panelSupportRails.filter(e => e.secWidth == section[0].secWidth);
+        await creo(sessionId, {
+            command: "file",
+            function: "assemble",
+            data: {
+                file: panelSupportRailData[0].supportAsm+".asm",
+                into_asm: jobNum+"-0100-"+sectionNum+".asm",
+                constraints: [{
+                    asmref: "PANEL_RAIL_TOP",
+                    compref: "ASM_DEF_CSYS",
+                    type: "CSYS"
+                }]
+            }
+        });
+        await creo(sessionId, {
+            command: "file",
+            function: "assemble",
+            data: {
+                file: panelSupportRailData[0].supportAsm+".asm",
+                into_asm: jobNum+"-0100-"+sectionNum+".asm",
+                constraints: [{
+                    asmref: "PANEL_RAIL_BTM",
+                    compref: "ASM_DEF_CSYS",
+                    type: "CSYS"
+                }]
+            }
+        });
+
+
         for (let row of creoRowData) {
+            let mccbRight, mccbLeft, mccbCenterRight, mccbCenterLeft, frame, panelWires;
             currentUnitSpace += row[0].unitSpaceQty;
             let CS = "ACS"+currentUnitSpace.toString();
             await creo(sessionId, {
@@ -2940,6 +3404,497 @@ exports.generateSubmittal = function(req, res) {
                     }]
                 }
             });
+            if (row[0].mount == 'SINGLE') {
+                if (row[0].cbRightFrame == null) {
+                    mccbRight = 'N';
+                    mccbCenterRight = 'N';
+                    switch (row[0].cbLeftFrame) {
+                        case 'P':
+                            mccbLeft = 'N';
+                            mccbCenterLeft = 'Y';
+                            frame = 'P';
+                            panelWires = null;
+                            break;
+                        case 'P-PROV':
+                            mccbLeft = 'N';
+                            mccbCenterLeft = 'Y';
+                            frame = 'P';
+                            panelWires = null;
+                            break;
+                        case 'L':
+                           if (row[0].cbLeftMaxAmps == 400) {
+                               mccbLeft = 'Y';
+                               mccbCenterLeft = 'N';
+                               frame = 'L';
+                               panelWires = null;
+                           } else {
+                               mccbLeft = 'N';
+                               mccbCenterLeft = 'Y';
+                               frame = 'L';
+                               panelWires = row[0].panelWires;
+                           }
+                            break;
+                        case 'L-PROV':
+                            if (row[0].cbLeftMaxAmps == 400) {
+                                mccbLeft = 'Y';
+                                mccbCenterLeft = 'N';
+                                frame = 'L';
+                                panelWires = null;
+                            } else {
+                                mccbLeft = 'N';
+                                mccbCenterLeft = 'Y';
+                                frame = 'L';
+                                panelWires = row[0].panelWires;
+                            }
+                            break;
+                        case 'J':
+                            mccbLeft = 'Y';
+                            mccbCenterLeft = 'N';
+                            frame = 'H/J';
+                            panelWires = null;
+                            break;
+                        case 'J-PROV':
+                            mccbLeft = 'Y';
+                            mccbCenterLeft = 'N';
+                            frame = 'H/J';
+                            panelWires = null;
+                            break;
+                        case 'H':
+                            mccbLeft = 'Y';
+                            mccbCenterLeft = 'N';
+                            frame = 'H/J';
+                            panelWires = null;
+                            break;
+                        case 'H-PROV':
+                            mccbLeft = 'Y';
+                            mccbCenterLeft = 'N';
+                            frame = 'H/J';
+                            panelWires = null;
+                            break;
+
+                        case 'XT7':
+                            mccbLeft = 'N';
+                            mccbCenterLeft = 'Y';
+                            frame = 'XT7';
+                            panelWires = null;
+                            break;
+                        case 'XT7-PROV':
+                            mccbLeft = 'N';
+                            mccbCenterLeft = 'Y';
+                            frame = 'XT7';
+                            panelWires = null;
+                            break;
+                        case 'XT6':
+                            mccbLeft = 'N';
+                            mccbCenterLeft = 'Y';
+                            frame = 'XT7';
+                            panelWires = null;
+                            break;
+                        case 'XT6-PROV':
+                            mccbLeft = 'N';
+                            mccbCenterLeft = 'Y';
+                            frame = 'XT7';
+                            panelWires = null;
+                            break;
+                        case 'XT5':
+                            if (row[0].cbLeftMaxAmps == 400) {
+                                mccbLeft = 'Y';
+                                mccbCenterLeft = 'N';
+                                frame = 'XT5';
+                                panelWires = null;
+                            } else {
+                                mccbLeft = 'N';
+                                mccbCenterLeft = 'Y';
+                                frame = 'XT5';
+                                panelWires = null;
+                            }
+                            break;
+                        case 'XT5-PROV':
+                            if (row[0].cbLeftMaxAmps == 400) {
+                                mccbLeft = 'Y';
+                                mccbCenterLeft = 'N';
+                                frame = 'XT5';
+                                panelWires = null;
+                            } else {
+                                mccbLeft = 'N';
+                                mccbCenterLeft = 'Y';
+                                frame = 'XT5';
+                                panelWires = null;
+                            }
+                            break;
+                        case 'XT4':
+                            mccbLeft = 'Y';
+                            mccbCenterLeft = 'N';
+                            frame = 'XT4';
+                            panelWires = null;
+                            break;
+                        case 'XT4-PROV':
+                            mccbLeft = 'Y';
+                            mccbCenterLeft = 'N';
+                            frame = 'XT4';
+                            panelWires = null;
+                            break;
+                        case 'XT2':
+                            mccbLeft = 'Y';
+                            mccbCenterLeft = 'N';
+                            frame = 'XT2';
+                            panelWires = null;
+                            break;
+                        case 'XT2-PROV':
+                            mccbLeft = 'Y';
+                            mccbCenterLeft = 'N';
+                            frame = 'XT2';
+                            panelWires = null;
+                            break;
+                    }
+                } else {
+                    mccbLeft = 'N';
+                    mccbCenterLeft = 'N';
+                    switch (row[0].cbRightFrame) {
+                        case 'P':
+                            mccbRight = 'N';
+                            mccbCenterRight = 'Y';
+                            frame = 'P';
+                            panelWires = null;
+                            break;
+                        case 'P-PROV':
+                            mccbRight = 'N';
+                            mccbCenterRight = 'Y';
+                            frame = 'P';
+                            panelWires = null;
+                            break;
+                        case 'L':
+                            if (row[0].cbRightMaxAmps == 400) {
+                                mccbRight = 'Y';
+                                mccbCenterRight = 'N';
+                                frame = 'L';
+                                panelWires = null;
+                            } else {
+                                mccbRight = 'N';
+                                mccbCenterRight = 'Y';
+                                frame = 'L';
+                                panelWires = row[0].panelWires;
+                            }
+                            break;
+                        case 'L-PROV':
+                            if (row[0].cbRightMaxAmps == 400) {
+                                mccbRight = 'Y';
+                                mccbCenterRight = 'N';
+                                frame = 'L';
+                                panelWires = null;
+                            } else {
+                                mccbRight = 'N';
+                                mccbCenterRight = 'Y';
+                                frame = 'L';
+                                panelWires = row[0].panelWires;
+                            }
+                            break;
+                        case 'J':
+                            mccbRight = 'Y';
+                            mccbCenterRight = 'N';
+                            frame = 'H/J';
+                            panelWires = null;
+                            break;
+                        case 'J-PROV':
+                            mccbRight = 'Y';
+                            mccbCenterRight = 'N';
+                            frame = 'H/J';
+                            panelWires = null;
+                            break;
+                        case 'H':
+                            mccbRight = 'Y';
+                            mccbCenterRight = 'N';
+                            frame = 'H/J';
+                            panelWires = null;
+                            break;
+                        case 'H-PROV':
+                            mccbRight = 'Y';
+                            mccbCenterRight = 'N';
+                            frame = 'H/J';
+                            panelWires = null;
+                            break;
+                        case 'XT7':
+                            mccbRight = 'N';
+                            mccbCenterRight = 'Y';
+                            frame = 'XT7';
+                            panelWires = null;
+                            break;
+                        case 'XT7-PROV':
+                            mccbRight = 'N';
+                            mccbCenterRight = 'Y';
+                            frame = 'XT7';
+                            panelWires = null;
+                            break;
+                        case 'XT6':
+                            mccbRight = 'N';
+                            mccbCenterRight = 'Y';
+                            frame = 'XT6';
+                            panelWires = null;
+                            break;
+                        case 'XT6-PROV':
+                            mccbRight = 'N';
+                            mccbCenterRight = 'Y';
+                            frame = 'XT6';
+                            panelWires = null;
+                            break;
+                        case 'XT5':
+                            if (row[0].cbRightMaxAmps == 400) {
+                                mccbRight = 'Y';
+                                mccbCenterRight = 'N';
+                                frame = 'XT5';
+                                panelWires = null;
+                            } else {
+                                mccbRight = 'N';
+                                mccbCenterRight = 'Y';
+                                frame = 'XT5';
+                                panelWires = null;
+                            }
+                            break;
+                        case 'XT5-PROV':
+                            if (row[0].cbRightMaxAmps == 400) {
+                                mccbRight = 'Y';
+                                mccbCenterRight = 'N';
+                                frame = 'XT5';
+                                panelWires = null;
+                            } else {
+                                mccbRight = 'N';
+                                mccbCenterRight = 'Y';
+                                frame = 'XT5';
+                                panelWires = null;
+                            }
+                            break;
+                        case 'XT4':
+                            mccbRight = 'Y';
+                            mccbCenterRight = 'N';
+                            frame = 'XT4';
+                            panelWires = null;
+                            break;
+                        case 'XT4-PROV':
+                            mccbRight = 'Y';
+                            mccbCenterRight = 'N';
+                            frame = 'XT4';
+                            panelWires = null;
+                            break;
+                        case 'XT2':
+                            mccbRight = 'Y';
+                            mccbCenterRight = 'N';
+                            frame = 'XT2';
+                            panelWires = null;
+                            break;
+                        case 'XT2-PROV':
+                            mccbRight = 'Y';
+                            mccbCenterRight = 'N';
+                            frame = 'XT2';
+                            panelWires = null;
+                            break;
+                    }
+                }
+            } else if (row[0].mount == 'TWIN') {
+                panelWires = null;
+                if (row[0].cbRightFrame == null) {
+                    mccbRight = 'N';
+                    mccbCenterRight = 'N';
+                    switch (row[0].cbLeftFrame) {
+                        case 'L':
+                            mccbLeft = 'Y';
+                            mccbCenterLeft = 'N';
+                            frame = 'L';
+                            break;
+                        case 'L-PROV':
+                            mccbLeft = 'Y';
+                            mccbCenterLeft = 'N';
+                            frame = 'L';
+                            break;
+                        case 'J':
+                            mccbLeft = 'Y';
+                            mccbCenterLeft = 'N';
+                            frame = 'H/J';
+                            break;
+                        case 'J-PROV':
+                            mccbLeft = 'Y';
+                            mccbCenterLeft = 'N';
+                            frame = 'H/J';
+                            break;
+                        case 'H':
+                            mccbLeft = 'Y';
+                            mccbCenterLeft = 'N';
+                            frame = 'H/J';
+                            break;
+                        case 'H-PROV':
+                            mccbLeft = 'Y';
+                            mccbCenterLeft = 'N';
+                            frame = 'H/J';
+                            break;
+                        case 'XT5':
+                            mccbLeft = 'Y';
+                            mccbCenterLeft = 'N';
+                            frame = 'XT5';
+                            break;
+                        case 'XT5-PROV':
+                            mccbLeft = 'Y';
+                            mccbCenterLeft = 'N';
+                            frame = 'XT5';
+                            break;
+                        case 'XT4':
+                            mccbLeft = 'Y';
+                            mccbCenterLeft = 'N';
+                            frame = 'XT4';
+                            break;
+                        case 'XT4-PROV':
+                            mccbLeft = 'Y';
+                            mccbCenterLeft = 'N';
+                            frame = 'XT4';
+                            break;
+                        case 'XT2':
+                            mccbLeft = 'Y';
+                            mccbCenterLeft = 'N';
+                            frame = 'XT2';
+                            break;
+                        case 'XT2-PROV':
+                            mccbLeft = 'Y';
+                            mccbCenterLeft = 'N';
+                            frame = 'XT2';
+                            break;
+                    }
+                } else if (row[0].cbLeftFrame == null) {
+                    mccbLeft = 'N';
+                    mccbCenterLeft = 'N';
+                    switch (row[0].cbRightFrame) {
+                        case 'L':
+                            mccbRight = 'Y';
+                            mccbCenterRight = 'N';
+                            frame = 'L';
+                            break;
+                        case 'L-PROV':
+                            mccbRight = 'Y';
+                            mccbCenterRight = 'N';
+                            frame = 'L';
+                            break;
+                        case 'J':
+                            mccbRight = 'Y';
+                            mccbCenterRight = 'N';
+                            frame = 'H/J';
+                            break;
+                        case 'J-PROV':
+                            mccbRight = 'Y';
+                            mccbCenterRight = 'N';
+                            frame = 'H/J';
+                            break;
+                        case 'H':
+                            mccbRight = 'Y';
+                            mccbCenterRight = 'N';
+                            frame = 'H/J';
+                            break;
+                        case 'H-PROV':
+                            mccbRight = 'Y';
+                            mccbCenterRight = 'N';
+                            frame = 'H/J';
+                            break;
+                        case 'XT5':
+                            mccbRight = 'Y';
+                            mccbCenterRight = 'N';
+                            frame = 'XT5';
+                            break;
+                        case 'XT5-PROV':
+                            mccbRight = 'Y';
+                            mccbCenterRight = 'N';
+                            frame = 'XT5';
+                            break;
+                        case 'XT4':
+                            mccbRight = 'Y';
+                            mccbCenterRight = 'N';
+                            frame = 'XT4';
+                            break;
+                        case 'XT4-PROV':
+                            mccbRight = 'Y';
+                            mccbCenterRight = 'N';
+                            frame = 'XT4';
+                            break;
+                        case 'XT2':
+                            mccbRight = 'Y';
+                            mccbCenterRight = 'N';
+                            frame = 'XT2';
+                            break;
+                        case 'XT2-PROV':
+                            mccbRight = 'Y';
+                            mccbCenterRight = 'N';
+                            frame = 'XT2';
+                            break;
+                    }
+                } else {
+                    mccbLeft = 'Y';
+                    mccbCenterLeft = 'N';
+                    mccbRight = 'Y';
+                    mccbCenterRight = 'N';
+                    switch (row[0].cbLeftFrame) {
+                        case 'L':
+                            frame = 'L';
+                            break;
+                        case 'L-PROV':
+                            frame = 'L';
+                            break;
+                        case 'J':
+                            frame = 'H/J';
+                            break;
+                        case 'J-PROV':
+                            frame = 'H/J';
+                            break;
+                        case 'H':
+                            frame = 'H/J';
+                            break;
+                        case 'H-PROV':
+                            frame = 'H/J';
+                            break;
+                        case 'XT5':
+                            frame = 'XT5';
+                            break;
+                        case 'XT5-PROV':
+                            frame = 'XT5';
+                            break;
+                        case 'XT4':
+                            frame = 'XT4';
+                            break;
+                        case 'XT4-PROV':
+                            frame = 'XT4';
+                            break;
+                        case 'XT2':
+                            frame = 'XT2';
+                            break;
+                        case 'XT2-PROV':
+                            frame = 'XT2';
+                            break;
+                    }
+                }
+
+            }
+            let fillerLookup = {
+                mfgProductLine: row[0].mfgProductLine,
+                frame: frame,
+                poles: row[0].poles,
+                panelWires: panelWires,
+                mccbRight: mccbRight,
+                mccbLeft: mccbLeft,
+                mccbCenterRight: mccbCenterRight,
+                mccbCenterLeft: mccbCenterLeft,
+                skru: 'N',
+                mimicLevel: 0
+            };
+            let chosenFiller = fillerData.filter(e => e.mfgProductLine == fillerLookup.mfgProductLine && e.frame == fillerLookup.frame && e.poles == fillerLookup.poles && e.panelWires == fillerLookup.panelWires && e.mccbRight == fillerLookup.mccbRight && e.mccbLeft == fillerLookup.mccbLeft && e.mccbCenterRight == fillerLookup.mccbCenterRight && e.mccbCenterLeft == fillerLookup.mccbCenterLeft && e.skru == 'N' && e.mimicLevel == 0);
+            await creo(sessionId, {
+                command: "file",
+                function: "assemble",
+                data: {
+                    file: chosenFiller[0].fillerAsm+".asm",
+                    into_asm: jobNum+"-0100-"+sectionNum+".asm",
+                    constraints: [{
+                        asmref: CS,
+                        compref: chosenFiller[0].csys,
+                        type: "CSYS"
+                    }]
+                }
+            });
+
+
         }
 
         await regenSaveAndClose(sessionId, newPanelAsm+".asm");
@@ -3125,13 +4080,22 @@ exports.generateSubmittal = function(req, res) {
                         accString_2 = accString.slice(80, accString.length);
                     }
 
+                    let mfg, productLine;
+                    if (breaker[0].platform == 'SQUARE D POWERPACT') {
+                        mfg = 'SQUARE D';
+                        productLine = 'POWERPACT';
+                    } else if (breaker[0].platform == 'ABB TMAX') {
+                        mfg = 'ABB';
+                        productLine = 'TMAX';
+                    }
+
                     let stringBrkParams = {
                         DESIGNATION: breaker[0].devDesignation,
                         DEVICE_TYPE: "MCCB",
                         PART_NO: breaker[0].brkPN,
                         CRADLE_PN: null,
-                        MANUFACTURER: "SCHNEIDER",
-                        PRODUCT_LINE: "POWERPACT",
+                        MANUFACTURER: mfg,
+                        PRODUCT_LINE: productLine,
                         FRAME: breaker[0].brkPN.slice(0, 1),
                         MOUNTING: "FIXED",
                         STANDARD: breaker[0].devUL,
@@ -4123,6 +5087,7 @@ exports.generateSubmittal = function(req, res) {
         let instanceNum;
         let devType;
         let productLine;
+        let mfg;
 
         if (count < 10) {
             instanceNum = '00'+count;
@@ -4132,6 +5097,7 @@ exports.generateSubmittal = function(req, res) {
 
         if (usedBreaker.catCode == '37-CB IC') {
             devType = 'ICCB';
+            mfg = 'SQUARE D';
             productLine = 'MASTERPACT';
             if (usedBreaker.devMount == 'DRAWOUT') {
                 if (usedBreaker.provision == 'Y') {
@@ -4152,7 +5118,13 @@ exports.generateSubmittal = function(req, res) {
             }
         } else if (usedBreaker.catCode == '36-CB MC') {
             devType = 'MCCB';
-            productLine = 'POWERPACT';
+            if (usedBreaker.platform == 'SQUARE D POWERPACT') {
+                mfg = 'SQUARE D';
+                productLine = 'POWERPACT';
+            } else if (usedBreaker.platform == 'ABB TMAX') {
+                mfg = 'ABB';
+                productLine = 'TMAX';
+            }
         }
 
         let stringBrkParams = {
@@ -4160,7 +5132,7 @@ exports.generateSubmittal = function(req, res) {
             DEVICE_TYPE: devType,
             PART_NO: breakerData[0].brkPN,
             CRADLE_PN: breakerData[0].cradlePN,
-            MANUFACTURER: "SCHNEIDER",
+            MANUFACTURER: mfg,
             PRODUCT_LINE: productLine,
             FRAME: usedBreaker.devFrame,
             MOUNTING: usedBreaker.devMount,

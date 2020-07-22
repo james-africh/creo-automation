@@ -66,11 +66,16 @@ module.exports = {
     'cornerPost_table': 'cornerPosts',
     'brkCompartment_NW_table': 'brkCompartments_NW',
     'brk_NW_table': 'iccbNW',
+    'brk_Emax2_table': 'iccbEmax2',
     'brk_powerpact_table': 'mccbPowerpact',
+    'brk_tmax_table': 'mccbTmax',
     'brk_lugLanding_table': 'brkLugLandings',
     'oneLineParts_table': 'oneLineParts',
     'standardPanel_table': 'standardPanels',
     'panel_enclosureRules_table':'panelEnclosureRules',
+    'filler_rails_table': 'fillerRails',
+    'panel_fillers_table': 'panelFillers',
+    'panelSupport_rails_table':'panelSupportRails',
 
     //User Login and Profile Tables
     'users_table':'users',

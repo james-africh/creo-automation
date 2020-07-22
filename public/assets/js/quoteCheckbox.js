@@ -255,6 +255,11 @@ function getComp(comp){
     $(".modal-header #getComp").val( comp );
 }
 
+let breakerType = '';
+function getBreakerType(breakerSelect) {
+    breakerType =  breakerSelect.value;
+}
+
 function showPB(checkbox){
     let checkboxes = document.getElementsByName('pbCheck');
     let noChecks = true;
@@ -396,7 +401,12 @@ function addDualRowNew(secNum) {
     document.getElementById("pbRow"+secNum+"_"+count+"_brkL").appendChild(selectL);
     document.getElementById("pbRow"+secNum+"_"+count+"_brkR").appendChild(selectR);
 
-    let selectList = ["H/J", "L"];
+    let selectList;
+    if (breakerType == 'POWERPACT (SQUARE D)') {
+        selectList = ["H/J", "L"];
+    } else if (breakerType == 'TMAX (ABB)') {
+        selectList = ["XT2", "XT4", "XT5"];
+    }
 
     for (let i = 0; i < selectList.length; i++) {
         let option = document.createElement("option");
@@ -459,7 +469,12 @@ function addSingleRowCenterLeftNew(secNum) {
     document.getElementById("pbRow"+secNum+"_"+count+"_brkCL").appendChild(select);
 
 
-    let selectList = ["L", "P"];
+    let selectList;
+    if (breakerType == 'POWERPACT (SQUARE D)') {
+        selectList = ["L", "P"];
+    } else if (breakerType == 'TMAX (ABB)') {
+        selectList = ["XT5", "XT6", "XT7"];
+    }
 
     for (let i = 0; i < selectList.length; i++) {
         let option = document.createElement("option");
@@ -514,8 +529,12 @@ function addSingleRowCenterRightNew(secNum) {
     document.getElementById("pbRow"+secNum+"_"+count).appendChild(div);
     document.getElementById("pbRow"+secNum+"_"+count+"_brkCR").appendChild(select);
 
-
-    let selectList = ["L", "P"];
+    let selectList;
+    if (breakerType == 'POWERPACT (SQUARE D)') {
+        selectList = ["L", "P"];
+    } else if (breakerType == 'TMAX (ABB)') {
+        selectList = ["XT5", "XT6", "XT7"];
+    }
 
     for (let i = 0; i < selectList.length; i++) {
         let option = document.createElement("option");
@@ -575,7 +594,13 @@ function addSingleLeftRowNew(secNum) {
     document.getElementById("pbRow"+secNum+"_"+count).appendChild(div2);
     document.getElementById("pbRow"+secNum+"_"+count+"_brkL").appendChild(selectL);
 
-    let selectList = ["H/J", "L"];
+    let selectList;
+    if (breakerType == 'POWERPACT (SQUARE D)') {
+        selectList = ["H/J", "L"];
+    } else if (breakerType == 'TMAX (ABB)') {
+        selectList = ["XT2", "XT4", "XT5"];
+    }
+
 
     for (let i = 0; i < selectList.length; i++) {
         let option = document.createElement("option");
@@ -637,7 +662,12 @@ function addSingleRightRowNew(secNum) {
     document.getElementById("pbRow"+secNum+"_"+count+"_brkR").appendChild(selectR);
 
 
-    let selectList = ["H/J", "L"];
+    let selectList;
+    if (breakerType == 'POWERPACT (SQUARE D)') {
+        selectList = ["H/J", "L"];
+    } else if (breakerType == 'TMAX (ABB)') {
+        selectList = ["XT2", "XT4", "XT5"];
+    }
 
     for (let i = 0; i < selectList.length; i++) {
         let option = document.createElement("option");
@@ -710,7 +740,15 @@ function addDualRowExisting(secNum, currentTotalRows) {
     document.getElementById("pbRow"+secNum+"_"+count+"_brkL").appendChild(selectL);
     document.getElementById("pbRow"+secNum+"_"+count+"_brkR").appendChild(selectR);
 
-    let selectList = ["H/J", "L"];
+    let selectList;
+    if (breakerType == '') {
+        document.getElementsByName("brkType").change();
+    }
+    if (breakerType == 'POWERPACT (SQUARE D)') {
+        selectList = ["H/J", "L"];
+    } else if (breakerType == 'TMAX (ABB)') {
+        selectList = ["XT2", "XT4", "XT5"];
+    }
 
     for (let i = 0; i < selectList.length; i++) {
         let option = document.createElement("option");

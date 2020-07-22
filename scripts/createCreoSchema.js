@@ -122,9 +122,56 @@ CREATE TABLE IF NOT EXISTS ' + database + '.' + dbConfig.brk_NW_table + ' ( \
     UNIQUE INDEX idICCB_UNIQUE (idICCB ASC))\
     ENGINE = InnoDB;', function(err,rows) { if(err) throw err; });
 
+// iccbEmax2
+connection.query('\
+CREATE TABLE IF NOT EXISTS ' + database + '.' + dbConfig.brk_Emax2_table + ' ( \
+    idICCB INT NOT NULL AUTO_INCREMENT, \
+    iccbType VARCHAR(100) NOT NULL, \
+    mounting VARCHAR(100) NOT NULL, \
+    poles INT NOT NULL, \
+    frame VARCHAR(100) NOT NULL, \
+    ul489 VARCHAR(1) NOT NULL, \
+    ul1066 VARCHAR(1) NOT NULL, \
+    maxAmps INT NOT NULL, \
+    provision VARCHAR(1) NOT NULL, \
+    asmPN VARCHAR(100) NOT NULL, \
+    iccbGenericPN VARCHAR(100) NOT NULL, \
+    iccbInstancePN VARCHAR(100) NOT NULL, \
+    compD VARCHAR(1) NOT NULL, \
+    compBC VARCHAR(1) NOT NULL, \
+    compC VARCHAR(1) NOT NULL, \
+    compB VARCHAR(1) NOT NULL, \
+    compA VARCHAR(1) NOT NULL, \
+    asmCsys VARCHAR(100) NOT NULL, \
+    PRIMARY KEY (idICCB), \
+    UNIQUE INDEX idICCB_UNIQUE (idICCB ASC))\
+    ENGINE = InnoDB;', function(err,rows) { if(err) throw err; });
+
 // mccbPowerpact
 connection.query('\
 CREATE TABLE IF NOT EXISTS ' + database + '.' + dbConfig.brk_powerpact_table + ' ( \
+    idMCCB INT NOT NULL AUTO_INCREMENT, \
+    mfgProductLine VARCHAR(100) NOT NULL, \
+    cnxnType VARCHAR(100) NOT NULL, \
+    cbRightFrame VARCHAR(100) NULL, \
+    cbRightMaxAmps INT NULL, \
+    cbLeftFrame VARCHAR(100) NULL, \
+    cbLeftMaxAmps INT NULL, \
+    poles INT NOT NULL, \
+    panelWires INT NOT NULL, \
+    unitSpaceQty INT NOT NULL, \
+    unitSpace DOUBLE NOT NULL, \
+    mount VARCHAR(100) NOT NULL, \
+    genericAsm VARCHAR(100) NOT NULL, \
+    instanceAsm VARCHAR(100) NOT NULL, \
+    asmCsys VARCHAR(100) NOT NULL, \
+    PRIMARY KEY (idMCCB), \
+    UNIQUE INDEX idMCCB_UNIQUE (idMCCB ASC))\
+    ENGINE = InnoDB;', function(err,rows) { if(err) throw err; });
+
+// mccbTmax
+connection.query('\
+CREATE TABLE IF NOT EXISTS ' + database + '.' + dbConfig.brk_tmax_table + ' ( \
     idMCCB INT NOT NULL AUTO_INCREMENT, \
     mfgProductLine VARCHAR(100) NOT NULL, \
     cnxnType VARCHAR(100) NOT NULL, \
@@ -177,6 +224,47 @@ CREATE TABLE IF NOT EXISTS ' + database + '.' + dbConfig.standardPanel_table + '
     UNIQUE INDEX idPanel_UNIQUE (idPanel ASC))\
     ENGINE = InnoDB;', function(err,rows) { if(err) throw err; });
 
+//fillerRails
+connection.query('\
+CREATE TABLE IF NOT EXISTS ' + database + '.' + dbConfig.filler_rails_table + ' ( \
+    idRail INT NOT NULL AUTO_INCREMENT, \
+    unitSpacing DOUBLE NOT NULL, \
+    secHeight DOUBLE NOT NULL, \
+    sec32width VARCHAR(1) NOT NULL, \
+    railAsm VARCHAR(100) NOT NULL, \
+    PRIMARY KEY (idRail), \
+    UNIQUE INDEX idRail_UNIQUE (idRail ASC))\
+    ENGINE = InnoDB;', function(err,rows) { if(err) throw err; });
+
+//panelFillers
+connection.query('\
+CREATE TABLE IF NOT EXISTS ' + database + '.' + dbConfig.panel_fillers_table + ' ( \
+    idFiller INT NOT NULL AUTO_INCREMENT, \
+    mfgProductLine VARCHAR(100) NOT NULL, \
+    frame VARCHAR(100) NOT NULL, \
+    poles INT NOT NULL, \
+    panelWires INT NULL, \
+    mccbRight VARCHAR(1) NOT NULL, \
+    mccbLeft VARCHAR(1) NOT NULL, \
+    mccbCenterRight VARCHAR(1) NOT NULL, \
+    mccbCenterLeft VARCHAR(1) NOT NULL, \
+    skru VARCHAR(1) NOT NULL, \
+    mimicLevel INT NOT NULL, \
+    fillerAsm VARCHAR(100) NOT NULL, \
+    csys VARCHAR(100) NOT NULL, \
+    PRIMARY KEY (idFiller), \
+    UNIQUE INDEX idFiller_UNIQUE (idFiller ASC))\
+    ENGINE = InnoDB;', function(err,rows) { if(err) throw err; });
+
+//panelSupportRails
+connection.query('\
+CREATE TABLE IF NOT EXISTS ' + database + '.' + dbConfig.panelSupport_rails_table + ' ( \
+    idSupport INT NOT NULL AUTO_INCREMENT, \
+    secWidth INT NOT NULL, \
+    supportAsm VARCHAR(100) NOT NULL, \
+    PRIMARY KEY (idSupport), \
+    UNIQUE INDEX idSupport_UNIQUE (idSupport ASC))\
+    ENGINE = InnoDB;', function(err,rows) { if(err) throw err; });
 
 //enclosureRules
 connection.query('\
@@ -190,6 +278,196 @@ CREATE TABLE IF NOT EXISTS ' + database + '.' + dbConfig.panel_enclosureRules_ta
     PRIMARY KEY (id), \
     UNIQUE INDEX id_UNIQUE (id ASC))\
     ENGINE = InnoDB;', function(err,rows) { if(err) throw err; });
+
+
+
+// submittalSum
+connection.query('\
+CREATE TABLE IF NOT EXISTS ' + database + '.' + dbConfig.submittal_summary_table + ' ( \
+    subID INT UNSIGNED NOT NULL AUTO_INCREMENT, \
+    jobNum VARCHAR(6) NULL, \
+    releaseNum VARCHAR(10) NULL, \
+    jobName VARCHAR(100) NULL, \
+    customer VARCHAR(100) NULL, \
+    layoutName VARCHAR(100) NULL, \
+    drawnBy VARCHAR(5) NULL, \
+    drawnDate DATE NULL, \
+    checkedBy VARCHAR(5) NULL, \
+    checkedDate DATE NULL, \
+    PRIMARY KEY (subID), \
+    UNIQUE INDEX subID_UNIQUE (subID ASC))\
+    ENGINE = InnoDB;', function(err,rows) { if(err) throw err; });
+
+// submittalRevSum
+connection.query('\
+CREATE TABLE IF NOT EXISTS ' + database + '.' + dbConfig.submittal_rev_table + ' ( \
+    revID INT UNSIGNED NOT NULL AUTO_INCREMENT, \
+    subID INT UNSIGNED NOT NULL, \
+    revNum VARCHAR(3) NULL, \
+    revNote VARCHAR(100) NULL, \
+    PRIMARY KEY (revID), \
+    CONSTRAINT fk_subID \
+    FOREIGN KEY (subID) \
+        REFERENCES submittalSum(subID) \
+        ON DELETE CASCADE \
+        ON UPDATE CASCADE, \
+    UNIQUE INDEX revID_UNIQUE (revID ASC)) \
+    ENGINE = InnoDB;', function(err,rows) { if(err) throw err; });
+
+// submittalLayoutSum
+connection.query('\
+CREATE TABLE IF NOT EXISTS ' + database + '.' + dbConfig.submittal_layout_table + ' ( \
+    layoutID INT UNSIGNED NOT NULL AUTO_INCREMENT, \
+    subID INT UNSIGNED NOT NULL, \
+    layoutName VARCHAR(100) NULL, \
+    ulListing VARCHAR(100) NULL, \
+    systemType VARCHAR(100) NULL, \
+    systemAmp VARCHAR(100) NULL, \
+    mainBusAmp VARCHAR(100) NULL, \
+    enclosure VARCHAR(100) NULL, \
+    accessibility VARCHAR(100) NULL, \
+    cableAccess VARCHAR(100) NULL, \
+    paint VARCHAR(100) NULL,\
+    interruptRating VARCHAR(100) NULL, \
+    busBracing VARCHAR(100) NULL, \
+    busType VARCHAR(100) NULL, \
+    insulatedBus VARCHAR(1) NOT NULL, \
+    boots VARCHAR(1) NOT NULL, \
+    keyInterlocks VARCHAR(100) NULL, \
+    seismic VARCHAR(1) NOT NULL, \
+    mimic VARCHAR(1) NOT NULL, \
+    ir VARCHAR(1) NOT NULL, \
+    wireway VARCHAR(1) NOT NULL, \
+    trolley VARCHAR(1) NOT NULL, \
+    numSections INT NOT NULL, \
+    PRIMARY KEY (layoutID), \
+    CONSTRAINT fk_layoutSubID \
+    FOREIGN KEY (subID) \
+        REFERENCES submittalSum(subID) \
+        ON DELETE CASCADE \
+        ON UPDATE CASCADE, \
+    UNIQUE INDEX layoutID_UNIQUE (layoutID ASC)) \
+    ENGINE = InnoDB;', function(err,rows) { if(err) throw err; });
+
+// submittalSectionSum
+connection.query('\
+CREATE TABLE IF NOT EXISTS ' + database + '.' + dbConfig.submittal_sections_table + ' ( \
+    secID INT UNSIGNED NOT NULL AUTO_INCREMENT, \
+    layoutID INT UNSIGNED NULL, \
+    sectionNum VARCHAR(100) NULL, \
+    compType JSON NULL, \
+    controlAsmID VARCHAR(100) NULL, \
+    secType VARCHAR(100) NULL, \
+    brkType VARCHAR(100) NULL, \
+    secAmp VARCHAR(100) NULL, \
+    secPoles INT NULL, \
+    secHeight INT NULL, \
+    secWidth INT NULL, \
+    secDepth INT NULL, \
+    PRIMARY KEY (secID), \
+    CONSTRAINT fk_layoutID \
+    FOREIGN KEY (layoutID) \
+        REFERENCES submittalLayoutSum(layoutID) \
+        ON DELETE CASCADE \
+        ON UPDATE CASCADE, \
+    UNIQUE INDEX secID_UNIQUE (secID ASC))\
+    ENGINE = InnoDB;', function(err) { if(err) throw err; });
+
+// submittalBrkSum
+connection.query('\
+CREATE TABLE IF NOT EXISTS ' + database + '.' + dbConfig.submittal_breaker_table + ' ( \
+    devID INT UNSIGNED NOT NULL AUTO_INCREMENT, \
+    layoutID INT UNSIGNED NOT NULL, \
+    secID INT UNSIGNED NULL,\
+    comp VARCHAR(100) NULL, \
+    devDesignation VARCHAR(100) NULL, \
+    devFunction VARCHAR(100) NOT NULL, \
+    unitOfIssue VARCHAR(2) NULL, \
+    catCode VARCHAR(100) NULL, \
+    platform VARCHAR(100) NULL, \
+    brkPN VARCHAR(100) NULL, \
+    cradlePN VARCHAR(100) NULL, \
+    devMount VARCHAR(100) NULL, \
+    rearAdaptType VARCHAR(100) NULL, \
+    devUL VARCHAR(100) NULL, \
+    devLevel VARCHAR(100) NULL, \
+    devOperation VARCHAR(100) NULL, \
+    devCtrlVolt VARCHAR(100) NULL, \
+    devMaxVolt VARCHAR(100) NULL, \
+    devKAIC VARCHAR(100) NULL, \
+    devFrameSet VARCHAR(100) NULL, \
+    devSensorSet VARCHAR(100) NULL, \
+    devTripSet VARCHAR(100) NULL, \
+    devTripUnit VARCHAR(100) NULL, \
+    devTripParam VARCHAR(100) NULL, \
+    devPoles VARCHAR(100) NULL,  \
+    devLugQty VARCHAR(100) NULL,  \
+    devLugType VARCHAR(100) NULL, \
+    devLugSize VARCHAR(100) NULL, \
+    PRIMARY KEY (devID), \
+    CONSTRAINT fk_layoutID_1 \
+    FOREIGN KEY (layoutID) \
+        REFERENCES submittalLayoutSum(layoutID) \
+        ON DELETE CASCADE \
+        ON UPDATE CASCADE, \
+    CONSTRAINT fk_secID_1 \
+    FOREIGN KEY (secID) \
+        REFERENCES submittalSectionSum(secID) \
+        ON DELETE SET NULL \
+        ON UPDATE CASCADE, \
+    UNIQUE INDEX devID_UNIQUE (devID ASC))\
+    ENGINE = InnoDB;', function(err) { if(err) throw err; });
+
+// submittalBrkAccSum
+connection.query('\
+CREATE TABLE IF NOT EXISTS ' + database + '.' + dbConfig.submittal_brkAcc_table + ' ( \
+    brkAccID INT UNSIGNED NOT NULL AUTO_INCREMENT, \
+    brkAccDropdownID INT UNSIGNED NULL,\
+    devID INT UNSIGNED NULL,\
+    PRIMARY KEY (brkAccID), \
+    CONSTRAINT fk_devID_1 \
+    FOREIGN KEY (devID) \
+        REFERENCES submittalBrkSum(devID) \
+        ON DELETE CASCADE \
+        ON UPDATE CASCADE, \
+    CONSTRAINT fk_brkAccDropdownID \
+    FOREIGN KEY (brkAccDropdownID) \
+        REFERENCES brkAccOptions(brkAccDropdownID) \
+        ON DELETE CASCADE \
+        ON UPDATE CASCADE, \
+    UNIQUE INDEX brkAccID_UNIQUE (brkAccID ASC))\
+    ENGINE = InnoDB;', function(err) { if(err) throw err; });
+
+
+
+//submittalPanelBrkSum
+connection.query('\
+CREATE TABLE IF NOT EXISTS ' + database + '.' + dbConfig.submittal_panel_breakers + ' ( \
+    panelBrkID INT UNSIGNED NOT NULL AUTO_INCREMENT, \
+    secID INT UNSIGNED NULL, \
+    devID INT UNSIGNED NULL, \
+    panelRow INT UNSIGNED NULL, \
+    configuration VARCHAR(100) NULL, \
+    mounting VARCHAR(100) NULL, \
+    frame VARCHAR(100) NULL, \
+    PRIMARY KEY (panelBrkID), \
+    CONSTRAINT fk_secID_2 \
+    FOREIGN KEY (secID) \
+        REFERENCES submittalSectionSum(secID) \
+        ON DELETE CASCADE \
+        ON UPDATE CASCADE, \
+    CONSTRAINT fk_devID_2 \
+    FOREIGN KEY (devID) \
+        REFERENCES submittalBrkSum(devID) \
+        ON DELETE SET NULL \
+        ON UPDATE CASCADE, \
+    UNIQUE INDEX panelBrkID_UNIQUE (panelBrkID ASC))\
+    ENGINE = InnoDB;', function(err) { if(err) throw err; });
+
+
+
+
+
 
 console.log("createCreoSchema successful");
 

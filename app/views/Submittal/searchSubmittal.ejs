@@ -1667,7 +1667,7 @@
                                                                                         <div class="col-sm-12">
                                                                                             <div class="form-group">
                                                                                                 <label for="" class="col-form-label">Type of Breaker<i style="color: red;">&nbsp;*</i></label>
-                                                                                                <select class="form-control" id="" name="brkType" required>
+                                                                                                <select class="form-control" id="" name="brkType" required onchange="getBreakerType(this)">
                                                                                                     <option value="">Select</option>
                                                                                                     <% if(sectionData){ %>
                                                                                                         <% for(let k = 0; k < sectionData.length; k++){ %>
@@ -1786,15 +1786,15 @@
                                                                                                                 <select id="compA<%=j+1%>" name="compA" class="form-control" onChange="compAdetails(this)" >
                                                                                                                     <option value="" disabled selected>A</option>
                                                                                                                     <% if(sectionData[k].compType != null && JSON.parse(sectionData[k].compType).A == 'brk'){ %>
-                                                                                                                    <option value="brk_<%=currentSlide%><%=j+1%>" selected>Breaker</option>
+                                                                                                                    <option value="brk_<%=j+1%>" selected>Breaker</option>
                                                                                                                     <% } else { %>
-                                                                                                                    <option value="brk_<%=currentSlide%><%=j+1%>">Breaker</option>
+                                                                                                                    <option value="brk_<%=j+1%>">Breaker</option>
                                                                                                                     <% } %>
 
                                                                                                                     <% if(sectionData[k].compType != null && JSON.parse(sectionData[k].compType).A == 'control'){ %>
-                                                                                                                    <option value="control_<%=currentSlide%><%=j+1%>" selected>Control</option>
+                                                                                                                    <option value="control_<%=j+1%>" selected>Control</option>
                                                                                                                     <% } else { %>
-                                                                                                                    <option value="control_<%=currentSlide%><%=j+1%>">Control</option>
+                                                                                                                    <option value="control_<%=j+1%>">Control</option>
                                                                                                                     <% } %>
                                                                                                                 </select>
                                                                                                             </div>
@@ -1804,15 +1804,15 @@
                                                                                                                 <select id="compB<%=j+1%>" name="compB" class="form-control" onChange="compBdetails(this)">
                                                                                                                     <option value="" disabled selected>B</option>
                                                                                                                     <% if(sectionData[k].compType != null && JSON.parse(sectionData[k].compType).B == 'brk'){ %>
-                                                                                                                    <option value="brk_<%=currentSlide%><%=j+1%>" selected>Breaker</option>
+                                                                                                                    <option value="brk_<%=j+1%>" selected>Breaker</option>
                                                                                                                     <% } else { %>
-                                                                                                                    <option value="brk_<%=currentSlide%><%=j+1%>">Breaker</option>
+                                                                                                                    <option value="brk_<%=j+1%>">Breaker</option>
                                                                                                                     <% } %>
 
                                                                                                                     <% if(sectionData[k].compType != null && JSON.parse(sectionData[k].compType).B == 'control'){ %>
-                                                                                                                    <option value="control_<%=currentSlide%><%=j+1%>" selected>Control</option>
+                                                                                                                    <option value="control_<%=j+1%>" selected>Control</option>
                                                                                                                     <% } else { %>
-                                                                                                                    <option value="control_<%=currentSlide%><%=j+1%>">Control</option>
+                                                                                                                    <option value="control_<%=j+1%>">Control</option>
                                                                                                                     <% } %>
                                                                                                                 </select>
                                                                                                             </div>
@@ -1822,15 +1822,15 @@
                                                                                                                 <select id="compC<%=j+1%>" name="compC" class="form-control" onChange="compCdetails(this)">
                                                                                                                     <option value="" disabled selected>C</option>
                                                                                                                     <% if(sectionData[k].compType != null && JSON.parse(sectionData[k].compType).C == 'brk'){ %>
-                                                                                                                    <option value="brk_<%=currentSlide%><%=j+1%>" selected>Breaker</option>
+                                                                                                                    <option value="brk_<%=j+1%>" selected>Breaker</option>
                                                                                                                     <% } else { %>
-                                                                                                                    <option value="brk_<%=currentSlide%><%=j+1%>">Breaker</option>
+                                                                                                                    <option value="brk_<%=j+1%>">Breaker</option>
                                                                                                                     <% } %>
 
                                                                                                                     <% if(sectionData[k].compType != null && JSON.parse(sectionData[k].compType).C == 'control'){ %>
-                                                                                                                    <option value="control_<%=currentSlide%><%=j+1%>" selected>Control</option>
+                                                                                                                    <option value="control_<%=j+1%>" selected>Control</option>
                                                                                                                     <% } else { %>
-                                                                                                                    <option value="control_<%=currentSlide%><%=j+1%>">Control</option>
+                                                                                                                    <option value="control_<%=j+1%>">Control</option>
                                                                                                                     <% } %>
                                                                                                                 </select>
                                                                                                             </div>
@@ -1840,15 +1840,15 @@
                                                                                                                 <select id="compD<%=j+1%>" name="compD" class="form-control" onChange="compDdetails(this)">
                                                                                                                     <option value="" disabled selected>D</option>
                                                                                                                     <% if(sectionData[k].compType != null && JSON.parse(sectionData[k].compType).D == 'brk' && JSON.parse(sectionData[k].compType).A != 'panelboard'){ %>
-                                                                                                                    <option value="brk_<%=currentSlide%><%=j+1%>" selected>Breaker</option>
+                                                                                                                    <option value="brk_<%=j+1%>" selected>Breaker</option>
                                                                                                                     <% } else { %>
-                                                                                                                    <option value="brk_<%=currentSlide%><%=j+1%>">Breaker</option>
+                                                                                                                    <option value="brk_<%=j+1%>">Breaker</option>
                                                                                                                     <% } %>
 
                                                                                                                     <% if(sectionData[k].compType != null && JSON.parse(sectionData[k].compType).D == 'control'){ %>
-                                                                                                                    <option value="control_<%=currentSlide%><%=j+1%>" selected>Control</option>
+                                                                                                                    <option value="control_<%=j+1%>" selected>Control</option>
                                                                                                                     <% } else { %>
-                                                                                                                    <option value="control_<%=currentSlide%><%=j+1%>">Control</option>
+                                                                                                                    <option value="control_<%=j+1%>">Control</option>
                                                                                                                     <% } %>
                                                                                                                 </select>
                                                                                                             </div>
@@ -1876,46 +1876,80 @@
                                                                                                                             <% if (rowData[0].configuration == 'SINGLE') { %>
                                                                                                                             <input name="rowType_<%=l%>" id="rowType_<%=l%>" value="SINGLE" hidden="hidden">
                                                                                                                                 <% if (rowData[0].mounting == 'CENTER - LEFT') { %>
-                                                                                                                                <% let frameOptsSingleCL = ["L","P"]; %>
+
+                                                                                                                                <% let frameOptsSingleCL_powerpact = ["L","P"]; %>
+                                                                                                                                <% let frameOptSingleCL_tmax = ["XT5","XT6", "XT7"]; %>
                                                                                                                                 <div class="row justify-content-center" id="pbRow<%=j+1%>_<%=l%>">
                                                                                                                                     <div class="col-sm-4" id="pbRow<%=j+1%>_<%=l%>_brkL" style="background-color:#e6e1e1; border:2px solid lightslategrey; border-radius:3px;">
                                                                                                                                         <select id="pb<%=j+1%>_row<%=l%>_frameCL" name="row<%=l%>_frameCL">
-                                                                                                                                            <% for (let opt of frameOptsSingleCL) { %>
-                                                                                                                                                <% if (rowData[0].frame == opt) { %>
-                                                                                                                                                <option value="<%=opt%>" selected="selected"><%=opt%></option>
-                                                                                                                                                <% } else { %>
-                                                                                                                                                <option value="<%=opt%>"><%=opt%></option>
+                                                                                                                                            <% if (frameOptsSingleCL_powerpact.includes(rowData[0].frame) == true) { %>
+                                                                                                                                                <% for (let opt of frameOptsSingleCL_powerpact) { %>
+                                                                                                                                                    <% if (rowData[0].frame == opt) { %>
+                                                                                                                                                    <option value="<%=opt%>" selected="selected"><%=opt%></option>
+                                                                                                                                                    <% } else { %>
+                                                                                                                                                    <option value="<%=opt%>"><%=opt%></option>
+                                                                                                                                                    <% } %>
                                                                                                                                                 <% } %>
+                                                                                                                                            <% } else if (frameOptSingleCL_tmax.includes(rowData[0].frame) == true) { %>
+                                                                                                                                                    <% for (let opt of frameOptSingleCL_tmax) { %>
+                                                                                                                                                        <% if (rowData[0].frame == opt) { %>
+                                                                                                                                                        <option value="<%=opt%>" selected="selected"><%=opt%></option>
+                                                                                                                                                        <% } else { %>
+                                                                                                                                                        <option value="<%=opt%>"><%=opt%></option>
+                                                                                                                                                        <% } %>
+                                                                                                                                                    <% } %>
                                                                                                                                             <% } %>
                                                                                                                                         </select>
                                                                                                                                     </div>
                                                                                                                                 </div>
                                                                                                                                 <% } else if (rowData[0].mounting == 'CENTER - RIGHT') { %>
-                                                                                                                                <% let frameOptsSingleCR = ["L","P"]; %>
+                                                                                                                                <% let frameOptsSingleCR_powerpact = ["L","P"]; %>
+                                                                                                                                <% let frameOptsSingleCR_tmax = ["XT5","XT6", "XT7"]; %>
                                                                                                                                 <div class="row justify-content-center" id="pbRow<%=j+1%>_<%=l%>">
                                                                                                                                     <div class="col-sm-4" id="pbRow<%=j+1%>_<%=l%>_brkCR" style="background-color:#e6e1e1; border:2px solid lightslategrey; border-radius:3px;">
                                                                                                                                         <select id="pb<%=j+1%>_row<%=l%>_frameCR" name="row<%=l%>_frameCR">
-                                                                                                                                            <% for (let opt of frameOptsSingleCR) { %>
-                                                                                                                                                <% if (rowData[0].frame == opt) { %>
-                                                                                                                                                <option value="<%=opt%>" selected="selected"><%=opt%></option>
-                                                                                                                                                <% } else { %>
-                                                                                                                                                <option value="<%=opt%>"><%=opt%></option>
+                                                                                                                                            <% if (frameOptsSingleCR_powerpact.includes(rowData[0].frame) == true) { %>
+                                                                                                                                                <% for (let opt of frameOptsSingleCR_powerpact) { %>
+                                                                                                                                                    <% if (rowData[0].frame == opt) { %>
+                                                                                                                                                    <option value="<%=opt%>" selected="selected"><%=opt%></option>
+                                                                                                                                                    <% } else { %>
+                                                                                                                                                    <option value="<%=opt%>"><%=opt%></option>
+                                                                                                                                                    <% } %>
+                                                                                                                                                <% } %>
+                                                                                                                                            <% } else if (frameOptsSingleCR_tmax.includes(rowData[0].frame) == true) { %>
+                                                                                                                                                <% for (let opt of frameOptsSingleCR_tmax) { %>
+                                                                                                                                                    <% if (rowData[0].frame == opt) { %>
+                                                                                                                                                    <option value="<%=opt%>" selected="selected"><%=opt%></option>
+                                                                                                                                                    <% } else { %>
+                                                                                                                                                    <option value="<%=opt%>"><%=opt%></option>
+                                                                                                                                                    <% } %>
                                                                                                                                                 <% } %>
                                                                                                                                             <% } %>
                                                                                                                                         </select>
                                                                                                                                     </div>
                                                                                                                                 </div>
                                                                                                                                 <% } else if (rowData[0].mounting == 'LEFT') { %>
-                                                                                                                                <% let frameOptsSingleL = ["H/J","L"]; %>
+                                                                                                                                <% let frameOptsSingleL_powerpact = ["H/J","L"]; %>
+                                                                                                                                <% let frameOptsSingleL_tmax = ["XT2","XT4","XT5"]; %>
                                                                                                                                 <div class="row justify-content-center" id="pbRow<%=j+1%>_<%=l%>">
                                                                                                                                     <div class="col-sm-4" id="pbRow<%=j+1%>_<%=l%>_brkL" style="background-color:#e6e1e1; border:2px solid lightslategrey; border-radius:3px;">
                                                                                                                                         <select id="pb<%=j+1%>_row<%=l%>_frameL" name="row<%=l%>_frameL">
-                                                                                                                                            <% for (let opt of frameOptsSingleL) { %>
-                                                                                                                                                <% if (rowData[0].frame == opt) { %>
-                                                                                                                                                <option value="<%=opt%>" selected="selected"><%=opt%></option>
-                                                                                                                                                <% } else { %>
-                                                                                                                                                <option value="<%=opt%>"><%=opt%></option>
+                                                                                                                                            <% if (frameOptsSingleL_powerpact.includes(rowData[0].frame) == true) { %>
+                                                                                                                                                <% for (let opt of frameOptsSingleL_powerpact) { %>
+                                                                                                                                                    <% if (rowData[0].frame == opt) { %>
+                                                                                                                                                    <option value="<%=opt%>" selected="selected"><%=opt%></option>
+                                                                                                                                                    <% } else { %>
+                                                                                                                                                    <option value="<%=opt%>"><%=opt%></option>
+                                                                                                                                                    <% } %>
                                                                                                                                                 <% } %>
+                                                                                                                                            <% } else if (frameOptsSingleL_tmax.includes(rowData[0].frame) == true) { %>
+                                                                                                                                                    <% for (let opt of frameOptsSingleL_tmax) { %>
+                                                                                                                                                        <% if (rowData[0].frame == opt) { %>
+                                                                                                                                                        <option value="<%=opt%>" selected="selected"><%=opt%></option>
+                                                                                                                                                        <% } else { %>
+                                                                                                                                                        <option value="<%=opt%>"><%=opt%></option>
+                                                                                                                                                        <% } %>
+                                                                                                                                                    <% } %>
                                                                                                                                             <% } %>
                                                                                                                                         </select>
                                                                                                                                     </div>
@@ -1924,17 +1958,28 @@
                                                                                                                                     </div>
                                                                                                                                 </div>
                                                                                                                                 <% } else if (rowData[0].mounting == 'RIGHT') { %>
-                                                                                                                                <% let frameOptsSingleR = ["H/J","L"]; %>
+                                                                                                                                <% let frameOptsSingleR_powerpact = ["H/J","L"]; %>
+                                                                                                                                <% let frameOptsSingleR_tmax = ["XT2","XT4","XT5"]; %>
                                                                                                                                 <div class="row justify-content-center" id="pbRow<%=j+1%>_<%=l%>">
                                                                                                                                     <div class="col-sm-4" style="background-color:#e6e1e1; border:2px solid lightslategrey; border-radius:3px;"></div>
                                                                                                                                     <div class="col-sm-4" id="pbRow<%=j+1%>_<%=l%>_brkR" style="background-color:#e6e1e1; border:2px solid lightslategrey; border-radius:3px;">
                                                                                                                                         <select id="pb<%=j+1%>_row<%=l%>_frameR" name="row<%=l%>_frameR">
-                                                                                                                                            <% for (let opt of frameOptsSingleR) { %>
-                                                                                                                                                <% if (rowData[0].frame == opt) { %>
-                                                                                                                                                <option value="<%=opt%>" selected="selected"><%=opt%></option>
-                                                                                                                                                <% } else { %>
-                                                                                                                                                <option value="<%=opt%>"><%=opt%></option>
+                                                                                                                                            <% if (frameOptsSingleR_powerpact.includes(rowData[0].frame) == true) { %>
+                                                                                                                                                <% for (let opt of frameOptsSingleR_powerpact) { %>
+                                                                                                                                                    <% if (rowData[0].frame == opt) { %>
+                                                                                                                                                    <option value="<%=opt%>" selected="selected"><%=opt%></option>
+                                                                                                                                                    <% } else { %>
+                                                                                                                                                    <option value="<%=opt%>"><%=opt%></option>
+                                                                                                                                                    <% } %>
                                                                                                                                                 <% } %>
+                                                                                                                                            <% } else if (frameOptsSingleR_tmax.includes(rowData[0].frame) == true) { %>
+                                                                                                                                                    <% for (let opt of frameOptsSingleR_tmax) { %>
+                                                                                                                                                        <% if (rowData[0].frame == opt) { %>
+                                                                                                                                                        <option value="<%=opt%>" selected="selected"><%=opt%></option>
+                                                                                                                                                        <% } else { %>
+                                                                                                                                                        <option value="<%=opt%>"><%=opt%></option>
+                                                                                                                                                        <% } %>
+                                                                                                                                                    <% } %>
                                                                                                                                             <% } %>
                                                                                                                                         </select>
                                                                                                                                     </div>
@@ -1942,27 +1987,48 @@
                                                                                                                                 <% } %>
                                                                                                                             <% } else if (rowData[0].configuration == 'DUAL') { %>
                                                                                                                             <input name="rowType_<%=l%>" id="rowType_<%=l%>" value="DUAL" hidden="hidden">
-                                                                                                                            <% let frameOptsDual = ["H/J","L"]; %>
+                                                                                                                            <% let frameOptsDual_powerpact = ["H/J","L"]; %>
+                                                                                                                            <% let frameOptsDual_tmax = ["XT2","XT4","XT5"]; %>
                                                                                                                             <div class="row justify-content-center" id="pbRow<%=j+1%>_<%=l%>">
                                                                                                                                 <div class="col-sm-4" id="pbRow<%=j+1%>_<%=l%>_brkL" style="background-color:#e6e1e1; border:2px solid lightslategrey; border-radius:3px;">
                                                                                                                                     <select id="pb<%=j+1%>_row<%=l%>_frameL" name="row<%=l%>_frameL" >
-                                                                                                                                        <% for (let opt of frameOptsDual) { %>
-                                                                                                                                            <% if (rowData[0].frame == opt) { %>
-                                                                                                                                            <option value="<%=opt%>" selected="selected"><%=opt%></option>
-                                                                                                                                            <% } else { %>
-                                                                                                                                            <option value="<%=opt%>"><%=opt%></option>
+                                                                                                                                        <% if (frameOptsDual_powerpact.includes(rowData[0].frame) == true) { %>
+                                                                                                                                            <% for (let opt of frameOptsDual_powerpact) { %>
+                                                                                                                                                <% if (rowData[0].frame == opt) { %>
+                                                                                                                                                <option value="<%=opt%>" selected="selected"><%=opt%></option>
+                                                                                                                                                <% } else { %>
+                                                                                                                                                <option value="<%=opt%>"><%=opt%></option>
+                                                                                                                                                <% } %>
+                                                                                                                                            <% } %>
+                                                                                                                                        <% } else if (frameOptsDual_tmax.includes(rowData[0].frame) == true) { %>
+                                                                                                                                            <% for (let opt of frameOptsDual_tmax) { %>
+                                                                                                                                                <% if (rowData[0].frame == opt) { %>
+                                                                                                                                                <option value="<%=opt%>" selected="selected"><%=opt%></option>
+                                                                                                                                                <% } else { %>
+                                                                                                                                                <option value="<%=opt%>"><%=opt%></option>
+                                                                                                                                                <% } %>
                                                                                                                                             <% } %>
                                                                                                                                         <% } %>
                                                                                                                                     </select>
                                                                                                                                 </div>
                                                                                                                                 <div class="col-sm-4" id="pbRow<%=j+1%>_<%=l%>_brkR" style="background-color:#e6e1e1; border:2px solid lightslategrey; border-radius:3px;">
                                                                                                                                     <select id="pb<%=j+1%>_row<%=l%>_frameR" name="row<%=l%>_frameR" >
-                                                                                                                                        <% for (let opt of frameOptsDual) { %>
-                                                                                                                                            <% if (rowData[1].frame == opt) { %>
-                                                                                                                                            <option value="<%=opt%>" selected="selected"><%=opt%></option>
-                                                                                                                                            <% } else { %>
-                                                                                                                                            <option value="<%=opt%>"><%=opt%></option>
+                                                                                                                                        <% if (frameOptsDual_powerpact.includes(rowData[1].frame) == true) { %>
+                                                                                                                                            <% for (let opt of frameOptsDual_powerpact) { %>
+                                                                                                                                                <% if (rowData[1].frame == opt) { %>
+                                                                                                                                                <option value="<%=opt%>" selected="selected"><%=opt%></option>
+                                                                                                                                                <% } else { %>
+                                                                                                                                                <option value="<%=opt%>"><%=opt%></option>
+                                                                                                                                                <% } %>
                                                                                                                                             <% } %>
+                                                                                                                                        <% } else if (frameOptsDual_tmax.includes(rowData[1].frame) == true) { %>
+                                                                                                                                                <% for (let opt of frameOptsDual_tmax) { %>
+                                                                                                                                                    <% if (rowData[1].frame == opt) { %>
+                                                                                                                                                    <option value="<%=opt%>" selected="selected"><%=opt%></option>
+                                                                                                                                                    <% } else { %>
+                                                                                                                                                    <option value="<%=opt%>"><%=opt%></option>
+                                                                                                                                                    <% } %>
+                                                                                                                                                <% } %>
                                                                                                                                         <% } %>
                                                                                                                                     </select>
                                                                                                                                 </div>
