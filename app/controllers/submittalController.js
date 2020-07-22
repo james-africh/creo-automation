@@ -943,11 +943,11 @@ exports.layoutSectionProperties = function(req, res) {
                 }
             }
 
-            for (let i = 0; i < applyToArr.length; i++) {
+            /*for (let i = 0; i < applyToArr.length; i++) {
                 await querySql("UPDATE " + database + "." + dbConfig.submittal_sections_table + " SET " +
-                    " compType = JSON_OBJECT(\"A\", ?, \"B\", ?, \"C\", ?, \"D\", ?), secType = ?, brkType = ?, secAmp = ?, secPoles = ?, secHeight = ?, secWidth = ?, secDepth = ? WHERE layoutID = ? AND sectionNum = ?",
+                    "compType = JSON_SET(COALESCE(compType,'{}'), '$.A', ?, '$.B', ?, '$.C', ?, '$.D', ?), secType = ?, brkType = ?, secAmp = ?, secPoles = ?, secHeight = ?, secWidth = ?, secDepth = ? WHERE layoutID = ? AND sectionNum = ?",
                     [comp.A, comp.B, comp.C, comp.D, data.secType, data.brkType, data.secAmp, data.secPoles, data.secHeight, data.secWidth, data.secDepth, layoutID, applyToArr[i]]);
-            }
+            }*/
             return null
         })
         .then(async function() {
@@ -958,6 +958,15 @@ exports.layoutSectionProperties = function(req, res) {
                         for(let row of rows){
                             await querySql("UPDATE " + database + "." + dbConfig.submittal_breaker_table + " SET " +
                                 "comp = ?, secID = ? WHERE secID = ?", [null, null, row.secID]);
+                        }
+                        if (row.compType == null) {
+                            await querySql("UPDATE " + database + "." + dbConfig.submittal_sections_table + " SET " +
+                                "compType = JSON_OBJECT('A', ?, 'B', ?, 'C', ?, 'D', ?), secType = ?, brkType = ?, secAmp = ?, secPoles = ?, secHeight = ?, secWidth = ?, secDepth = ? WHERE layoutID = ? AND sectionNum = ?",
+                                [comp.A, comp.B, comp.C, comp.D, data.secType, data.brkType, data.secAmp, data.secPoles, data.secHeight, data.secWidth, data.secDepth, layoutID, row]);
+                        } else {
+                            await querySql("UPDATE " + database + "." + dbConfig.submittal_sections_table + " SET " +
+                                "compType = JSON_SET(compType, '$.A', ?, '$.B', ?, '$.C', ?, '$.D', ?), secType = ?, brkType = ?, secAmp = ?, secPoles = ?, secHeight = ?, secWidth = ?, secDepth = ? WHERE layoutID = ? AND sectionNum = ?",
+                                [comp.A, comp.B, comp.C, comp.D, data.secType, data.brkType, data.secAmp, data.secPoles, data.secHeight, data.secWidth, data.secDepth, layoutID, row]);
                         }
                     })
                     .catch(err => {
