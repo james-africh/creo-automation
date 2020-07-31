@@ -25,7 +25,7 @@ module.exports = {
             }
         },
     },
-    /*'connection': {
+   /* 'connection': {
         'host': 'localhost',
         'user': 'root',
         'port' : 3306,
@@ -50,6 +50,7 @@ module.exports = {
     'brkAcc_options_table': 'brkAccOptions',
     'control_assemblies_table': 'controlAsmSum',
     'control_items_table': 'controlItemSum',
+    'breakerDropdown_options_table': 'breakerDropdownOptions',
 
     //Standard Design Tables (Shared b/w apps)
     'panelboard_amp_type': 'panelboardAmpType',
@@ -66,6 +67,7 @@ module.exports = {
     'cornerPost_table': 'cornerPosts',
     'brkCompartment_NW_table': 'brkCompartments_NW',
     'brk_NW_table': 'iccbNW',
+    'brkCompartment_Emax2_table': 'brkCompartments_Emax2',
     'brk_Emax2_table': 'iccbEmax2',
     'brk_powerpact_table': 'mccbPowerpact',
     'brk_tmax_table': 'mccbTmax',

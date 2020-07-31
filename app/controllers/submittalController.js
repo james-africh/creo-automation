@@ -117,28 +117,411 @@ const Promise = require('bluebird');
 exports = {};
 module.exports = exports;
 
-async function submittalLookup(lookupArray) {
+let creoWorkingDir, creoStandardLib;
+
+async function submittalLookup(subData, lookupArray) {
+    let submittals;
     if (lookupArray.length == 0) {
-        return await querySql("SELECT * FROM " + database + "." + dbConfig.submittal_summary_table);
+        submittals = await querySql("SELECT * FROM " + database + "." + dbConfig.submittal_summary_table);
     } else {
         if (lookupArray[0] != null && lookupArray[1] != null) {
-            return await querySql("SELECT * FROM " + database + "." + dbConfig.submittal_summary_table+" WHERE jobNum = ? AND releaseNum = ?",[lookupArray[0], lookupArray[1]]);
+            submittals =  await querySql("SELECT * FROM " + database + "." + dbConfig.submittal_summary_table+" WHERE jobNum = ? AND releaseNum = ?",[lookupArray[0], lookupArray[1]]);
         } else if (lookupArray[2] != null) {
-            return await querySql("SELECT * FROM " + database + "." + dbConfig.submittal_summary_table+" WHERE subID = ?", lookupArray[2]);
+            submittals =  await querySql("SELECT * FROM " + database + "." + dbConfig.submittal_summary_table+" WHERE subID = ?", lookupArray[2]);
         }
     }
 
-}
-
-async function revLookup(lookupArray) {
-    if (lookupArray.length == 0) {
-        return await querySql("SELECT * FROM " + database + "." + dbConfig.submittal_rev_table);
-    } else {
-        return await querySql("SELECT * FROM " + database + "." + dbConfig.submittal_rev_table + " WHERE subID = ?", lookupArray[0]);
+    for (let submittal of submittals) {
+        let drawnDate = moment(submittal.drawnDate).utc().format("YYYY-MM-DD");
+        let checkedDate = moment(submittal.checkedDate).utc().format("YYYY-MM-DD");
+        await subData.push({
+            subID: submittal.subID,
+            jobNum: submittal.jobNum,
+            releaseNum: submittal.releaseNum,
+            jobName: submittal.jobName,
+            customer: submittal.customer,
+            layoutName: submittal.layoutName,
+            drawnBy: submittal.drawnBy,
+            drawnDate: drawnDate,
+            checkedBy: submittal.checkedBy,
+            checkedDate: checkedDate
+        });
     }
+    return null
 }
 
-let creoWorkingDir, creoStandardLib;
+async function revLookup(revData, lookupArray) {
+    let revs;
+    if (lookupArray.length == 0) {
+        revs = await querySql("SELECT * FROM " + database + "." + dbConfig.submittal_rev_table);
+    } else {
+        revs =  await querySql("SELECT * FROM " + database + "." + dbConfig.submittal_rev_table + " WHERE subID = ?", lookupArray[0]);
+    }
+    for (let rev of revs) {
+        await revData.push({
+            revID: rev.revID,
+            subID: rev.subID,
+            revNum: rev.revNum,
+            revNote: rev.revNote
+        })
+    }
+    return null
+}
+
+async function getCreoData(subData, revData, creoData) {
+    let jobNum = subData[0].jobNum;
+    let releaseNum = subData[0].releaseNum;
+    let layoutName = subData[0].layoutName;
+    let latestRevNum = revData[revData.length - 1].revNum;
+
+    let layoutNum = releaseNum.toLowerCase().charCodeAt(0) - 96;
+    let dir = await creo(sessionId, {
+        command: "creo",
+        function: "pwd",
+        data: {}
+    });
+    if (dir.data == undefined) {
+        await creo(sessionId, {
+            command: "creo",
+            function: "cd",
+            data: {
+                "dirname": creoWorkingDir
+            }
+        });
+    } else {
+        if (dir.data.dirname != creoWorkingDir) {
+            await creo(sessionId, {
+                command: "creo",
+                function: "cd",
+                data: {
+                    "dirname": creoWorkingDir
+                }
+            });
+        }
+    }
+
+    let creoLayoutAsm;
+    let creoLayoutDrw;
+    let creoOneLineAsm;
+    let creoOutputDir = null;
+    let creoOutputPDF;
+    if (layoutNum < 10) {
+        creoLayoutAsm = jobNum+'-'+'0000'+'-'+'00'+layoutNum+'.asm';
+        creoOneLineAsm = jobNum+'-'+'0001'+'-'+'00'+layoutNum+'.asm';
+    } else if (layoutNum < 100) {
+        creoLayoutAsm = jobNum+'-'+'0000'+'-'+'0'+layoutNum+'.asm';
+        creoOneLineAsm = jobNum+'-'+'0001'+'-'+'0'+layoutNum+'.asm';
+    }
+    creoLayoutDrw = creoLayoutAsm.slice(0,15)+'-S.drw';
+    creoOutputPDF = creoLayoutAsm.slice(0,15)+'-'+latestRevNum+'_'+layoutName+'.pdf';
+    creoData.push({
+        workingDir: creoWorkingDir,
+        layoutAsm: creoLayoutAsm,
+        layoutDrw: creoLayoutDrw,
+        oneLineAsm: creoOneLineAsm,
+        standardLib: creoStandardLib,
+        outputDir: creoOutputDir,
+        outputPDF: creoOutputPDF
+    });
+
+    return null
+}
+
+async function getLayoutData(subData, layoutData) {
+    const layouts = await querySql("SELECT * FROM " + database + "." + dbConfig.submittal_layout_table + " WHERE subID = ?", subData[0].subID);
+
+    if (layouts.length != 0) {
+        for (let layout of layouts) {
+            layoutData.push({
+                subID: layout.subID,
+                layoutID: layout.layoutID,
+                layoutName: layout.layoutName,
+                ulListing: layout.ulListing,
+                systemType: layout.systemType,
+                systemAmp: layout.systemAmp,
+                mainBusAmp: layout.mainBusAmp,
+                enclosure: layout.enclosure,
+                accessibility: layout.accessibility,
+                cableAccess: layout.cableAccess,
+                paint: layout.paint,
+                interruptRating: layout.interruptRating,
+                busBracing: layout.busBracing,
+                busType: layout.busType,
+                insulatedBus: layout.insulatedBus,
+                boots: layout.boots,
+                iccbPlatform: layout.iccbPlatform,
+                mccbPlatform: layout.mccbPlatform,
+                vcbPlatform: layout.vcbPlatform,
+                keyInterlocks: layout.keyInterlocks,
+                seismic: layout.seismic,
+                mimic: layout.mimic,
+                ir: layout.ir,
+                wireway: layout.wireway,
+                trolley: layout.trolley,
+                numSections: layout.numSections
+            });
+        }
+    }
+    return null
+}
+
+async function getBreakerData(layoutData, deviceData) {
+    let breakers;
+    if (layoutData.length != 0) {
+        let layoutID = layoutData[0].layoutID;
+        breakers = await querySql("SELECT * FROM " + database + "." + dbConfig.submittal_breaker_table + " WHERE layoutID = ?", layoutID);
+    } else {
+        breakers = [];
+    }
+    for (let breaker of breakers) {
+        deviceData.push({
+            devID: breaker.devID,
+            layoutID: breaker.layoutID,
+            secID: breaker.secID,
+            comp: breaker.comp,
+            devDesignation: breaker.devDesignation,
+            devFunction: breaker.devFunction,
+            unitOfIssue: breaker.unitOfIssue,
+            catCode: breaker.catCode,
+            platform: breaker.platform,
+            brkPN: breaker.brkPN,
+            cradlePN: breaker.cradlePN,
+            devMount: breaker.devMount,
+            rearAdaptType: breaker.rearAdaptType,
+            devUL: breaker.devUL,
+            devLevel: breaker.devLevel,
+            devOperation: breaker.devOperation,
+            devCtrlVolt: breaker.devCtrlVolt,
+            devMaxVolt: breaker.devMaxVolt,
+            devKAIC: breaker.devKAIC,
+            devFrameSet: breaker.devFrameSet,
+            devSensorSet: breaker.devSensorSet,
+            devTripSet: breaker.devTripSet,
+            devTripUnit: breaker.devTripUnit,
+            devTripParam: breaker.devTripParam,
+            devPoles: breaker.devPoles,
+            devLugQty: breaker.devLugQty,
+            devLugType: breaker.devLugType,
+            devLugSize: breaker.devLugSize
+        });
+    }
+    return null
+}
+
+async function getBreakerAccData(deviceData, brkAccData) {
+    for (let data of deviceData) {
+        const devAccs = await querySql("SELECT * FROM " + database + "." + dbConfig.submittal_brkAcc_table + " WHERE devID = ?", data.devID);
+        const devAccOptions = await querySql("SELECT * FROM " + database + "." + dbConfig.brkAcc_options_table);
+        for (let devAcc of devAccs) {
+            for  (let devAccOpt of devAccOptions) {
+                if (devAcc.brkAccDropdownID == devAccOpt.brkAccDropdownID) {
+                    brkAccData.push({
+                        brkAccID: devAcc.brkAccID,
+                        brkAccDropdownID: devAcc.brkAccDropdownID,
+                        name: devAccOpt.brkAccName,
+                        opt: devAccOpt.brkAccOpt,
+                        devID: devAcc.devID
+                    });
+                }
+            }
+        }
+    }
+
+    return null
+}
+
+async function getLayoutAndBrkAccDropdownData(layoutDropdownData, brkAccDropdownData) {
+    const layoutDropdowns = await querySql("SELECT * FROM " + database + "." + dbConfig.layout_paramTypes_table);
+    const brkAccDropdowns = await querySql("SELECT * FROM " + database + "." + dbConfig.brkAcc_options_table);
+
+    for (let dropdown of layoutDropdowns) {
+        layoutDropdownData.push({
+            type: dropdown.dropdownType,
+            value: dropdown.dropdownValue
+        });
+    }
+    let tempBrkAccDropdownData = [];
+    for (let dropdown of brkAccDropdowns) {
+        tempBrkAccDropdownData.push({
+            id: dropdown.brkAccDropdownID,
+            type: dropdown.brkAcc,
+            name: dropdown.brkAccName,
+            value: dropdown.brkAccOpt
+        });
+    }
+    for (let item of tempBrkAccDropdownData) {
+        if (brkAccDropdownData.filter(e => e.type === item.type).length > 0) {
+            brkAccDropdownData.filter(e => e.type === item.type)[0].value.push(item.value);
+            brkAccDropdownData.filter(e => e.type === item.type)[0].id.push(item.brkAccDropdownID)
+        } else {
+            brkAccDropdownData.push({
+                id: [item.id],
+                type: item.type,
+                name: item.name,
+                value: [item.value]
+            })
+        }
+    }
+    return null
+}
+
+async function getSectionData(layoutData, sectionData) {
+    if (layoutData.length != 0) {
+        const sections = await querySql("SELECT * FROM " + database + "." + dbConfig.submittal_sections_table+ " WHERE layoutID = ?", layoutData[0].layoutID);
+        for (let section of sections) {
+            sectionData.push({
+                secID: section.secID,
+                layoutID: section.layoutID,
+                sectionNum: section.sectionNum,
+                compType: section.compType,
+                controlAsmID: section.controlAsmID,
+                secType: section.secType,
+                brkType: section.brkType,
+                secAmp: section.secAmp,
+                secPoles: section.secPoles,
+                secHeight: section.secHeight,
+                secWidth: section.secWidth,
+                secDepth: section.secDepth
+            })
+        }
+    }
+    return null
+}
+
+async function getTypeAndRestrictionData(sectionTypeData, brkTypeData, restrictionData) {
+    const secTypes = await querySql("SELECT * FROM " + database + "." + dbConfig.secType_table);
+    for (let secType of secTypes) {
+        sectionTypeData.push({
+            secType: secType.type
+        });
+    }
+
+    const brkTypes = await querySql("SELECT * FROM " + database + "." + dbConfig.brkType_table);
+    for (let brkType of brkTypes) {
+        brkTypeData.push({
+            brkType: brkType.type
+        })
+    }
+
+    const layoutParamRestrictions = await querySql("SELECT * FROM " + database + "." + dbConfig.layout_paramType_restrictions);
+    for (let restriction of layoutParamRestrictions) {
+        restrictionData.push({
+            type: restriction.dropdownType,
+            value: restriction.dropdownValue,
+            restrictions: JSON.parse(restriction.dropdownRestrictions)
+        });
+    }
+
+    return null
+}
+
+async function getPbRowData(sectionData, pbRowData) {
+    for (let section of sectionData) {
+        const pbRows = await querySql("SELECT * FROM " + database + "." + dbConfig.submittal_panel_breakers + " WHERE secID = ?", section.secID);
+        if (pbRows.length != 0) {
+            for (let row of pbRows) {
+                pbRowData.push({
+                    secID: section.secID,
+                    secNum: section.sectionNum,
+                    devID: row.devID,
+                    panelRow: row.panelRow,
+                    configuration: row.configuration,
+                    mounting: row.mounting,
+                    frame: row.frame
+                });
+            }
+        }
+    }
+    return null
+}
+
+async function getMfgBreakerDropdownData(brkDropdownOpts) {
+    const breakerDropdownOptions = await querySql("SELECT * FROM " + database + "." + dbConfig.breakerDropdown_options_table);
+    for (let opt of breakerDropdownOptions) {
+        brkDropdownOpts.push(opt);
+    }
+return null
+}
+
+async function searchSubmittalRoutine(subID, res, message) {
+    let subData = [];
+    let revData = [];
+    let creoData = [];
+    let layoutData = [];
+    let layoutDropdownData = [];
+    let brkAccDropdownData = [];
+    let deviceData = [];
+    let brkAccData = [];
+    let sectionData = [];
+    let sectionTypeData = [];
+    let brkTypeData = [];
+    let restrictionData = [];
+    let pbRowData = [];
+    let brkDropdownOpts = [];
+    submittalLookup(subData, [null, null, subID])
+        .then(async function() {
+            return await revLookup(revData,[subData[0].subID])
+        })
+        .then(async function() {
+            return await getCreoData(subData, revData, creoData);
+        })
+        .then(async function () {
+            return await getLayoutData(subData, layoutData);
+        })
+        .then(async function() {
+            return await getBreakerData(layoutData, deviceData);
+        })
+        .then(async function() {
+            return await getBreakerAccData(deviceData, brkAccData);
+        })
+        .then(async function() {
+            return await getLayoutAndBrkAccDropdownData(layoutDropdownData, brkAccDropdownData);
+        })
+        .then(async function() {
+            return await getSectionData(layoutData, sectionData);
+        })
+        .then(async function() {
+            return await getTypeAndRestrictionData(sectionTypeData, brkTypeData, restrictionData);
+        })
+        .then(async function() {
+            return await getPbRowData(sectionData, pbRowData);
+        })
+        .then(async function() {
+            return await getMfgBreakerDropdownData(brkDropdownOpts);
+        })
+        .then(() => {
+            res.locals = {title: 'Submittal'};
+            res.render('Submittal/searchSubmittal', {
+                message: message,
+                subData: subData,
+                revData: revData,
+                creoData: creoData,
+                layoutData: layoutData,
+                sectionData: sectionData,
+                sectionType: sectionTypeData,
+                brkType: brkTypeData,
+                layoutDropdownData: layoutDropdownData,
+                brkAccDropdownData: brkAccDropdownData,
+                layoutItemData: [],
+                userItemData: [],
+                comItemData: [],
+                layoutControlData: [],
+                controlAsmData: [],
+                panelboardData: [],
+                deviceData: deviceData,
+                brkAccData: brkAccData,
+                brkAccDropdown: [],
+                restrictionData: restrictionData,
+                pbRowData: pbRowData,
+                brkDropdownOpts: brkDropdownOpts,
+                currentSlide: 1
+            })
+        })
+        .catch(err => {
+            console.log(err);
+        })
+}
+
 
 /***********************************************
  MAIN SUBMITTAL
@@ -146,7 +529,8 @@ let creoWorkingDir, creoStandardLib;
 
 exports.submittal = function(req, res) {
     let submittalData = [];
-    submittalLookup([])
+
+    querySql("SELECT * FROM " + database + "." + dbConfig.submittal_summary_table)
         .then(async function(submittals) {
             for (let submittal of submittals) {
                 let drawnDate = moment(submittal.drawnDate).utc().format("YYYY-MM-DD");
@@ -181,6 +565,7 @@ exports.submittal = function(req, res) {
 
 exports.createSubmittal = function(req, res) {
     let submittalData = [];
+    let subData = [];
     let newSubData = {
         jobNum: req.body.jobNum,
         releaseNum: req.body.releaseNum,
@@ -200,10 +585,10 @@ exports.createSubmittal = function(req, res) {
         return await querySql("INSERT INTO " + database + "." + dbConfig.submittal_rev_table + " SET ?", revData);
     }
 
-    submittalLookup([])
-        .then(async function(submittals) {
+    submittalLookup(subData,[])
+        .then(async function() {
             let existingSubID = null;
-            for (let submittal of submittals) {
+            for (let submittal of subData) {
                 submittalData.push({
                     subID: submittal.subID,
                     jobNum: submittal.jobNum,
@@ -229,7 +614,8 @@ exports.createSubmittal = function(req, res) {
                 });
             } else {
                 await createSubmittal(newSubData);
-                const submittals =  await submittalLookup([newSubData.jobNum, newSubData.releaseNum, null]);
+                let submittals = [];
+                await submittalLookup(submittals,[newSubData.jobNum, newSubData.releaseNum, null]);
                 let subID = submittals[0].subID;
                 let newRevData = {
                     subID: subID,
@@ -278,7 +664,6 @@ exports.editSubmittal = function(req, res) {
 };
 
 exports.searchSubmittal = function(req, res) {
-
     let urlObj = url.parse(req.originalUrl);
     urlObj.protocol = req.protocol;
     urlObj.host = req.get('host');
@@ -297,303 +682,37 @@ exports.searchSubmittal = function(req, res) {
     let brkTypeData = [];
     let restrictionData = [];
     let pbRowData = [];
-
-    submittalLookup([null, null, subID])
-        .then(async function(submittals) {
-            for (let submittal of submittals) {
-                let drawnDate = moment(submittal.drawnDate).utc().format("YYYY-MM-DD");
-                let checkedDate = moment(submittal.checkedDate).utc().format("YYYY-MM-DD");
-                await subData.push({
-                    subID: submittal.subID,
-                    jobNum: submittal.jobNum,
-                    releaseNum: submittal.releaseNum,
-                    jobName: submittal.jobName,
-                    customer: submittal.customer,
-                    layoutName: submittal.layoutName,
-                    drawnBy: submittal.drawnBy,
-                    drawnDate: drawnDate,
-                    checkedBy: submittal.checkedBy,
-                    checkedDate: checkedDate
-                });
-            }
-            return null
+    let brkDropdownOpts = [];
+    submittalLookup(subData, [null, null, subID])
+        .then(async function() {
+            return await revLookup(revData,[subData[0].subID])
         })
         .then(async function() {
-            return await revLookup([subData[0].subID])
-        })
-        .then(async function(revs) {
-            for (let rev of revs) {
-                await revData.push({
-                    revID: rev.revID,
-                    subID: rev.subID,
-                    revNum: rev.revNum,
-                    revNote: rev.revNote
-                })
-            }
-            return null
-        })
-        .then(async function() {
-            let jobNum = subData[0].jobNum;
-            let releaseNum = subData[0].releaseNum;
-            let layoutName = subData[0].layoutName;
-            let latestRevNum = revData[revData.length - 1].revNum;
-
-            let layoutNum = releaseNum.toLowerCase().charCodeAt(0) - 96;
-            let dir = await creo(sessionId, {
-                command: "creo",
-                function: "pwd",
-                data: {}
-            });
-            if (dir.data == undefined) {
-                await creo(sessionId, {
-                    command: "creo",
-                    function: "cd",
-                    data: {
-                        "dirname": creoWorkingDir
-                    }
-                });
-            } else {
-                if (dir.data.dirname != creoWorkingDir) {
-                    await creo(sessionId, {
-                        command: "creo",
-                        function: "cd",
-                        data: {
-                            "dirname": creoWorkingDir
-                        }
-                    });
-                }
-            }
-            let creoLayoutAsm;
-            let creoLayoutDrw;
-            let creoOneLineAsm;
-            let creoOutputDir = null;
-            let creoOutputPDF;
-            if (layoutNum < 10) {
-                creoLayoutAsm = jobNum+'-'+'0000'+'-'+'00'+layoutNum+'.asm';
-                creoOneLineAsm = jobNum+'-'+'0001'+'-'+'00'+layoutNum+'.asm';
-            } else if (layoutNum < 100) {
-                creoLayoutAsm = jobNum+'-'+'0000'+'-'+'0'+layoutNum+'.asm';
-                creoOneLineAsm = jobNum+'-'+'0001'+'-'+'0'+layoutNum+'.asm';
-            }
-            creoLayoutDrw = creoLayoutAsm.slice(0,15)+'-S.drw';
-            creoOutputPDF = creoLayoutAsm.slice(0,15)+'-'+latestRevNum+'_'+layoutName+'.pdf';
-            creoData.push({
-                workingDir: creoWorkingDir,
-                layoutAsm: creoLayoutAsm,
-                layoutDrw: creoLayoutDrw,
-                oneLineAsm: creoOneLineAsm,
-                standardLib: creoStandardLib,
-                outputDir: creoOutputDir,
-                outputPDF: creoOutputPDF
-            });
-            return null
+            return await getCreoData(subData, revData, creoData);
         })
         .then(async function () {
-            return await querySql("SELECT * FROM " + database + "." + dbConfig.submittal_layout_table + " WHERE subID = ?", subData[0].subID);
-        })
-        .then(async function(layouts) {
-            if (layouts.length != 0) {
-                for (let layout of layouts) {
-                    layoutData.push({
-                        subID: layout.subID,
-                        layoutID: layout.layoutID,
-                        layoutName: layout.layoutName,
-                        ulListing: layout.ulListing,
-                        systemType: layout.systemType,
-                        systemAmp: layout.systemAmp,
-                        mainBusAmp: layout.mainBusAmp,
-                        enclosure: layout.enclosure,
-                        accessibility: layout.accessibility,
-                        cableAccess: layout.cableAccess,
-                        paint: layout.paint,
-                        interruptRating: layout.interruptRating,
-                        busBracing: layout.busBracing,
-                        busType: layout.busType,
-                        insulatedBus: layout.insulatedBus,
-                        boots: layout.boots,
-                        iccbPlatform: layout.iccbPlatform,
-                        mccbPlatform: layout.mccbPlatform,
-                        vcbPlatform: layout.vcbPlatform,
-                        keyInterlocks: layout.keyInterlocks,
-                        seismic: layout.seismic,
-                        mimic: layout.mimic,
-                        ir: layout.ir,
-                        wireway: layout.wireway,
-                        trolley: layout.trolley,
-                        numSections: layout.numSections
-                    });
-                }
-            }
-            return null
+            return await getLayoutData(subData, layoutData);
         })
         .then(async function() {
-            if (layoutData.length != 0) {
-                let layoutID = layoutData[0].layoutID;
-                return await querySql("SELECT * FROM " + database + "." + dbConfig.submittal_breaker_table + " WHERE layoutID = ?", layoutID);
-            } else {
-                return [];
-            }
-        })
-        .then(async function(breakers) {
-            for (let breaker of breakers) {
-                deviceData.push({
-                    devID: breaker.devID,
-                    layoutID: breaker.layoutID,
-                    secID: breaker.secID,
-                    comp: breaker.comp,
-                    devDesignation: breaker.devDesignation,
-                    devFunction: breaker.devFunction,
-                    unitOfIssue: breaker.unitOfIssue,
-                    catCode: breaker.catCode,
-                    platform: breaker.platform,
-                    brkPN: breaker.brkPN,
-                    cradlePN: breaker.cradlePN,
-                    devMount: breaker.devMount,
-                    rearAdaptType: breaker.rearAdaptType,
-                    devUL: breaker.devUL,
-                    devLevel: breaker.devLevel,
-                    devOperation: breaker.devOperation,
-                    devCtrlVolt: breaker.devCtrlVolt,
-                    devMaxVolt: breaker.devMaxVolt,
-                    devKAIC: breaker.devKAIC,
-                    devFrameSet: breaker.devFrameSet,
-                    devSensorSet: breaker.devSensorSet,
-                    devTripSet: breaker.devTripSet,
-                    devTripUnit: breaker.devTripUnit,
-                    devTripParam: breaker.devTripParam,
-                    devPoles: breaker.devPoles,
-                    devLugQty: breaker.devLugQty,
-                    devLugType: breaker.devLugType,
-                    devLugSize: breaker.devLugSize
-                })
-            }
-            return null
+            return await getBreakerData(layoutData, deviceData);
         })
         .then(async function() {
-            for (let data of deviceData) {
-                const devAccs = await querySql("SELECT * FROM " + database + "." + dbConfig.submittal_brkAcc_table + " WHERE devID = ?", data.devID);
-                const devAccOptions = await querySql("SELECT * FROM " + database + "." + dbConfig.brkAcc_options_table);
-                for (let devAcc of devAccs) {
-                    for  (let devAccOpt of devAccOptions) {
-                        if (devAcc.brkAccDropdownID == devAccOpt.brkAccDropdownID) {
-                            brkAccData.push({
-                                brkAccID: devAcc.brkAccID,
-                                brkAccDropdownID: devAcc.brkAccDropdownID,
-                                name: devAccOpt.brkAccName,
-                                opt: devAccOpt.brkAccOpt,
-                                devID: devAcc.devID
-                            });
-                        }
-                    }
-                }
-            }
-
+            return await getBreakerAccData(deviceData, brkAccData);
         })
         .then(async function() {
-            const layoutDropdowns = await querySql("SELECT * FROM " + database + "." + dbConfig.layout_paramTypes_table);
-            const brkAccDropdowns = await querySql("SELECT * FROM " + database + "." + dbConfig.brkAcc_options_table);
-            return {layoutDropdowns, brkAccDropdowns}
-        })
-        .then(async function({layoutDropdowns, brkAccDropdowns}) {
-            for (let dropdown of layoutDropdowns) {
-                layoutDropdownData.push({
-                    type: dropdown.dropdownType,
-                    value: dropdown.dropdownValue
-                });
-            }
-            let tempBrkAccDropdownData = [];
-            for (let dropdown of brkAccDropdowns) {
-                tempBrkAccDropdownData.push({
-                    id: dropdown.brkAccDropdownID,
-                    type: dropdown.brkAcc,
-                    name: dropdown.brkAccName,
-                    value: dropdown.brkAccOpt
-                });
-            }
-
-            for (let item of tempBrkAccDropdownData) {
-                if (brkAccDropdownData.filter(e => e.type === item.type).length > 0) {
-                    brkAccDropdownData.filter(e => e.type === item.type)[0].value.push(item.value);
-                    brkAccDropdownData.filter(e => e.type === item.type)[0].id.push(item.brkAccDropdownID)
-                } else {
-                    brkAccDropdownData.push({
-                        id: [item.id],
-                        type: item.type,
-                        name: item.name,
-                        value: [item.value]
-                    })
-                }
-            }
-            return null
+            return await getLayoutAndBrkAccDropdownData(layoutDropdownData, brkAccDropdownData);
         })
         .then(async function() {
-            if (layoutData.length != 0) {
-                const sections = await querySql("SELECT * FROM " + database + "." + dbConfig.submittal_sections_table+ " WHERE layoutID = ?", layoutData[0].layoutID);
-                for (let section of sections) {
-                    sectionData.push({
-                        secID: section.secID,
-                        layoutID: section.layoutID,
-                        sectionNum: section.sectionNum,
-                        compType: section.compType,
-                        controlAsmID: section.controlAsmID,
-                        secType: section.secType,
-                        brkType: section.brkType,
-                        secAmp: section.secAmp,
-                        secPoles: section.secPoles,
-                        secHeight: section.secHeight,
-                        secWidth: section.secWidth,
-                        secDepth: section.secDepth
-                    })
-                }
-            }
-            return null
+            return await getSectionData(layoutData, sectionData);
         })
         .then(async function() {
-            const secTypes = await querySql("SELECT * FROM " + database + "." + dbConfig.secType_table);
-            for (let secType of secTypes) {
-                sectionTypeData.push({
-                    secType: secType.type
-                });
-            }
-            return null
+            return await getTypeAndRestrictionData(sectionTypeData, brkTypeData, restrictionData);
         })
         .then(async function() {
-            const brkTypes = await querySql("SELECT * FROM " + database + "." + dbConfig.brkType_table);
-            for (let brkType of brkTypes) {
-                brkTypeData.push({
-                    brkType: brkType.type
-                })
-            }
-            return null
+            return await getPbRowData(sectionData, pbRowData);
         })
         .then(async function() {
-            const layoutParamRestrictions = await querySql("SELECT * FROM " + database + "." + dbConfig.layout_paramType_restrictions);
-            for (let restriction of layoutParamRestrictions) {
-                restrictionData.push({
-                    type: restriction.dropdownType,
-                    value: restriction.dropdownValue,
-                    restrictions: JSON.parse(restriction.dropdownRestrictions)
-                });
-            }
-        })
-        .then(async function() {
-            for (let section of sectionData) {
-                const pbRows = await querySql("SELECT * FROM " + database + "." + dbConfig.submittal_panel_breakers + " WHERE secID = ?", section.secID);
-                if (pbRows.length != 0) {
-                    for (let row of pbRows) {
-                        pbRowData.push({
-                            secID: section.secID,
-                            secNum: section.sectionNum,
-                            devID: row.devID,
-                            panelRow: row.panelRow,
-                            configuration: row.configuration,
-                            mounting: row.mounting,
-                            frame: row.frame
-                        });
-                    }
-                }
-            }
-            return null
+            return await getMfgBreakerDropdownData(brkDropdownOpts);
         })
         .then(() => {
             res.locals = {title: 'Submittal'};
@@ -619,12 +738,13 @@ exports.searchSubmittal = function(req, res) {
                 brkAccDropdown: [],
                 restrictionData: restrictionData,
                 pbRowData: pbRowData,
+                brkDropdownOpts: brkDropdownOpts,
                 currentSlide: 1
             })
         })
-        .catch(err => {
-            console.log(err);
-        })
+        .catch((err) => {
+            return Promise.reject(err);
+        });
 };
 
 /***********************************************
@@ -805,9 +925,9 @@ exports.layoutDeleteSection = function(req, res) {
         .then(sections => {
             if (sections.length != 0) {
                 for (let section of sections) {
-                    if (section.sectionNum == selectedSection) {
+                    if (parseInt(section.sectionNum) == parseInt(selectedSection.toString())) {
                         querySql("DELETE FROM " + database + "." + dbConfig.submittal_sections_table + " WHERE secID = ?",section.secID);
-                    } else if (section.sectionNum > selectedSection) {
+                    } else if (parseInt(section.sectionNum) > parseInt(selectedSection.toString())) {
                         querySql("UPDATE " + database + "." + dbConfig.submittal_sections_table + " SET sectionNum = ? WHERE secID = ?", [section.sectionNum - 1, section.secID]);
                     }
                 }
@@ -1169,7 +1289,11 @@ exports.addBrk = function(req, res) {
         .then(async function(layout) {
             layoutID = layout[0].layoutID;
             for(let row of designationArrayFinal) {
-                let lugInfo = await querySql("SELECT * FROM "+database+"."+dbConfig.brk_lugLanding_table+" WHERE (devType, devMfg, devFrame, frameAmp) = (?,?,?,?)",[devType, devMfg, devFrame, frameAmp]);
+                console.log(devType)
+                console.log(devMfg)
+                console.log(devFrame)
+                console.log(frameAmp)
+                const lugInfo = await querySql("SELECT * FROM "+database+"."+dbConfig.brk_lugLanding_table+" WHERE (devType, devMfg, devFrame, frameAmp) = (?,?,?,?)",[devType, devMfg, devFrame, frameAmp]);
                 console.log(lugInfo);
                 data.push({
                     layoutID: layoutID,
@@ -1566,7 +1690,20 @@ exports.generateSubmittal = function(req, res) {
     let creoData = [];
     let breakerData = [];
     let creoPanelData = [];
+    let message = null;
 
+    async function checkWorkingDirAndStandardLib() {
+        if (creoWorkingDir == null || creoStandardLib == null) {
+            message = {
+                location: 2,
+                text: 'Please set the location of the Working Directory as well as the Standard Library'
+            };
+            await searchSubmittalRoutine(subID, res, message);
+            return 'STOP';
+        } else {
+            return null
+        }
+    }
     async function getSectionDetails() {
         const layouts = await querySql("SELECT * FROM " + database + "." + dbConfig.submittal_layout_table + " WHERE subID = ?", subID);
         for (let layout of layouts) {
@@ -1609,6 +1746,7 @@ exports.generateSubmittal = function(req, res) {
                 comp: breaker.comp,
                 devDesignation: breaker.devDesignation,
                 devFunction: breaker.devFunction,
+                platform: breaker.platform,
                 unitOfIssue: breaker.unitOfIssue,
                 catCode: breaker.catCode,
                 brkPN: breaker.brkPN,
@@ -1868,6 +2006,36 @@ exports.generateSubmittal = function(req, res) {
                             }
                         }
                     }
+                } else if (uniqueSection.secData.brkType == 'EMAX2 (ABB) - DRAWOUT') {
+                    for (let cornerPost of cornerPosts) {
+                        if (cornerPost.CPostHeight == uniqueSection.secData.secHeight && cornerPost.CPostType == 'EMAX2 DRAWOUT') {
+                            uniqueFrontCPost = {
+                                generic: cornerPost.partGeneric,
+                                instance: cornerPost.partInstance
+                            }
+                        }
+                        if (cornerPost.CPostHeight == uniqueSection.secData.secHeight && cornerPost.CPostType == 'SHORT') {
+                            uniqueRearCPost = {
+                                generic: cornerPost.partGeneric,
+                                instance: cornerPost.partInstance
+                            }
+                        }
+                    }
+                } else if (uniqueSection.secData.brkType == 'EMAX2 (ABB) - FIXED') {
+                    for (let cornerPost of cornerPosts) {
+                        if (cornerPost.CPostHeight == uniqueSection.secData.secHeight && cornerPost.CPostType == 'EMAX2 FIXED') {
+                            uniqueFrontCPost = {
+                                generic: cornerPost.partGeneric,
+                                instance: cornerPost.partInstance
+                            }
+                        }
+                        if (cornerPost.CPostHeight == uniqueSection.secData.secHeight && cornerPost.CPostType == 'SHORT') {
+                            uniqueRearCPost = {
+                                generic: cornerPost.partGeneric,
+                                instance: cornerPost.partInstance
+                            }
+                        }
+                    }
                 }
             } else if (uniqueSection.secData.secType == 'PANELBOARD - MAIN LUG (T)' || uniqueSection.secData.secType == 'PANELBOARD - MAIN LUG (B)' || uniqueSection.secData.secType == 'PANELBOARD - NO MAIN LUG') {
                 for (let cornerPost of cornerPosts) {
@@ -1921,6 +2089,7 @@ exports.generateSubmittal = function(req, res) {
                     }],
                 }
             });
+
             await creo(sessionId, {
                 command: "file",
                 function: "assemble",
@@ -2091,10 +2260,12 @@ exports.generateSubmittal = function(req, res) {
         return null
     }
     async function findBrkCompartmentAndAssemble() {
-
         const compartmentsNW = await querySql("SELECT * FROM " + database + "." + dbConfig.brkCompartment_NW_table);
-
         const breakersNW = await querySql("SELECT * FROM " + database + "." + dbConfig.brk_NW_table);
+
+        const compartmentsEmax2 = await querySql("SELECT * FROM " + database + "." + dbConfig.brkCompartment_Emax2_table);
+        const breakersEmax2 = await querySql("SELECT * FROM " + database + "." + dbConfig.brk_Emax2_table);
+
 
         let count = 1;
 
@@ -2102,8 +2273,8 @@ exports.generateSubmittal = function(req, res) {
 
         for (let i = 0; i < breakerData.length; i++) {
             if (breakerData[i].secID != null) {
+                let mount, frame, provision, compartment;
                 if (sectionData.filter(e => e.secID == breakerData[i].secID).length > 0) {
-                    let mount, frame, provision;
 
                     if (breakerData[i].devMount == 'DRAW-OUT') {
                         mount = 'DRAWOUT';
@@ -2111,34 +2282,56 @@ exports.generateSubmittal = function(req, res) {
                         mount = breakerData[i].devMount;
                     }
 
-                    if (breakerData[i].brkPN.length != 0) {
-                        provision = 'N';
-                        if (breakerData[i].brkPN.slice(0,1) == 'W') {
-                            frame = 'W';
-                        } else if (breakerData[i].brkPN.slice(0,1) == 'Y') {
-                            frame = 'Y';
+                    if (breakerData[i].platform == 'SQUARE D MASTERPACT NW') {
+                        if (breakerData[i].brkPN.length != 0) {
+                            provision = 'N';
+                            if (breakerData[i].brkPN.slice(0,1) == 'W') {
+                                frame = 'W';
+                            } else if (breakerData[i].brkPN.slice(0,1) == 'Y') {
+                                frame = 'Y';
+                            }
+                        } else {
+                            provision = 'Y';
+                            if (breakerData[i].cradlePN.slice(1,2) == 'W') {
+                                frame = 'W';
+                            } else if (breakerData[i].cradlePN.slice(1,2) == 'Y') {
+                                frame = 'Y';
+                            }
                         }
-                    } else {
-                        provision = 'Y';
-                        if (breakerData[i].cradlePN.slice(1,2) == 'W') {
-                            frame = 'W';
-                        } else if (breakerData[i].cradlePN.slice(1,2) == 'Y') {
-                            frame = 'Y';
-                        }
-                    }
 
-                    let compartment = breakerData[i].comp;
-                    if (breakerData[i].comp == 'C') {
-                        let totalSecBreakers = breakerData.filter(e => e.secID == breakerData[i].secID);
-                        let restrictedBreakers = totalSecBreakers.filter(e => e.comp == 'D' && e.devUL == 'UL1066' && parseInt(e.devFrameSet.slice(0, e.devFrameSet.length - 1)) >= 3200);
-                        if (restrictedBreakers.length != 0) {
-                            compartment = 'B';
+                        compartment = breakerData[i].comp;
+                        if (breakerData[i].comp == 'C') {
+                            let totalSecBreakers = breakerData.filter(e => e.secID == breakerData[i].secID);
+                            let restrictedBreakers = totalSecBreakers.filter(e => e.comp == 'D' && e.devUL == 'UL1066' && parseInt(e.devFrameSet.slice(0, e.devFrameSet.length - 1)) >= 3200);
+                            if (restrictedBreakers.length != 0) {
+                                compartment = 'B';
+                            }
+                            if (breakerData[i].devUL == 'UL1066' && parseInt(breakerData[i].devFrameSet.slice(0, breakerData[i].devFrameSet.length - 1)) >= 3200) {
+                                compartment = 'BC';
+                            }
                         }
-                        if (breakerData[i].devUL == 'UL1066' && parseInt(breakerData[i].devFrameSet.slice(0, breakerData[i].devFrameSet.length - 1)) >= 3200) {
-                            compartment = 'BC';
+                    } else if (breakerData[i].platform == 'ABB EMAX2') {
+                        if (breakerData[i].brkPN.length != 0) {
+                            provision = 'N';
+                        } else {
+                            provision = 'Y';
                         }
-                    }
 
+                        if (parseInt(breakerData[i].devFrameSet.slice(0,breakerData[i].devFrameSet.length - 1)) < 6000) {
+                            if (parseInt(breakerData[i].devFrameSet.slice(0,breakerData[i].devFrameSet.length - 1)) < 3200) {
+                                if (parseInt(breakerData[i].devFrameSet.slice(0,breakerData[i].devFrameSet.length - 1)) < 2500) {
+                                    frame = 'E2.2';
+                                } else {
+                                    frame = 'E4.2';
+                                }
+                            } else {
+                                frame = 'E4.2';
+                            }
+                        } else {
+                            frame = 'E6.2';
+                        }
+                        compartment = breakerData[i].comp;
+                    }
                     const breakerAccessories = await getBreakerAccessories(breakerData[i]);
 
                     let accString = "";
@@ -2175,6 +2368,7 @@ exports.generateSubmittal = function(req, res) {
                         sectionNum: parseInt(sectionData.filter(e => e.secID == breakerData[i].secID)[0].sectionNum),
                         comp: compartment,
                         devDesignation: breakerData[i].devDesignation,
+                        platform: breakerData[i].platform,
                         catCode: breakerData[i].catCode,
                         devFunction: breakerData[i].devFunction.split(' - ')[0],
                         devConnection: breakerData[i].devFunction.split(' - ')[1],
@@ -2189,7 +2383,7 @@ exports.generateSubmittal = function(req, res) {
                         lugSize: breakerData[i].devLugSize,
                         accessories_1: accString_1,
                         accessories_2: accString_2
-                    })
+                    });
                 }
             }
         }
@@ -2200,94 +2394,136 @@ exports.generateSubmittal = function(req, res) {
                 if (usedBreaker.sectionNum == section.sectionNum) {
                     if (usedBreaker.catCode == '37-CB IC') {
                         let compData = [];
-                        for (let compNW of compartmentsNW) {
-                            if (usedBreaker.devUL == 'UL489') {
-                                if (compNW.frame == usedBreaker.devFrame && compNW.mounting == usedBreaker.devMount && compNW.poles == usedBreaker.devPoles && compNW.maxAmps >= usedBreaker.devFrameSet && compNW.ul489 == 'Y' && compNW.secWidth == section.secWidth) {
-                                    if (compNW.position.includes(', ') == true) {
-                                        if (compNW.position.split(', ').includes(usedBreaker.comp) == true) {
-                                            compData.push(compNW);
+                        let brkData = [];
+                        if (usedBreaker.platform == 'SQUARE D MASTERPACT NW') {
+                            for (let compNW of compartmentsNW) {
+                                if (usedBreaker.devUL == 'UL489') {
+                                    if (compNW.frame == usedBreaker.devFrame && compNW.mounting == usedBreaker.devMount && compNW.poles == usedBreaker.devPoles && compNW.maxAmps >= usedBreaker.devFrameSet && compNW.ul489 == 'Y' && compNW.secWidth == section.secWidth) {
+                                        if (compNW.position.includes(', ') == true) {
+                                            if (compNW.position.split(', ').includes(usedBreaker.comp) == true) {
+                                                compData.push(compNW);
+                                            }
                                         }
-                                    }
-                                    if (compNW.position == usedBreaker.comp) {
-                                        compData.push(compNW);
-                                    }
-                                }
-                            } else if (usedBreaker.devUL == 'UL1066') {
-                                if (compNW.frame == usedBreaker.devFrame && compNW.mounting == usedBreaker.devMount && compNW.poles == usedBreaker.devPoles && compNW.maxAmps >= usedBreaker.devFrameSet && compNW.ul1066 == 'Y' && compNW.secWidth == section.secWidth) {
-                                    if (compNW.position.includes(', ') == true) {
-                                        if (compNW.position.split(', ').includes(usedBreaker.comp) == true) {
-                                            compData.push(compNW);
-                                        }
-                                    } else {
                                         if (compNW.position == usedBreaker.comp) {
                                             compData.push(compNW);
                                         }
                                     }
+                                } else if (usedBreaker.devUL == 'UL1066') {
+                                    if (compNW.frame == usedBreaker.devFrame && compNW.mounting == usedBreaker.devMount && compNW.poles == usedBreaker.devPoles && compNW.maxAmps >= usedBreaker.devFrameSet && compNW.ul1066 == 'Y' && compNW.secWidth == section.secWidth) {
+                                        if (compNW.position.includes(', ') == true) {
+                                            if (compNW.position.split(', ').includes(usedBreaker.comp) == true) {
+                                                compData.push(compNW);
+                                            }
+                                        } else {
+                                            if (compNW.position == usedBreaker.comp) {
+                                                compData.push(compNW);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            for (let brkNW of breakersNW) {
+                                if (usedBreaker.devUL == 'UL489') {
+                                    switch (usedBreaker.comp) {
+                                        case "A":
+                                            if (brkNW.frame == usedBreaker.devFrame && brkNW.mounting == usedBreaker.devMount && brkNW.poles == usedBreaker.devPoles && brkNW.maxAmps >= usedBreaker.devFrameSet && brkNW.ul489 == 'Y' && brkNW.provision == usedBreaker.provision && brkNW.compA == 'Y') {
+                                                brkData.push(brkNW);
+                                            }
+                                            break;
+                                        case "B":
+                                            if (brkNW.frame == usedBreaker.devFrame && brkNW.mounting == usedBreaker.devMount && brkNW.poles == usedBreaker.devPoles && brkNW.maxAmps >= usedBreaker.devFrameSet && brkNW.ul489 == 'Y' && brkNW.provision == usedBreaker.provision && brkNW.compB == 'Y') {
+                                                brkData.push(brkNW);
+                                            }
+                                            break;
+                                        case "C":
+                                            if (brkNW.frame == usedBreaker.devFrame && brkNW.mounting == usedBreaker.devMount && brkNW.poles == usedBreaker.devPoles && brkNW.maxAmps >= usedBreaker.devFrameSet && brkNW.ul489 == 'Y' && brkNW.provision == usedBreaker.provision && brkNW.compC == 'Y') {
+                                                brkData.push(brkNW);
+                                            }
+                                            break;
+                                        case "BC":
+                                            if (brkNW.frame == usedBreaker.devFrame && brkNW.mounting == usedBreaker.devMount && brkNW.poles == usedBreaker.devPoles && brkNW.maxAmps >= usedBreaker.devFrameSet && brkNW.ul489 == 'Y' && brkNW.provision == usedBreaker.provision && brkNW.compBC == 'Y') {
+                                                brkData.push(brkNW);
+                                            }
+                                            break;
+                                        case "D":
+                                            if (brkNW.frame == usedBreaker.devFrame && brkNW.mounting == usedBreaker.devMount && brkNW.poles == usedBreaker.devPoles && brkNW.maxAmps >= usedBreaker.devFrameSet && brkNW.ul489 == 'Y' && brkNW.provision == usedBreaker.provision && brkNW.compD == 'Y') {
+                                                brkData.push(brkNW);
+                                            }
+                                            break;
+                                    }
+                                } else if (usedBreaker.devUL == 'UL1066') {
+                                    switch (usedBreaker.comp) {
+                                        case "A":
+                                            if (brkNW.frame == usedBreaker.devFrame && brkNW.mounting == usedBreaker.devMount && brkNW.poles == usedBreaker.devPoles && brkNW.maxAmps >= usedBreaker.devFrameSet && brkNW.ul1066 == 'Y' && brkNW.provision == usedBreaker.provision && brkNW.compA == 'Y') {
+                                                brkData.push(brkNW);
+                                            }
+                                            break;
+                                        case "B":
+                                            if (brkNW.frame == usedBreaker.devFrame && brkNW.mounting == usedBreaker.devMount && brkNW.poles == usedBreaker.devPoles && brkNW.maxAmps >= usedBreaker.devFrameSet && brkNW.ul1066 == 'Y' && brkNW.provision == usedBreaker.provision && brkNW.compB == 'Y') {
+                                                brkData.push(brkNW);
+                                            }
+                                            break;
+                                        case "C":
+                                            if (brkNW.frame == usedBreaker.devFrame && brkNW.mounting == usedBreaker.devMount && brkNW.poles == usedBreaker.devPoles && brkNW.maxAmps >= usedBreaker.devFrameSet && brkNW.ul1066 == 'Y' && brkNW.provision == usedBreaker.provision && brkNW.compC == 'Y') {
+                                                brkData.push(brkNW);
+                                            }
+                                            break;
+                                        case "BC":
+                                            if (brkNW.frame == usedBreaker.devFrame && brkNW.mounting == usedBreaker.devMount && brkNW.poles == usedBreaker.devPoles && brkNW.maxAmps >= usedBreaker.devFrameSet && brkNW.ul1066 == 'Y' && brkNW.provision == usedBreaker.provision && brkNW.compBC == 'Y') {
+                                                brkData.push(brkNW);
+                                            }
+                                            break;
+                                        case "D":
+                                            if (brkNW.frame == usedBreaker.devFrame && brkNW.mounting == usedBreaker.devMount && brkNW.poles == usedBreaker.devPoles && brkNW.maxAmps >= usedBreaker.devFrameSet && brkNW.ul1066 == 'Y' && brkNW.provision == usedBreaker.provision && brkNW.compD == 'Y') {
+                                                brkData.push(brkNW);
+                                            }
+                                            break;
+                                    }
+                                }
+                            }
+                        } else if (usedBreaker.platform == 'ABB EMAX2') {
+                            for (let compEmax2 of compartmentsEmax2) {
+                                if (usedBreaker.devUL == 'UL1066') {
+                                    if (compEmax2.frame == usedBreaker.devFrame && compEmax2.mounting == usedBreaker.devMount && compEmax2.poles == usedBreaker.devPoles && compEmax2.maxAmps >= usedBreaker.devFrameSet && compEmax2.ul1066 == 'Y' && compEmax2.secWidth == section.secWidth) {
+                                        if (compEmax2.position.includes(', ') == true) {
+                                            if (compEmax2.position.split(', ').includes(usedBreaker.comp) == true) {
+                                                compData.push(compEmax2);
+                                            }
+                                        } else {
+                                            if (compEmax2.position == usedBreaker.comp) {
+                                                compData.push(compEmax2);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            for (let brkEmax2 of breakersEmax2) {
+                                if (usedBreaker.devUL == 'UL1066') {
+                                    switch (usedBreaker.comp) {
+                                        case "A":
+                                            if (brkEmax2.frame == usedBreaker.devFrame && brkEmax2.mounting == usedBreaker.devMount && brkEmax2.poles == usedBreaker.devPoles && brkEmax2.maxAmps >= usedBreaker.devFrameSet && brkEmax2.ul1066 == 'Y' && brkEmax2.provision == usedBreaker.provision && brkEmax2.compA == 'Y') {
+                                                brkData.push(brkEmax2);
+                                            }
+                                            break;
+                                        case "B":
+                                            if (brkEmax2.frame == usedBreaker.devFrame && brkEmax2.mounting == usedBreaker.devMount && brkEmax2.poles == usedBreaker.devPoles && brkEmax2.maxAmps >= usedBreaker.devFrameSet && brkEmax2.ul1066 == 'Y' && brkEmax2.provision == usedBreaker.provision && brkEmax2.compB == 'Y') {
+                                                brkData.push(brkEmax2);
+                                            }
+                                            break;
+                                        case "C":
+                                            if (brkEmax2.frame == usedBreaker.devFrame && brkEmax2.mounting == usedBreaker.devMount && brkEmax2.poles == usedBreaker.devPoles && brkEmax2.maxAmps >= usedBreaker.devFrameSet && brkEmax2.ul1066 == 'Y' && brkEmax2.provision == usedBreaker.provision && brkEmax2.compC == 'Y') {
+                                                brkData.push(brkEmax2);
+                                            }
+                                            break;
+                                        case "D":
+                                            if (brkEmax2.frame == usedBreaker.devFrame && brkEmax2.mounting == usedBreaker.devMount && brkEmax2.poles == usedBreaker.devPoles && brkEmax2.maxAmps >= usedBreaker.devFrameSet && brkEmax2.ul1066 == 'Y' && brkEmax2.provision == usedBreaker.provision && brkEmax2.compD == 'Y') {
+                                                brkData.push(brkEmax2);
+                                            }
+                                            break;
+                                    }
                                 }
                             }
                         }
-
-                        let brkData = [];
-                        for (let brkNW of breakersNW) {
-                            if (usedBreaker.devUL == 'UL489') {
-                                switch (usedBreaker.comp) {
-                                    case "A":
-                                        if (brkNW.frame == usedBreaker.devFrame && brkNW.mounting == usedBreaker.devMount && brkNW.poles == usedBreaker.devPoles && brkNW.maxAmps >= usedBreaker.devFrameSet && brkNW.ul489 == 'Y' && brkNW.provision == usedBreaker.provision && brkNW.compA == 'Y') {
-                                            brkData.push(brkNW);
-                                        }
-                                        break;
-                                    case "B":
-                                        if (brkNW.frame == usedBreaker.devFrame && brkNW.mounting == usedBreaker.devMount && brkNW.poles == usedBreaker.devPoles && brkNW.maxAmps >= usedBreaker.devFrameSet && brkNW.ul489 == 'Y' && brkNW.provision == usedBreaker.provision && brkNW.compB == 'Y') {
-                                            brkData.push(brkNW);
-                                        }
-                                        break;
-                                    case "C":
-                                        if (brkNW.frame == usedBreaker.devFrame && brkNW.mounting == usedBreaker.devMount && brkNW.poles == usedBreaker.devPoles && brkNW.maxAmps >= usedBreaker.devFrameSet && brkNW.ul489 == 'Y' && brkNW.provision == usedBreaker.provision && brkNW.compC == 'Y') {
-                                            brkData.push(brkNW);
-                                        }
-                                        break;
-                                    case "BC":
-                                        if (brkNW.frame == usedBreaker.devFrame && brkNW.mounting == usedBreaker.devMount && brkNW.poles == usedBreaker.devPoles && brkNW.maxAmps >= usedBreaker.devFrameSet && brkNW.ul489 == 'Y' && brkNW.provision == usedBreaker.provision && brkNW.compBC == 'Y') {
-                                            brkData.push(brkNW);
-                                        }
-                                        break;
-                                    case "D":
-                                        if (brkNW.frame == usedBreaker.devFrame && brkNW.mounting == usedBreaker.devMount && brkNW.poles == usedBreaker.devPoles && brkNW.maxAmps >= usedBreaker.devFrameSet && brkNW.ul489 == 'Y' && brkNW.provision == usedBreaker.provision && brkNW.compD == 'Y') {
-                                            brkData.push(brkNW);
-                                        }
-                                        break;
-                                }
-                            } else if (usedBreaker.devUL == 'UL1066') {
-                                switch (usedBreaker.comp) {
-                                    case "A":
-                                        if (brkNW.frame == usedBreaker.devFrame && brkNW.mounting == usedBreaker.devMount && brkNW.poles == usedBreaker.devPoles && brkNW.maxAmps >= usedBreaker.devFrameSet && brkNW.ul1066 == 'Y' && brkNW.provision == usedBreaker.provision && brkNW.compA == 'Y') {
-                                            brkData.push(brkNW);
-                                        }
-                                        break;
-                                    case "B":
-                                        if (brkNW.frame == usedBreaker.devFrame && brkNW.mounting == usedBreaker.devMount && brkNW.poles == usedBreaker.devPoles && brkNW.maxAmps >= usedBreaker.devFrameSet && brkNW.ul1066 == 'Y' && brkNW.provision == usedBreaker.provision && brkNW.compB == 'Y') {
-                                            brkData.push(brkNW);
-                                        }
-                                        break;
-                                    case "C":
-                                        if (brkNW.frame == usedBreaker.devFrame && brkNW.mounting == usedBreaker.devMount && brkNW.poles == usedBreaker.devPoles && brkNW.maxAmps >= usedBreaker.devFrameSet && brkNW.ul1066 == 'Y' && brkNW.provision == usedBreaker.provision && brkNW.compC == 'Y') {
-                                            brkData.push(brkNW);
-                                        }
-                                        break;
-                                    case "BC":
-                                        if (brkNW.frame == usedBreaker.devFrame && brkNW.mounting == usedBreaker.devMount && brkNW.poles == usedBreaker.devPoles && brkNW.maxAmps >= usedBreaker.devFrameSet && brkNW.ul1066 == 'Y' && brkNW.provision == usedBreaker.provision && brkNW.compBC == 'Y') {
-                                            brkData.push(brkNW);
-                                        }
-                                        break;
-                                    case "D":
-                                        if (brkNW.frame == usedBreaker.devFrame && brkNW.mounting == usedBreaker.devMount && brkNW.poles == usedBreaker.devPoles && brkNW.maxAmps >= usedBreaker.devFrameSet && brkNW.ul1066 == 'Y' && brkNW.provision == usedBreaker.provision && brkNW.compD == 'Y') {
-                                            brkData.push(brkNW);
-                                        }
-                                        break;
-                                }
-                            }
-                        }
-
 
                         if (compData.length != 0 && brkData.length != 0) {
                             await creo(sessionId, {
@@ -2316,17 +2552,46 @@ exports.generateSubmittal = function(req, res) {
                                 }
                             });
 
+                            if (compData[0].iccbAsmPN != null) {
+                                await creo(sessionId, {
+                                    command: "file",
+                                    function: "assemble",
+                                    data: {
+                                        file: compData[0].iccbAsmPN+".asm",
+                                        into_asm: section.sectionPN,
+                                        constraints: [{
+                                            "asmref": usedBreaker.comp+"_BRKR",
+                                            "compref": "ASM_DEF_CSYS",
+                                            "type": "csys"
+                                        }]
+                                    }
+                                });
+                            }
+
                             await creo(sessionId, {
                                 command: "file",
                                 function: "assemble",
                                 data: {
-                                    file: compData[0].iccbAsmPN+".asm",
+                                    file: brkData[0].asmPN+".asm",
                                     into_asm: section.sectionPN,
                                     constraints: [{
                                         "asmref": usedBreaker.comp+"_BRKR",
-                                        "compref": "ASM_DEF_CSYS",
+                                        "compref": brkData[0].asmCsys,
                                         "type": "csys"
                                     }]
+                                }
+                            });
+
+                            await regenSaveAndClose(sessionId, section.sectionPN);
+                        } else if (compData.length == 0 && brkData.length != 0) {
+                            await creo(sessionId, {
+                                command: "file",
+                                function: "open",
+                                data: {
+                                    file: section.sectionPN,
+                                    dirname: creoData[0].workingDir,
+                                    display: true,
+                                    activate: true
                                 }
                             });
 
@@ -5097,6 +5362,7 @@ exports.generateSubmittal = function(req, res) {
         let devType;
         let productLine;
         let mfg;
+        let tripUnit;
 
         if (count < 10) {
             instanceNum = '00'+count;
@@ -5106,8 +5372,15 @@ exports.generateSubmittal = function(req, res) {
 
         if (usedBreaker.catCode == '37-CB IC') {
             devType = 'ICCB';
-            mfg = 'SQUARE D';
-            productLine = 'MASTERPACT';
+            if (usedBreaker.platform == 'SQUARE D MASTERPACT NW') {
+                mfg = 'SQUARE D';
+                productLine = 'MASTERPACT';
+                tripUnit = breakerData[0].devTripUnit.split('MICROLOGIC ')[1];
+            } else if (usedBreaker.platform == 'ABB EMAX2') {
+                mfg = 'ABB';
+                productLine = 'EMAX2';
+                tripUnit = breakerData[0].devTripUnit;
+            }
             if (usedBreaker.devMount == 'DRAWOUT') {
                 if (usedBreaker.provision == 'Y') {
                     copyBreakerOneLinePN = '000123-6500-005';
@@ -5130,9 +5403,11 @@ exports.generateSubmittal = function(req, res) {
             if (usedBreaker.platform == 'SQUARE D POWERPACT') {
                 mfg = 'SQUARE D';
                 productLine = 'POWERPACT';
+                tripUnit = breakerData[0].devTripUnit.split('MICROLOGIC ')[1];
             } else if (usedBreaker.platform == 'ABB TMAX') {
                 mfg = 'ABB';
                 productLine = 'TMAX';
+                tripUnit = breakerData[0].devTripUnit;
             }
         }
 
@@ -5152,7 +5427,7 @@ exports.generateSubmittal = function(req, res) {
             FRAME_AMPS: breakerData[0].devFrameSet,
             SENSOR_AMPS: breakerData[0].devSensorSet,
             TRIP_AMPS: breakerData[0].devTripSet+"A",
-            TRIP_UNIT: breakerData[0].devTripUnit.split('Micrologic ')[1],
+            TRIP_UNIT: tripUnit,
             PARAMETER: breakerData[0].devTripParam,
             LUG_TYPE: usedBreaker.lugType,
             LUG_SIZE: usedBreaker.lugSize,
@@ -5849,107 +6124,118 @@ exports.generateSubmittal = function(req, res) {
 
         return null;
     }
-    getSectionDetails()
-        .then(() => {
-            return getCreoData();
-        })
-        .then(async function() {
-            for (let section of sectionData) {
-                let currentSecData = {
-                    secType: section.secType,
-                    brkType: section.brkType,
-                    secAmp: section.secAmp,
-                    secPoles: section.secPoles,
-                    secHeight: section.secHeight,
-                    secWidth: section.secWidth,
-                    secDepth: section.secDepth
-                };
-                if (uniqueSections.filter(e => JSON.stringify(e.secData) === JSON.stringify(currentSecData)).length > 0) {
-                    uniqueSections.filter(e => JSON.stringify(e.secData) === JSON.stringify(currentSecData))[0].sectionNum.push(section.sectionNum);
-                } else {
-                    uniqueSections.push({
-                        sectionNum: [section.sectionNum],
-                        mainFramePN: jobNum+"-0010-"+section.sectionNum,
-                        secData: currentSecData
-                    });
-                }
+
+
+
+    checkWorkingDirAndStandardLib()
+        .then((response) => {
+            if (response == null) {
+                getSectionDetails()
+                    .then(() => {
+                        return getCreoData();
+                    })
+                    .then(async function () {
+                        for (let section of sectionData) {
+                            let currentSecData = {
+                                secType: section.secType,
+                                brkType: section.brkType,
+                                secAmp: section.secAmp,
+                                secPoles: section.secPoles,
+                                secHeight: section.secHeight,
+                                secWidth: section.secWidth,
+                                secDepth: section.secDepth
+                            };
+                            if (uniqueSections.filter(e => JSON.stringify(e.secData) === JSON.stringify(currentSecData)).length > 0) {
+                                uniqueSections.filter(e => JSON.stringify(e.secData) === JSON.stringify(currentSecData))[0].sectionNum.push(section.sectionNum);
+                            } else {
+                                uniqueSections.push({
+                                    sectionNum: [section.sectionNum],
+                                    mainFramePN: jobNum + "-0010-" + section.sectionNum,
+                                    secData: currentSecData
+                                });
+                            }
+                        }
+
+                        for (let uniqueSection of uniqueSections) {
+                            await saveStandardFrame(uniqueSection.mainFramePN, uniqueSection.secData);
+                        }
+                        return null
+                    })
+                    .then(async function () {
+                        await assembleUniqueBaseFrameAndCornerPost();
+                        return null
+                    })
+                    .then(async function () {
+                        for (let uniqueSection of uniqueSections) {
+                            for (let i = 0; i < uniqueSection.sectionNum.length; i++) {
+                                let secID = sectionData.filter(e => e.sectionNum == uniqueSection.sectionNum[i]);
+                                sortedSectionSum.push({
+                                    sectionNum: parseInt(uniqueSection.sectionNum[i]),
+                                    secID: secID[0].secID,
+                                    sectionPN: jobNum + "-0100-" + uniqueSection.sectionNum[i] + ".asm",
+                                    mainFramePN: uniqueSection.mainFramePN + ".asm",
+                                    secType: uniqueSection.secData.secType,
+                                    brkType: uniqueSection.secData.brkType,
+                                    secAmp: uniqueSection.secData.secAmp,
+                                    secPoles: uniqueSection.secData.secPoles,
+                                    secHeight: uniqueSection.secData.secHeight,
+                                    secWidth: uniqueSection.secData.secWidth,
+                                    secDepth: uniqueSection.secData.secDepth
+                                });
+                            }
+                        }
+                        sortedSectionSum.sort(function (a, b) {
+                            return a.sectionNum - b.sectionNum
+                        });
+                        return null
+
+                    })
+                    .then(async function () {
+                        for (let section of sortedSectionSum) {
+                            await generateDistinctSections(section);
+                        }
+                        return null
+                    })
+                    .then(async function () {
+                        for (let section of sortedSectionSum) {
+                            await resizeSectionParamsAndAssembleFrame(section);
+                        }
+                        return null
+                    })
+                    .then(async function () {
+                        await getBreakerDetails();
+                        await findBrkCompartmentAndAssemble();
+                        return null
+                    })
+                    .then(async function () {
+                        await getPanelDetails();
+                        await findPanelAndBreakerRows();
+                        return null
+                    })
+                    .then(async function () {
+                        await backupLayoutAndOneLine();
+                        await renameLayoutAndOneLine();
+                        return null
+                    })
+                    .then(async function () {
+                        await assembleSectionsIntoLayout();
+                        await fillLayoutParameters();
+                        await assembleSectionsIntoOneLine();
+                        return null
+                    })
+                    .then(() => {
+                        res.locals = {title: 'Submittal'};
+                        res.redirect('../searchSubmittal/?subID=' + jobRelease + "_" + subID);
+                        return null
+                    })
+                    .catch((err) => {
+                        return Promise.reject(err);
+                    })
+            } else {
+
             }
 
-            for (let uniqueSection of uniqueSections) {
-                await saveStandardFrame(uniqueSection.mainFramePN, uniqueSection.secData);
-            }
-            return null
-        })
-        .then(async function() {
-            await assembleUniqueBaseFrameAndCornerPost();
-            return null
-        })
-        .then(async function() {
-            for (let uniqueSection of uniqueSections) {
-                for (let i = 0; i < uniqueSection.sectionNum.length; i++) {
-                    let secID = sectionData.filter(e => e.sectionNum == uniqueSection.sectionNum[i]);
-                    sortedSectionSum.push({
-                        sectionNum: parseInt(uniqueSection.sectionNum[i]),
-                        secID: secID[0].secID,
-                        sectionPN: jobNum + "-0100-" + uniqueSection.sectionNum[i] + ".asm",
-                        mainFramePN:uniqueSection.mainFramePN + ".asm",
-                        secType: uniqueSection.secData.secType,
-                        brkType: uniqueSection.secData.brkType,
-                        secAmp: uniqueSection.secData.secAmp,
-                        secPoles: uniqueSection.secData.secPoles,
-                        secHeight: uniqueSection.secData.secHeight,
-                        secWidth: uniqueSection.secData.secWidth,
-                        secDepth: uniqueSection.secData.secDepth
-                    });
-                }
-            }
-            sortedSectionSum.sort(function(a,b) {
-                return a.sectionNum - b.sectionNum
-            });
-            return null
-
-        })
-        .then(async function() {
-            for (let section of sortedSectionSum) {
-                await generateDistinctSections(section);
-            }
-            return null
-        })
-        .then(async function() {
-            for (let section of sortedSectionSum) {
-                await resizeSectionParamsAndAssembleFrame(section);
-            }
-            return null
-        })
-        .then(async function() {
-            await getBreakerDetails();
-            await findBrkCompartmentAndAssemble();
-            return null
-        })
-        .then(async function() {
-            await getPanelDetails();
-            await findPanelAndBreakerRows();
-            return null
-        })
-        .then(async function() {
-            await backupLayoutAndOneLine();
-            await renameLayoutAndOneLine();
-            return null
-        })
-        .then(async function() {
-            await assembleSectionsIntoLayout();
-            await fillLayoutParameters();
-            await assembleSectionsIntoOneLine();
-            return null
-        })
-        .then(() => {
-            res.locals = {title: 'Submittal'};
-            res.redirect('../searchSubmittal/?subID='+jobRelease+"_"+subID);
-            return null
-        })
-        .catch((err) => {
-            return Promise.reject(err);
-        })
+    })
 };
 
 exports.verifySubmittal = function(req, res) {

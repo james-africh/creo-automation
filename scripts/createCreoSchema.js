@@ -22,6 +22,16 @@ let connection = mysql.createConnection({
 
 connection.query('USE ' + database, function(err,rows) { if(err) throw err; });
 
+//breakerDropdownOptions
+connection.query('\
+CREATE TABLE IF NOT EXISTS ' + database + '.' + dbConfig.breakerDropdown_options_table + ' ( \
+    idOpt INT NOT NULL AUTO_INCREMENT, \
+    platform VARCHAR(100) NOT NULL, \
+    type VARCHAR(100) NOT NULL, \
+    value VARCHAR(100) NULL, \
+    PRIMARY KEY (idOpt), \
+    UNIQUE INDEX idOpt_UNIQUE (idOpt ASC))\
+    ENGINE = InnoDB;', function(err,rows) { if(err) throw err; });
 
 // baseFrames
 connection.query('\
@@ -80,6 +90,34 @@ CREATE TABLE IF NOT EXISTS ' + database + '.' + dbConfig.brkCompartment_NW_table
     PRIMARY KEY (idCompICCB), \
     UNIQUE INDEX idCompICCB_UNIQUE (idCompICCB ASC))\
     ENGINE = InnoDB;', function(err,rows) { if(err) throw err; });
+
+
+
+// brkCompartments_Emax2
+connection.query('\
+CREATE TABLE IF NOT EXISTS ' + database + '.' + dbConfig.brkCompartment_Emax2_table + ' ( \
+    idCompICCB INT NOT NULL AUTO_INCREMENT, \
+    iccbType VARCHAR(100) NOT NULL, \
+    mounting VARCHAR(100) NOT NULL, \
+    poles INT NOT NULL, \
+    frame VARCHAR(100) NOT NULL, \
+    maxAmps INT NOT NULL, \
+    ul489 VARCHAR(1) NOT NULL, \
+    ul1066 VARCHAR(1) NOT NULL, \
+    position VARCHAR(100) NOT NULL, \
+    compHeight DOUBLE NOT NULL, \
+    secWidth INT NOT NULL, \
+    iccbAsmPN VARCHAR(100) NULL, \
+    cbMountPN VARCHAR(100) NULL, \
+    rabbetPN VARCHAR(100) NULL, \
+    backsheetPN VARCHAR(100) NULL, \
+    asmCsys VARCHAR(100) NOT NULL, \
+    doorGenericPN VARCHAR(100) NULL, \
+    doorInstancePN VARCHAR(100) NULL, \
+    PRIMARY KEY (idCompICCB), \
+    UNIQUE INDEX idCompICCB_UNIQUE (idCompICCB ASC))\
+    ENGINE = InnoDB;', function(err,rows) { if(err) throw err; });
+
 
 // brkLugLandings
 connection.query('\

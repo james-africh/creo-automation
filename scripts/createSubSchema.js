@@ -15,9 +15,9 @@ let connection = mysql.createConnection({
 });
 
 
-connection.query('DROP SCHEMA IF EXISTS ' + dbConfig.database, function(err,rows) { if(err) throw err; }); // DROPS RESIDUAL DATABASE/TABLES
+// connection.query('DROP SCHEMA IF EXISTS ' + dbConfig.database, function(err,rows) { if(err) throw err; }); // DROPS RESIDUAL DATABASE/TABLES
 
-connection.query('CREATE DATABASE ' + dbConfig.database, function(err,rows) { if(err) throw err; }); // CREATES mechSubDB SCHEMA
+// connection.query('CREATE DATABASE ' + dbConfig.database, function(err,rows) { if(err) throw err; }); // CREATES mechSubDB SCHEMA
 
 connection.query('USE ' + database, function(err,rows) { if(err) throw err; });
 
@@ -74,8 +74,23 @@ connection.query("INSERT INTO "+database+"."+dbConfig.layout_paramTypes_table+" 
     "('cableAccess', 'N/A'), " +
 
     //paint
-    "('paint', 'ANSI 61'), " +
-    "('paint', 'RAL 7035'), " +
+    "('paint', 'ANSI 49 GRAY - 039/70200 (ASA 49)'), " +
+    "('paint', 'ANSI 61 GRAY - T3-GY19'), " +
+    "('paint', 'BLACK - HBT2-30015-HC'), " +
+    "('paint', 'RAVEN BLACK - HBT2-30015-HC'), " +
+    "('paint', 'TOSHIBA BLACK - H1-BK(AM105-6)-R'), " +
+    "('paint', 'P.O. BLUE - PPL87314'), " +
+    "('paint', 'RED BARON - PPL94334'), " +
+    "('paint', 'GRAPHITE GRAY - PRPL97024'), " +
+    "('paint', 'SKY WHITE - T9-WH1'), " +
+    "('paint', 'PILLER BLUE TEXTURED - RAL 5012(89/40940)'), " +
+    "('paint', 'SE WHITE 3 - HWS8-01703'), " +
+    "('paint', 'MITSUBISHI BEIGE - PAS3-60022'), " +
+    "('paint', 'SILCON GRAY - HAT2-30232'), " +
+    "('paint', 'CPN BEIGE - T2-BG2'), " +
+    "('paint', 'LIGHT GRAY/OFF WHITE - RAL 7035'), " +
+    "('paint', 'BLACK - RAL 9011'), " +
+    "('paint', 'NO PAINT - NONE'), " +
 
     //systemAmp
     "('systemAmp', '800A'), " +

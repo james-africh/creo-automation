@@ -82,6 +82,7 @@
             });
         });
     </script>
+    <% if (message == null) { %>
     <script>
         document.addEventListener("DOMContentLoaded", function(event) {
             var scrollpos = localStorage.getItem('scrollpos');
@@ -92,7 +93,7 @@
             localStorage.setItem('scrollpos', window.scrollY);
         };
     </script>
-
+    <% } %>
     <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.5.0/jquery.min.js"></script>
     <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.9/jquery-ui.min.js"></script>
 
@@ -195,7 +196,11 @@
                                     <div class="card m-b-20" style="height:94%;">
                                         <div class="card-body">
                                             <h4 class="mt-0 header-title">Project Data</h4>
-                                            <h6 style="color:red;"><%= message %></h6>
+                                            <% if (message != null) { %>
+                                                <% if (message.location == 1) { %>
+                                                    <h6 style="color:red;"><%= message.text %></h6>
+                                                <% } %>
+                                            <% } %>
                                             <% if  (subData.length != 0) { %>
                                                 <% for (let i = 0; i < subData.length; i++) { %>
                                                 <form id="submittalForm" class="submittalForm" action="" method="POST">
@@ -359,7 +364,11 @@
                                     <div class="card m-b-20" style="height:94%;">
                                         <div class="card-body">
                                             <h4 class="mt-0 header-title">Creo Data</h4>
-                                            <h6 style="color:red;"><%= message %></h6>
+                                            <% if (message != null) { %>
+                                                <% if (message.location == 2) { %>
+                                                    <h6 style="color:red;"><%= message.text %></h6>
+                                                <% } %>
+                                            <% } %>
                                             <% if  (creoData.length != 0) { %>
                                                 <% for (let i = 0; i < creoData.length; i++) { %>
                                                 <form id="creoDataForm" class="creoDataForm" action="../submittalSetWD/?subID=<%= subData[0].jobNum%><%= subData[0].releaseNum%>_<%= subData[0].subID%>" method="POST">
@@ -435,7 +444,11 @@
                                                     <% } %>
                                                 <% } %>
                                             </form>
-                                            <h6 style="color:red;"><%= message %></h6>
+                                            <% if (message != null) { %>
+                                                <% if (message.location == 3) { %>
+                                                    <h6 style="color:red;"><%= message.text %></h6>
+                                                <% } %>
+                                            <% } %>
                                             <% if (layoutData.length == 0) { %>
                                             <form id="layoutDataForm" class="layoutDataForm" action="/addLayout/?subID=<%=subData[0].jobNum%><%=subData[0].releaseNum%>_<%=subData[0].subID%>" method="POST">
                                                 <% let selectedUL = ''; %>
@@ -1358,7 +1371,7 @@
                                                                         <div class="col-sm-3" style="padding-bottom:2rem;">
                                                                             <form id="quoteDeleteSectionForm" class="quoteDeleteSectionForm" action="../layoutDeleteSection/?selectedSection=<%= section.sectionNum %>&subID=<%= subData[0].jobNum%><%= subData[0].releaseNum %>_<%= subData[0].subID %>" method="POST">
                                                                                 <% let sectionName; %>
-                                                                                <% if (parseInt(section.sectionNum) < 9) { %>
+                                                                                <% if (parseInt(section.sectionNum) < 10) { %>
                                                                                     <% sectionName = "Section " + layoutNum + '0' + section.sectionNum %>
                                                                                 <% } else { %>
                                                                                     <% sectionName = "Section " + layoutNum + section.sectionNum %>
@@ -2171,6 +2184,19 @@
                                                                     Fill out the following for each device, and click "Add" afterwards
                                                                     <br><i style="color: red;">*<span style="font-size: 11px;">Required</span></i>
                                                                 </p>
+                                                                <% let platformArray = [{
+                                                                    name: 'SQUARE D MASTERPACT NW',
+                                                                    shorthand: 'NW'
+                                                                }, {
+                                                                    name: 'SQUARE D POWERPACT',
+                                                                    shorthand: 'POWERPACT'
+                                                                }, {
+                                                                    name: 'ABB EMAX2',
+                                                                    shorthand: 'EMAX2'
+                                                                }, {
+                                                                    name: 'ABB TMAX',
+                                                                    shorthand: 'TMAX'
+                                                                }] %>
                                                                 <div class="row">
                                                                     <div class="col-sm-2">
                                                                         <div class="form-group">
@@ -2222,10 +2248,11 @@
                                                                         </div>
                                                                     </div>
                                                                 </div>
+
                                                                 <div class="row">
                                                                     <div class="col-sm-4">
                                                                         <label for="iccbPlatform" class="col-form-label">ICCB Platform</label>
-                                                                        <select class="form-control" name="iccbPlatform" id="iccbPlatform">
+                                                                        <select class="form-control" name="iccbPlatform" id="iccbPlatform" onchange="getBreakerPlatform(this)">
                                                                             <option value="">Select</option>
                                                                             <%   let iccbPlatforms = layoutDropdownData.filter(e => e.type === 'iccbPlatform') %>
                                                                             <% for (let iccbPlatform of iccbPlatforms) { %>
@@ -2235,7 +2262,7 @@
                                                                     </div>
                                                                     <div class="col-sm-4">
                                                                         <label for="mccbPlatform" class="col-form-label">MCCB Platform</label>
-                                                                        <select class="form-control" name="mccbPlatform" id="mccbPlatform">
+                                                                        <select class="form-control" name="mccbPlatform" id="mccbPlatform" onchange="getBreakerPlatform(this)">
                                                                             <option value="">Select</option>
                                                                             <%   let mccbPlatforms = layoutDropdownData.filter(e => e.type === 'mccbPlatform') %>
                                                                             <% for (let mccbPlatform of mccbPlatforms) { %>
@@ -2245,7 +2272,7 @@
                                                                     </div>
                                                                     <div class="col-sm-4">
                                                                         <label for="vcbPlatform" class="col-form-label">MV VCB Platform</label>
-                                                                        <select class="form-control" name="vcbPlatform" id="vcbPlatform">
+                                                                        <select class="form-control" name="vcbPlatform" id="vcbPlatform" onchange="getBreakerPlatform(this)">
                                                                             <option value="">Select</option>
                                                                             <%   let vcbPlatforms = layoutDropdownData.filter(e => e.type === 'vcbPlatform') %>
                                                                             <% for (let vcbPlatform of vcbPlatforms) { %>
@@ -2273,9 +2300,15 @@
                                                                         <div class="form-group">
                                                                             <label for="" class="control-label">UL Rating</label>
                                                                             <select class="form-control" id="" name="devUL">
-                                                                                <option>Select</option>
-                                                                                <option value="UL1066">UL1066</option>
-                                                                                <option value="UL489">UL489</option>
+                                                                                <option value="" id="NONE">Select</option>
+                                                                                <% let optsUL = brkDropdownOpts.filter(e => e.type == 'devUL'); %>
+                                                                                <% for (let opt of optsUL) { %>
+                                                                                    <% for (let platform of platformArray) { %>
+                                                                                        <% if (opt.platform == platform.name) { %>
+                                                                                            <option value="<%=opt.value%>" id="<%=platform.shorthand%>" hidden="hidden"><%=opt.value%></option>
+                                                                                        <% } %>
+                                                                                    <% } %>
+                                                                                <% } %>
                                                                             </select>
                                                                         </div>
                                                                     </div>
@@ -2283,10 +2316,15 @@
                                                                         <div class="form-group">
                                                                             <label for="" class="control-label">Device Mounting</label>
                                                                             <select class="form-control" id="" name="devMount">
-                                                                                <option>Select</option>
-                                                                                <option value="DRAW-OUT">Draw-Out</option>
-                                                                                <option value="FIXED">Fixed</option>
-                                                                                <option value="PLUG-IN">Plug-in</option>
+                                                                                <option value="" id="NONE">Select</option>
+                                                                                <% let optsMount = brkDropdownOpts.filter(e => e.type == 'devMount'); %>
+                                                                                <% for (let opt of optsMount) { %>
+                                                                                    <% for (let platform of platformArray) { %>
+                                                                                        <% if (opt.platform == platform.name) { %>
+                                                                                        <option value="<%=opt.value%>" id="<%=platform.shorthand%>" hidden="hidden"><%=opt.value%></option>
+                                                                                        <% } %>
+                                                                                    <% } %>
+                                                                                <% } %>
                                                                             </select>
                                                                         </div>
                                                                     </div>
@@ -2294,9 +2332,15 @@
                                                                         <div class="form-group">
                                                                             <label for="" class="control-label">Rear Adapter Type</label>
                                                                             <select class="form-control" id="" name="rearAdaptType">
-                                                                                <option>Select</option>
-                                                                                <option value="Horizontal">Horizontal</option>
-                                                                                <option value="Vertical">Vertical</option>
+                                                                                <option value="" id="NONE">Select</option>
+                                                                                <% let optsRearAdapt = brkDropdownOpts.filter(e => e.type == 'rearAdaptType'); %>
+                                                                                <% for (let opt of optsRearAdapt) { %>
+                                                                                    <% for (let platform of platformArray) { %>
+                                                                                        <% if (opt.platform == platform.name) { %>
+                                                                                        <option value="<%=opt.value%>" id="<%=platform.shorthand%>" hidden="hidden"><%=opt.value%></option>
+                                                                                        <% } %>
+                                                                                    <% } %>
+                                                                                <% } %>
                                                                             </select>
                                                                         </div>
                                                                     </div>
@@ -2304,9 +2348,15 @@
                                                                         <div class="form-group">
                                                                             <label for="" class="control-label">Operation</label>
                                                                             <select class="form-control" id="" name="devOperation">
-                                                                                <option>Select</option>
-                                                                                <option value="ELECTRICAL">Electrical</option>
-                                                                                <option value="MANUAL">Manual</option>
+                                                                                <option value="" id="NONE">Select</option>
+                                                                                <% let optsOp = brkDropdownOpts.filter(e => e.type == 'devOperation'); %>
+                                                                                <% for (let opt of optsOp) { %>
+                                                                                    <% for (let platform of platformArray) { %>
+                                                                                        <% if (opt.platform == platform.name) { %>
+                                                                                        <option value="<%=opt.value%>" id="<%=platform.shorthand%>" hidden="hidden"><%=opt.value%></option>
+                                                                                        <% } %>
+                                                                                    <% } %>
+                                                                                <% } %>
                                                                             </select>
                                                                         </div>
                                                                     </div>
@@ -2316,10 +2366,15 @@
                                                                         <div class="form-group">
                                                                             <label for="" class="control-label">Poles</label>
                                                                             <select class="form-control" id="" name="devPoles">
-                                                                                <option>Select</option>
-                                                                                <option value="2">2</option>
-                                                                                <option value="3">3</option>
-                                                                                <option value="4">4</option>
+                                                                                <option value="" id="NONE">Select</option>
+                                                                                <% let optsPoles = brkDropdownOpts.filter(e => e.type == 'devPoles'); %>
+                                                                                <% for (let opt of optsPoles) { %>
+                                                                                    <% for (let platform of platformArray) { %>
+                                                                                        <% if (opt.platform == platform.name) { %>
+                                                                                        <option value="<%=opt.value%>" id="<%=platform.shorthand%>" hidden="hidden"><%=opt.value%></option>
+                                                                                        <% } %>
+                                                                                    <% } %>
+                                                                                <% } %>
                                                                             </select>
                                                                         </div>
                                                                     </div>
@@ -2327,11 +2382,15 @@
                                                                         <div class="form-group">
                                                                             <label for="" class="control-label">Max. System Voltage</label>
                                                                             <select class="form-control" id="" name="devMaxVolt">
-                                                                                <option>Select</option>
-                                                                                <option value="240VAC">240VAC</option>
-                                                                                <option value="480VAC">480VAC</option>
-                                                                                <option value="600VAC">600VAC</option>
-                                                                                <option value="500VDC">500VDC</option>
+                                                                                <option value="" id="NONE">Select</option>
+                                                                                <% let optsMaxVolt = brkDropdownOpts.filter(e => e.type == 'devMaxVolt'); %>
+                                                                                <% for (let opt of optsMaxVolt) { %>
+                                                                                    <% for (let platform of platformArray) { %>
+                                                                                        <% if (opt.platform == platform.name) { %>
+                                                                                        <option value="<%=opt.value%>" id="<%=platform.shorthand%>" hidden="hidden"><%=opt.value%></option>
+                                                                                        <% } %>
+                                                                                    <% } %>
+                                                                                <% } %>
                                                                             </select>
                                                                         </div>
                                                                     </div>
@@ -2339,13 +2398,15 @@
                                                                         <div class="form-group">
                                                                             <label for="" class="control-label">kAIC</label>
                                                                             <select class="form-control" id="" name="devKAIC">
-                                                                                <option>Select</option>
-                                                                                <option value="55kAIC">55kAIC</option>
-                                                                                <option value="65kAIC">65kAIC</option>
-                                                                                <option value="85kAIC">85kAIC</option>
-                                                                                <option value="100kAIC">100kAIC</option>
-                                                                                <option value="150kAIC">150kAIC</option>
-                                                                                <option value="200kAIC">200kAIC</option>
+                                                                                <option value="" id="NONE">Select</option>
+                                                                                <% let optsKAIC = brkDropdownOpts.filter(e => e.type == 'devKAIC'); %>
+                                                                                <% for (let opt of optsKAIC) { %>
+                                                                                    <% for (let platform of platformArray) { %>
+                                                                                        <% if (opt.platform == platform.name) { %>
+                                                                                        <option value="<%=opt.value%>" id="<%=platform.shorthand%>" hidden="hidden"><%=opt.value%></option>
+                                                                                        <% } %>
+                                                                                    <% } %>
+                                                                                <% } %>
                                                                             </select>
                                                                         </div>
                                                                     </div>
@@ -2353,10 +2414,15 @@
                                                                         <div class="form-group">
                                                                             <label for="" class="control-label">Control Voltage</label>
                                                                             <select class="form-control" id="" name="devCtrlVolt">
-                                                                                <option>Select</option>
-                                                                                <option value="120VAC">120VAC</option>
-                                                                                <option value="24VDC">24VDC</option>
-                                                                                <option value="Mixed">Mixed</option>
+                                                                                <option value="" id="NONE">Select</option>
+                                                                                <% let optsCtrlVolt = brkDropdownOpts.filter(e => e.type == 'devCtrlVolt'); %>
+                                                                                <% for (let opt of optsCtrlVolt) { %>
+                                                                                    <% for (let platform of platformArray) { %>
+                                                                                        <% if (opt.platform == platform.name) { %>
+                                                                                        <option value="<%=opt.value%>" id="<%=platform.shorthand%>" hidden="hidden"><%=opt.value%></option>
+                                                                                        <% } %>
+                                                                                    <% } %>
+                                                                                <% } %>
                                                                             </select>
                                                                         </div>
                                                                     </div>
@@ -2366,25 +2432,15 @@
                                                                         <div class="form-group">
                                                                             <label for="" class="control-label">Frame Amperage</label>
                                                                             <select class="form-control" id="" name="devFrameSet">
-                                                                                <option>Select</option>
-                                                                                <option value="15A">15A</option>
-                                                                                <option value="30A">30A</option>
-                                                                                <option value="60A">60A</option>
-                                                                                <option value="100A">100A</option>
-                                                                                <option value="150A">150A</option>
-                                                                                <option value="225A">225A</option>
-                                                                                <option value="250A">250A</option>
-                                                                                <option value="400A">400A</option>
-                                                                                <option value="600A">600A</option>
-                                                                                <option value="800A">800A</option>
-                                                                                <option value="1200A">1200A</option>
-                                                                                <option value="1600A">1600A</option>
-                                                                                <option value="2000A">2000A</option>
-                                                                                <option value="2500A">2500A</option>
-                                                                                <option value="3000A">3000A</option>
-                                                                                <option value="3200A">3200A</option>
-                                                                                <option value="4000A">4000A</option>
-                                                                                <option value="5000A">5000A</option>
+                                                                                <option value="" id="NONE">Select</option>
+                                                                                <% let optsFrameSet = brkDropdownOpts.filter(e => e.type == 'devFrameSet'); %>
+                                                                                <% for (let opt of optsFrameSet) { %>
+                                                                                    <% for (let platform of platformArray) { %>
+                                                                                        <% if (opt.platform == platform.name) { %>
+                                                                                        <option value="<%=opt.value%>A" id="<%=platform.shorthand%>" hidden="hidden"><%=opt.value%></option>
+                                                                                        <% } %>
+                                                                                    <% } %>
+                                                                                <% } %>
                                                                             </select>
                                                                         </div>
                                                                     </div>
@@ -2392,44 +2448,15 @@
                                                                         <div class="form-group">
                                                                             <label for="" class="control-label">Sensor Amperage</label>
                                                                             <select class="form-control" id="" name="devSensorSet">
-                                                                                <option>Select</option>
-                                                                                <option value="10A">10A</option>
-                                                                                <option value="15A">15A</option>
-                                                                                <option value="20A">20A</option>
-                                                                                <option value="30A">30A</option>
-                                                                                <option value="40A">40A</option>
-                                                                                <option value="50A">50A</option>
-                                                                                <option value="60A">60A</option>
-                                                                                <option value="70A">70A</option>
-                                                                                <option value="80A">80A</option>
-                                                                                <option value="90A">90A</option>
-                                                                                <option value="100A">100A</option>
-                                                                                <option value="110A">110A</option>
-                                                                                <option value="120A">120A</option>
-                                                                                <option value="130A">130A</option>
-                                                                                <option value="140A">140A</option>
-                                                                                <option value="150A">150A</option>
-                                                                                <option value="160A">160A</option>
-                                                                                <option value="170A">170A</option>
-                                                                                <option value="180A">180A</option>
-                                                                                <option value="190A">190A</option>
-                                                                                <option value="200A">200A</option>
-                                                                                <option value="225A">225A</option>
-                                                                                <option value="250A">250A</option>
-                                                                                <option value="300A">300A</option>
-                                                                                <option value="400A">400A</option>
-                                                                                <option value="600A">600A</option>
-                                                                                <option value="800A">800A</option>
-                                                                                <option value="1000A">1000A</option>
-                                                                                <option value="1200A">1200A</option>
-                                                                                <option value="1250A">1250A</option>
-                                                                                <option value="1600A">1600A</option>
-                                                                                <option value="2000A">2000A</option>
-                                                                                <option value="2500A">2500A</option>
-                                                                                <option value="3000A">3000A</option>
-                                                                                <option value="3200A">3200A</option>
-                                                                                <option value="4000A">4000A</option>
-                                                                                <option value="5000A">5000A</option>
+                                                                                <option value="" id="NONE">Select</option>
+                                                                                <% let optsSensorSet = brkDropdownOpts.filter(e => e.type == 'devSensorSet'); %>
+                                                                                <% for (let opt of optsSensorSet) { %>
+                                                                                    <% for (let platform of platformArray) { %>
+                                                                                        <% if (opt.platform == platform.name) { %>
+                                                                                        <option value="<%=opt.value%>A" id="<%=platform.shorthand%>" hidden="hidden"><%=opt.value%></option>
+                                                                                        <% } %>
+                                                                                    <% } %>
+                                                                                <% } %>
                                                                             </select>
                                                                         </div>
                                                                     </div>
@@ -2443,10 +2470,15 @@
                                                                         <div class="form-group">
                                                                             <label for="" class="control-label">Breaker Level</label>
                                                                             <select class="form-control" id="" name="devLevel">
-                                                                                <option>Select</option>
-                                                                                <option value="Level 1">Level 1</option>
-                                                                                <option value="Level 2">Level 2</option>
-                                                                                <option value="Level 3">Level 3</option>
+                                                                                <option value="" id="NONE">Select</option>
+                                                                                <% let optsLevel = brkDropdownOpts.filter(e => e.type == 'devLevel'); %>
+                                                                                <% for (let opt of optsLevel) { %>
+                                                                                    <% for (let platform of platformArray) { %>
+                                                                                        <% if (opt.platform == platform.name) { %>
+                                                                                        <option value="<%=opt.value%>" id="<%=platform.shorthand%>" hidden="hidden"><%=opt.value%></option>
+                                                                                        <% } %>
+                                                                                    <% } %>
+                                                                                <% } %>
                                                                             </select>
                                                                         </div>
                                                                     </div>
@@ -2456,10 +2488,15 @@
                                                                         <div class="form-group">
                                                                             <label for="" class="control-label">Trip Param</label>
                                                                             <select class="form-control" id="" name="devTripParam">
-                                                                                <option>Select</option>
-                                                                                <option value="LI">LI</option>
-                                                                                <option value="LSI">LSI</option>
-                                                                                <option value="LSIG">LSIG</option>
+                                                                                <option value="" id="NONE">Select</option>
+                                                                                <% let optsTripParam = brkDropdownOpts.filter(e => e.type == 'devTripParam'); %>
+                                                                                <% for (let opt of optsTripParam) { %>
+                                                                                    <% for (let platform of platformArray) { %>
+                                                                                        <% if (opt.platform == platform.name) { %>
+                                                                                        <option value="<%=opt.value%>" id="<%=platform.shorthand%>" hidden="hidden"><%=opt.value%></option>
+                                                                                        <% } %>
+                                                                                    <% } %>
+                                                                                <% } %>
                                                                             </select>
                                                                         </div>
                                                                     </div>
@@ -2467,13 +2504,15 @@
                                                                         <div class="form-group">
                                                                             <label for="" class="control-label">Trip Unit</label>
                                                                             <select class="form-control" id="" name="devTripUnit">
-                                                                                <option>Select</option>
-                                                                                <option value="Micrologic 3.0">Micrologic 3.0</option>
-                                                                                <option value="Micrologic 5.0">Micrologic 5.0</option>
-                                                                                <option value="Micrologic 5.0A">Micrologic 5.0A</option>
-                                                                                <option value="Micrologic 6.0A">Micrologic 6.0A</option>
-                                                                                <option value="Micrologic 6.0P">Micrologic 6.0P</option>
-                                                                                <option value="Micrologic 6.0H">Micrologic 6.0H</option>
+                                                                                <option value="" id="NONE">Select</option>
+                                                                                <% let optsTripUnit = brkDropdownOpts.filter(e => e.type == 'devTripUnit'); %>
+                                                                                <% for (let opt of optsTripUnit) { %>
+                                                                                    <% for (let platform of platformArray) { %>
+                                                                                        <% if (opt.platform == platform.name) { %>
+                                                                                        <option value="<%=opt.value%>" id="<%=platform.shorthand%>" hidden="hidden"><%=opt.value%></option>
+                                                                                        <% } %>
+                                                                                    <% } %>
+                                                                                <% } %>
                                                                             </select>
                                                                         </div>
                                                                     </div>
@@ -2578,7 +2617,7 @@
                                                                     <td style="display: none;"><%= deviceData[i].devOperation %></td>
                                                                     <td>
                                                                         <input id="copyButton" type="submit" value="Copy" class="btn btn-md btn-outline-secondary waves-effect waves-light" onclick="this.form.action='../submittalCopyDevice/?subID=<%=subData[0].jobNum%><%=subData[0].releaseNum%>_<%= layoutData[0].subID %>&layoutID=<%=deviceData[i].layoutID%>&devID=<%= deviceData[i].devID%>'"/>
-                                                                        <input id="editBreakerButton" type="button" value="Edit" class="btn btn-md btn-outline-warning waves-effect waves-light" data-toggle="modal" data-target="#editBreakerModal<%=currentBrk%>"/>
+                                                                        <input id="editBreakerButton" type="button" value="Edit" class="btn btn-md btn-outline-warning waves-effect waves-light" data-toggle="modal" data-target="#editBreakerModal<%=currentBrk%>" onclick="setBreakerPlatformInitial(<%=currentBrk%>)"/>
                                                                         <input id="deleteButton" type="submit" value="Delete" class="btn btn-md btn-outline-danger waves-effect waves-light" onclick="this.form.action='../submittalDeleteDevice/?subID=<%=subData[0].jobNum%><%=subData[0].releaseNum%>_<%= layoutData[0].subID %>&layoutID=<%=deviceData[i].layoutID%>&devID=<%= deviceData[i].devID%>'"/>
                                                                     </td>
                                                                 </tr>
@@ -2633,6 +2672,19 @@
                                                                                             <p class="mb-0">
                                                                                                 Please fill out the following and click "Save" afterwards
                                                                                             </p>
+                                                                                            <% let platformArray = [{
+                                                                                                name: 'SQUARE D MASTERPACT NW',
+                                                                                                shorthand: 'NW'
+                                                                                            }, {
+                                                                                                name: 'SQUARE D POWERPACT',
+                                                                                                shorthand: 'POWERPACT'
+                                                                                            }, {
+                                                                                                name: 'ABB EMAX2',
+                                                                                                shorthand: 'EMAX2'
+                                                                                            }, {
+                                                                                                name: 'ABB TMAX',
+                                                                                                shorthand: 'TMAX'
+                                                                                            }] %>
                                                                                             <div class="row">
                                                                                                 <div class="col-sm-12">
                                                                                                     <div class="card-body">
@@ -2709,7 +2761,7 @@
                                                                                                         <div class="row">
                                                                                                             <div class="col-sm-4">
                                                                                                                 <label for="iccbPlatform" class="col-form-label">ICCB Platform</label>
-                                                                                                                <select class="form-control" name="iccbPlatform" id="iccbPlatform">
+                                                                                                                <select class="form-control" name="iccbPlatform" id="iccbPlatform-<%=currentBrk%>" onchange="getBreakerPlatformEdit(this)">
                                                                                                                     <option value="">Select</option>
                                                                                                                     <% let iccbPlatforms = layoutDropdownData.filter(e => e.type === 'iccbPlatform') %>
                                                                                                                     <% for (let iccbPlatform of iccbPlatforms) { %>
@@ -2723,7 +2775,7 @@
                                                                                                             </div>
                                                                                                             <div class="col-sm-4">
                                                                                                                 <label for="mccbPlatform" class="col-form-label">MCCB Platform</label>
-                                                                                                                <select class="form-control" name="mccbPlatform" id="mccbPlatform">
+                                                                                                                <select class="form-control" name="mccbPlatform" id="mccbPlatform-<%=currentBrk%>" onchange="getBreakerPlatformEdit(this)">
                                                                                                                     <option value="">Select</option>
                                                                                                                     <% let mccbPlatforms = layoutDropdownData.filter(e => e.type === 'mccbPlatform') %>
                                                                                                                     <% for (let mccbPlatform of mccbPlatforms) { %>
@@ -2737,7 +2789,7 @@
                                                                                                             </div>
                                                                                                             <div class="col-sm-4">
                                                                                                                 <label for="vcbPlatform" class="col-form-label">MV VCB Platform</label>
-                                                                                                                <select class="form-control" name="vcbPlatform" id="vcbPlatform">
+                                                                                                                <select class="form-control" name="vcbPlatform" id="vcbPlatform-<%=currentBrk%>" onchange="getBreakerPlatformEdit(this)">
                                                                                                                     <option value="">Select</option>
                                                                                                                     <%   let vcbPlatforms = layoutDropdownData.filter(e => e.type === 'vcbPlatform') %>
                                                                                                                     <% for (let vcbPlatform of vcbPlatforms) { %>
@@ -2755,14 +2807,23 @@
                                                                                                             <div class="col-sm-3" style="margin-top: 0.3rem;">
                                                                                                                 <div class="form-group">
                                                                                                                     <label for="" class="control-label">UL Rating</label>
-                                                                                                                    <select class="form-control" id="" name="devUL">
-                                                                                                                        <% let devULs = ["UL1066", "UL489"]; %>
-                                                                                                                        <option>Select</option>
-                                                                                                                        <% for (let devUL of devULs) { %>
-                                                                                                                            <% if (deviceData[i].devUL == devUL) { %>
-                                                                                                                            <option value="<%=devUL%>" selected="selected"><%=deviceData[i].devUL%></option>
-                                                                                                                            <% } else { %>
-                                                                                                                            <option value="<%=devUL%>"><%=devUL%></option>
+                                                                                                                    <select class="form-control" id="devUL-<%=currentBrk%>" name="devUL">
+                                                                                                                        <option value="" id="NONE">Select</option>
+                                                                                                                        <% let optsUL = brkDropdownOpts.filter(e => e.type == 'devUL'); %>
+                                                                                                                        <% for (let opt of optsUL) { %>
+                                                                                                                            <% for (let platform of platformArray) { %>
+                                                                                                                                <% if (opt.platform == platform.name) { %>
+
+                                                                                                                                <% if (deviceData[i].platform == opt.platform) { %>
+                                                                                                                                        <% if (deviceData[i].devUL == opt.value) { %>
+                                                                                                                                        <option  value="<%=opt.value%>" id="<%=platform.shorthand%>" selected="selected"><%=opt.value%></option>
+                                                                                                                                        <% } else { %>
+                                                                                                                                        <option value="<%=opt.value%>" id="<%=platform.shorthand%>"><%=opt.value%></option>
+                                                                                                                                        <% } %>
+                                                                                                                                <% } else { %>
+                                                                                                                                    <option value="<%=opt.value%>" id="<%=platform.shorthand%>" hidden="hidden"><%=opt.value%></option>
+                                                                                                                                <% } %>
+                                                                                                                                <% } %>
                                                                                                                             <% } %>
                                                                                                                         <% } %>
                                                                                                                     </select>
@@ -2771,14 +2832,22 @@
                                                                                                             <div class="col-sm-3" style="margin-top: 0.3rem;">
                                                                                                                 <div class="form-group">
                                                                                                                     <label for="" class="control-label">Device Mounting</label>
-                                                                                                                    <select class="form-control" id="" name="devMount">
-                                                                                                                        <% let devMounts = ["DRAW-OUT", "FIXED", "PLUG-IN"]; %>
-                                                                                                                        <option>Select</option>
-                                                                                                                        <% for (let devMount of devMounts) { %>
-                                                                                                                            <% if (deviceData[i].devMount == devMount) { %>
-                                                                                                                            <option value="<%=devMount%>" selected="selected"><%=deviceData[i].devMount%></option>
-                                                                                                                            <% } else { %>
-                                                                                                                            <option value="<%=devMount%>"><%=devMount%></option>
+                                                                                                                    <select class="form-control" id="devMount-<%=currentBrk%>" name="devMount">
+                                                                                                                        <option value="" id="NONE">Select</option>
+                                                                                                                        <% let optsMount = brkDropdownOpts.filter(e => e.type == 'devMount'); %>
+                                                                                                                        <% for (let opt of optsMount) { %>
+                                                                                                                            <% for (let platform of platformArray) { %>
+                                                                                                                                <% if (opt.platform == platform.name) { %>
+                                                                                                                                    <% if (deviceData[i].platform == opt.platform) { %>
+                                                                                                                                        <% if (deviceData[i].devMount == opt.value) { %>
+                                                                                                                                        <option value="<%=opt.value%>" id="<%=platform.shorthand%>" selected="selected"><%=opt.value%></option>
+                                                                                                                                        <% } else { %>
+                                                                                                                                        <option value="<%=opt.value%>" id="<%=platform.shorthand%>" ><%=opt.value%></option>
+                                                                                                                                        <% } %>
+                                                                                                                                    <% } else { %>
+                                                                                                                                        <option value="<%=opt.value%>" id="<%=platform.shorthand%>" hidden="hidden"><%=opt.value%></option>
+                                                                                                                                    <% } %>
+                                                                                                                                <% } %>
                                                                                                                             <% } %>
                                                                                                                         <% } %>
                                                                                                                     </select>
@@ -2787,14 +2856,22 @@
                                                                                                             <div class="col-sm-3"  style="margin-top: 0.3rem;">
                                                                                                                 <div class="form-group">
                                                                                                                     <label for="" class="control-label">Rear Adapter Type</label>
-                                                                                                                    <select class="form-control" id="" name="rearAdaptType">
-                                                                                                                        <% let rearAdaptTypes = ["Horizontal", "Vertical"]; %>
-                                                                                                                        <option>Select</option>
-                                                                                                                        <% for (let rearAdaptType of rearAdaptTypes) { %>
-                                                                                                                            <% if (deviceData[i].rearAdaptType == rearAdaptType) { %>
-                                                                                                                            <option value="<%=rearAdaptType%>" selected="selected"><%=deviceData[i].rearAdaptType%></option>
-                                                                                                                            <% } else { %>
-                                                                                                                            <option value="<%=rearAdaptType%>"><%=rearAdaptType%></option>
+                                                                                                                    <select class="form-control" id="rearAdaptType-<%=currentBrk%>" name="rearAdaptType">
+                                                                                                                        <option value="" id="NONE">Select</option>
+                                                                                                                        <% let optsRearAdapt = brkDropdownOpts.filter(e => e.type == 'rearAdaptType'); %>
+                                                                                                                        <% for (let opt of optsRearAdapt) { %>
+                                                                                                                            <% for (let platform of platformArray) { %>
+                                                                                                                                <% if (opt.platform == platform.name) { %>
+                                                                                                                                    <% if (deviceData[i].platform == opt.platform) { %>
+                                                                                                                                        <% if (deviceData[i].rearAdaptType == opt.value) { %>
+                                                                                                                                        <option value="<%=opt.value%>" id="<%=platform.shorthand%>" selected="selected"><%=opt.value%></option>
+                                                                                                                                        <% } else { %>
+                                                                                                                                        <option value="<%=opt.value%>" id="<%=platform.shorthand%>" ><%=opt.value%></option>
+                                                                                                                                        <% } %>
+                                                                                                                                    <% } else { %>
+                                                                                                                                        <option value="<%=opt.value%>" id="<%=platform.shorthand%>" hidden="hidden"><%=opt.value%></option>
+                                                                                                                                    <% } %>
+                                                                                                                                <% } %>
                                                                                                                             <% } %>
                                                                                                                         <% } %>
                                                                                                                     </select>
@@ -2803,14 +2880,22 @@
                                                                                                             <div class="col-sm-3" style="margin-top: 0.3rem;">
                                                                                                                 <div class="form-group">
                                                                                                                     <label for="" class="control-label">Operation</label>
-                                                                                                                    <select class="form-control" id="" name="devOperation">
-                                                                                                                        <% let devOperations = ["ELECTRICAL", "MANUAL"]; %>
-                                                                                                                        <option>Select</option>
-                                                                                                                        <% for (let devOperation of devOperations) { %>
-                                                                                                                            <% if (deviceData[i].devOperation == devOperation) { %>
-                                                                                                                            <option value="<%=devOperation%>" selected="selected"><%=deviceData[i].devOperation%></option>
-                                                                                                                            <% } else { %>
-                                                                                                                            <option value="<%=devOperation%>"><%=devOperation%></option>
+                                                                                                                    <select class="form-control" id="devOperation-<%=currentBrk%>" name="devOperation">
+                                                                                                                        <option value="" id="NONE">Select</option>
+                                                                                                                        <% let optsOp = brkDropdownOpts.filter(e => e.type == 'devOperation'); %>
+                                                                                                                        <% for (let opt of optsOp) { %>
+                                                                                                                            <% for (let platform of platformArray) { %>
+                                                                                                                                <% if (opt.platform == platform.name) { %>
+                                                                                                                                    <% if (deviceData[i].platform == opt.platform) { %>
+                                                                                                                                        <% if (deviceData[i].devOperation == opt.value) { %>
+                                                                                                                                        <option value="<%=opt.value%>" id="<%=platform.shorthand%>" selected="selected"><%=opt.value%></option>
+                                                                                                                                        <% } else { %>
+                                                                                                                                        <option value="<%=opt.value%>" id="<%=platform.shorthand%>" ><%=opt.value%></option>
+                                                                                                                                        <% } %>
+                                                                                                                                    <% } else { %>
+                                                                                                                                        <option value="<%=opt.value%>" id="<%=platform.shorthand%>" hidden="hidden"><%=opt.value%></option>
+                                                                                                                                    <% } %>
+                                                                                                                                <% } %>
                                                                                                                             <% } %>
                                                                                                                         <% } %>
                                                                                                                     </select>
@@ -2821,14 +2906,22 @@
                                                                                                             <div class="col-sm-3">
                                                                                                                 <div class="form-group">
                                                                                                                     <label for="" class="control-label">Poles</label>
-                                                                                                                    <select class="form-control" id="" name="devPoles">
-                                                                                                                        <% let devPoles = ["2", "3", "4"]; %>
-                                                                                                                        <option>Select</option>
-                                                                                                                        <% for (let devPole of devPoles) { %>
-                                                                                                                            <% if (deviceData[i].devPoles == devPole) { %>
-                                                                                                                            <option value="<%=devPole%>" selected="selected"><%=deviceData[i].devPoles%></option>
-                                                                                                                            <% } else { %>
-                                                                                                                            <option value="<%=devPole%>"><%=devPole%></option>
+                                                                                                                    <select class="form-control" id="devPoles-<%=currentBrk%>" name="devPoles">
+                                                                                                                        <option value="" id="NONE">Select</option>
+                                                                                                                        <% let optsPoles = brkDropdownOpts.filter(e => e.type == 'devPoles'); %>
+                                                                                                                        <% for (let opt of optsPoles) { %>
+                                                                                                                            <% for (let platform of platformArray) { %>
+                                                                                                                                <% if (opt.platform == platform.name) { %>
+                                                                                                                                    <% if (deviceData[i].platform == opt.platform) { %>
+                                                                                                                                        <% if (deviceData[i].devPoles == opt.value) { %>
+                                                                                                                                        <option value="<%=opt.value%>" id="<%=platform.shorthand%>" selected="selected"><%=opt.value%></option>
+                                                                                                                                        <% } else { %>
+                                                                                                                                        <option value="<%=opt.value%>" id="<%=platform.shorthand%>" ><%=opt.value%></option>
+                                                                                                                                        <% } %>
+                                                                                                                                    <% } else { %>
+                                                                                                                                        <option value="<%=opt.value%>" id="<%=platform.shorthand%>" hidden="hidden"><%=opt.value%></option>
+                                                                                                                                    <% } %>
+                                                                                                                                <% } %>
                                                                                                                             <% } %>
                                                                                                                         <% } %>
                                                                                                                     </select>
@@ -2837,14 +2930,22 @@
                                                                                                             <div class="col-sm-3">
                                                                                                                 <div class="form-group">
                                                                                                                     <label for="" class="control-label">Max. System Voltage</label>
-                                                                                                                    <select class="form-control" id="" name="devMaxVolt">
-                                                                                                                        <% let devMaxVolts = ["240VAC", "480VAC", "600VAC", "500VDC"]; %>
-                                                                                                                        <option>Select</option>
-                                                                                                                        <% for (let devMaxVolt of devMaxVolts) { %>
-                                                                                                                            <% if (deviceData[i].devMaxVolt == devMaxVolt) { %>
-                                                                                                                            <option value="<%=devMaxVolt%>" selected="selected"><%=deviceData[i].devMaxVolt%></option>
-                                                                                                                            <% } else { %>
-                                                                                                                            <option value="<%=devMaxVolt%>"><%=devMaxVolt%></option>
+                                                                                                                    <select class="form-control" id="devMaxVolt-<%=currentBrk%>" name="devMaxVolt">
+                                                                                                                        <option value="" id="NONE">Select</option>
+                                                                                                                        <% let optsMaxVolt = brkDropdownOpts.filter(e => e.type == 'devMaxVolt'); %>
+                                                                                                                        <% for (let opt of optsMaxVolt) { %>
+                                                                                                                            <% for (let platform of platformArray) { %>
+                                                                                                                                <% if (opt.platform == platform.name) { %>
+                                                                                                                                    <% if (deviceData[i].platform == opt.platform) { %>
+                                                                                                                                        <% if (deviceData[i].devMaxVolt == opt.value) { %>
+                                                                                                                                        <option value="<%=opt.value%>" id="<%=platform.shorthand%>" selected="selected"><%=opt.value%></option>
+                                                                                                                                        <% } else { %>
+                                                                                                                                        <option value="<%=opt.value%>" id="<%=platform.shorthand%>" ><%=opt.value%></option>
+                                                                                                                                        <% } %>
+                                                                                                                                    <% } else { %>
+                                                                                                                                        <option value="<%=opt.value%>" id="<%=platform.shorthand%>" hidden="hidden"><%=opt.value%></option>
+                                                                                                                                    <% } %>
+                                                                                                                                <% } %>
                                                                                                                             <% } %>
                                                                                                                         <% } %>
                                                                                                                     </select>
@@ -2853,14 +2954,22 @@
                                                                                                             <div class="col-sm-3">
                                                                                                                 <div class="form-group">
                                                                                                                     <label for="" class="control-label">kAIC</label>
-                                                                                                                    <select class="form-control" id="" name="devKAIC">
-                                                                                                                        <% let devKAICs = ["55kAIC", "65kAIC", "85kAIC", "100kAIC", "150kAIC", "200kAIC"]; %>
-                                                                                                                        <option>Select</option>
-                                                                                                                        <% for (let devKAIC of devKAICs) { %>
-                                                                                                                            <% if (deviceData[i].devKAIC == devKAIC) { %>
-                                                                                                                            <option value="<%=devKAIC%>" selected="selected"><%=deviceData[i].devKAIC%></option>
-                                                                                                                            <% } else { %>
-                                                                                                                            <option value="<%=devKAIC%>"><%=devKAIC%></option>
+                                                                                                                    <select class="form-control" id="devKAIC-<%=currentBrk%>" name="devKAIC">
+                                                                                                                        <option value="" id="NONE">Select</option>
+                                                                                                                        <% let optsKAIC = brkDropdownOpts.filter(e => e.type == 'devKAIC'); %>
+                                                                                                                        <% for (let opt of optsKAIC) { %>
+                                                                                                                            <% for (let platform of platformArray) { %>
+                                                                                                                                <% if (opt.platform == platform.name) { %>
+                                                                                                                                    <% if (deviceData[i].platform == opt.platform) { %>
+                                                                                                                                        <% if (deviceData[i].devKAIC == opt.value) { %>
+                                                                                                                                        <option value="<%=opt.value%>" id="<%=platform.shorthand%>" selected="selected"><%=opt.value%></option>
+                                                                                                                                        <% } else { %>
+                                                                                                                                        <option value="<%=opt.value%>" id="<%=platform.shorthand%>" ><%=opt.value%></option>
+                                                                                                                                        <% } %>
+                                                                                                                                    <% } else { %>
+                                                                                                                                        <option value="<%=opt.value%>" id="<%=platform.shorthand%>" hidden="hidden"><%=opt.value%></option>
+                                                                                                                                    <% } %>
+                                                                                                                                <% } %>
                                                                                                                             <% } %>
                                                                                                                         <% } %>
                                                                                                                     </select>
@@ -2869,14 +2978,22 @@
                                                                                                             <div class="col-sm-3">
                                                                                                                 <div class="form-group">
                                                                                                                     <label for="" class="control-label">Control Voltage</label>
-                                                                                                                    <select class="form-control" id="" name="devCtrlVolt">
-                                                                                                                        <% let devCtrlVolts = ["120VAC", "24VDC", "Mixed"]; %>
-                                                                                                                        <option>Select</option>
-                                                                                                                        <% for (let devCtrlVolt of devCtrlVolts) { %>
-                                                                                                                            <% if (deviceData[i].devCtrlVolt == devCtrlVolt) { %>
-                                                                                                                            <option value="<%=devCtrlVolt%>" selected="selected"><%=deviceData[i].devCtrlVolt%></option>
-                                                                                                                            <% } else { %>
-                                                                                                                            <option value="<%=devCtrlVolt%>"><%=devCtrlVolt%></option>
+                                                                                                                    <select class="form-control" id="devCtrlVolt-<%=currentBrk%>" name="devCtrlVolt">
+                                                                                                                        <option value="" id="NONE">Select</option>
+                                                                                                                        <% let optsCtrlVolt = brkDropdownOpts.filter(e => e.type == 'devCtrlVolt'); %>
+                                                                                                                        <% for (let opt of optsCtrlVolt) { %>
+                                                                                                                            <% for (let platform of platformArray) { %>
+                                                                                                                                <% if (opt.platform == platform.name) { %>
+                                                                                                                                    <% if (deviceData[i].platform == opt.platform) { %>
+                                                                                                                                        <% if (deviceData[i].devCtrlVolt == opt.value) { %>
+                                                                                                                                        <option value="<%=opt.value%>" id="<%=platform.shorthand%>" selected="selected"><%=opt.value%></option>
+                                                                                                                                        <% } else { %>
+                                                                                                                                        <option value="<%=opt.value%>" id="<%=platform.shorthand%>" ><%=opt.value%></option>
+                                                                                                                                        <% } %>
+                                                                                                                                    <% } else { %>
+                                                                                                                                        <option value="<%=opt.value%>" id="<%=platform.shorthand%>" hidden="hidden"><%=opt.value%></option>
+                                                                                                                                    <% } %>
+                                                                                                                                <% } %>
                                                                                                                             <% } %>
                                                                                                                         <% } %>
                                                                                                                     </select>
@@ -2887,16 +3004,22 @@
                                                                                                             <div class="col-sm-3">
                                                                                                                 <div class="form-group">
                                                                                                                     <label for="" class="control-label">Frame Amperage</label>
-                                                                                                                    <select class="form-control" id="" name="devFrameSet">
-                                                                                                                        <% let devFrameSets = ["15A", "30A", "60A", "100A", "150A",
-                                                                                                                            "225A", "250A", "400A", "600A", "800A", "1200A", "1600A",
-                                                                                                                            "2000A", "2500A", "3000A", "3200A", "4000A", "5000A"]; %>
-                                                                                                                        <option>Select</option>
-                                                                                                                        <% for (let devFrameSet of devFrameSets) { %>
-                                                                                                                            <% if (deviceData[i].devFrameSet == devFrameSet) { %>
-                                                                                                                            <option value="<%=devFrameSet%>" selected="selected"><%=deviceData[i].devFrameSet%></option>
-                                                                                                                            <% } else { %>
-                                                                                                                            <option value="<%=devFrameSet%>"><%=devFrameSet%></option>
+                                                                                                                    <select class="form-control" id="devFrameSet-<%=currentBrk%>" name="devFrameSet">
+                                                                                                                        <option value="" id="NONE">Select</option>
+                                                                                                                        <% let optsFrameSet = brkDropdownOpts.filter(e => e.type == 'devFrameSet'); %>
+                                                                                                                        <% for (let opt of optsFrameSet) { %>
+                                                                                                                            <% for (let platform of platformArray) { %>
+                                                                                                                                <% if (opt.platform == platform.name) { %>
+                                                                                                                                    <% if (deviceData[i].platform == opt.platform) { %>
+                                                                                                                                        <% if (deviceData[i].devFrameSet == (opt.value + 'A')) { %>
+                                                                                                                                        <option value="<%=opt.value%>A" id="<%=platform.shorthand%>" selected="selected"><%=opt.value%></option>
+                                                                                                                                        <% } else { %>
+                                                                                                                                        <option value="<%=opt.value%>A" id="<%=platform.shorthand%>" ><%=opt.value%></option>
+                                                                                                                                        <% } %>
+                                                                                                                                    <% } else { %>
+                                                                                                                                        <option value="<%=opt.value%>" id="<%=platform.shorthand%>" hidden="hidden"><%=opt.value%></option>
+                                                                                                                                    <% } %>
+                                                                                                                                <% } %>
                                                                                                                             <% } %>
                                                                                                                         <% } %>
                                                                                                                     </select>
@@ -2905,18 +3028,22 @@
                                                                                                             <div class="col-sm-3">
                                                                                                                 <div class="form-group">
                                                                                                                     <label for="" class="control-label">Sensor Amperage</label>
-                                                                                                                    <select class="form-control" id="" name="devSensorSet">
-                                                                                                                        <% let devSensorSets = ["10A", "15A", "20A", "30A", "40A", "50A", "60A",
-                                                                                                                            "70A", "80A", "90A", "100A", "110A", "120A", "130A", "140A", "150A",
-                                                                                                                            "160A", "170A", "180A", "190A", "200A", "225A", "250A", "300A", "400A",
-                                                                                                                            "600A", "800A", "1000A", "1200A", "1250A", "1600A", "2000A", "2500A",
-                                                                                                                            "3000A", "3200A", "4000A", "5000A"]; %>
-                                                                                                                        <option>Select</option>
-                                                                                                                        <% for (let devSensorSet of devSensorSets) { %>
-                                                                                                                            <% if (deviceData[i].devSensorSet == devSensorSet) { %>
-                                                                                                                            <option value="<%=devSensorSet%>" selected="selected"><%=deviceData[i].devSensorSet%></option>
-                                                                                                                            <% } else { %>
-                                                                                                                            <option value="<%=devSensorSet%>"><%=devSensorSet%></option>
+                                                                                                                    <select class="form-control" id="devSensorSet-<%=currentBrk%>" name="devSensorSet">
+                                                                                                                        <option value="" id="NONE">Select</option>
+                                                                                                                        <% let optsSensorSet = brkDropdownOpts.filter(e => e.type == 'devSensorSet'); %>
+                                                                                                                        <% for (let opt of optsSensorSet) { %>
+                                                                                                                            <% for (let platform of platformArray) { %>
+                                                                                                                                <% if (opt.platform == platform.name) { %>
+                                                                                                                                    <% if (deviceData[i].platform == opt.platform) { %>
+                                                                                                                                        <% if (deviceData[i].devSensorSet == (opt.value + 'A')) { %>
+                                                                                                                                        <option value="<%=opt.value%>A" id="<%=platform.shorthand%>" selected="selected"><%=opt.value%></option>
+                                                                                                                                        <% } else { %>
+                                                                                                                                        <option value="<%=opt.value%>A" id="<%=platform.shorthand%>" ><%=opt.value%></option>
+                                                                                                                                        <% } %>
+                                                                                                                                    <% } else { %>
+                                                                                                                                        <option value="<%=opt.value%>" id="<%=platform.shorthand%>" hidden="hidden"><%=opt.value%></option>
+                                                                                                                                    <% } %>
+                                                                                                                                <% } %>
                                                                                                                             <% } %>
                                                                                                                         <% } %>
                                                                                                                     </select>
@@ -2931,14 +3058,22 @@
                                                                                                             <div class="col-sm-3">
                                                                                                                 <div class="form-group">
                                                                                                                     <label for="" class="control-label">Breaker Level</label>
-                                                                                                                    <select class="form-control" id="" name="devLevel">
-                                                                                                                        <% let devLevels = ["Level 1", "Level 2", "Level 3"]; %>
-                                                                                                                        <option>Select</option>
-                                                                                                                        <% for (let devLevel of devLevels) { %>
-                                                                                                                            <% if (deviceData[i].devLevel == devLevel) { %>
-                                                                                                                            <option value="<%=devLevel%>" selected="selected"><%=deviceData[i].devLevel%></option>
-                                                                                                                            <% } else { %>
-                                                                                                                            <option value="<%=devLevel%>"><%=devLevel%></option>
+                                                                                                                    <select class="form-control" id="devLevel-<%=currentBrk%>" name="devLevel">
+                                                                                                                        <option value="" id="NONE">Select</option>
+                                                                                                                        <% let optsLevel = brkDropdownOpts.filter(e => e.type == 'devLevel'); %>
+                                                                                                                        <% for (let opt of optsLevel) { %>
+                                                                                                                            <% for (let platform of platformArray) { %>
+                                                                                                                                <% if (opt.platform == platform.name) { %>
+                                                                                                                                    <% if (deviceData[i].platform == opt.platform) { %>
+                                                                                                                                        <% if (deviceData[i].devLevel == opt.value) { %>
+                                                                                                                                        <option value="<%=opt.value%>" id="<%=platform.shorthand%>" selected="selected"><%=opt.value%></option>
+                                                                                                                                        <% } else { %>
+                                                                                                                                        <option value="<%=opt.value%>" id="<%=platform.shorthand%>" ><%=opt.value%></option>
+                                                                                                                                        <% } %>
+                                                                                                                                    <% } else { %>
+                                                                                                                                        <option value="<%=opt.value%>" id="<%=platform.shorthand%>" hidden="hidden"><%=opt.value%></option>
+                                                                                                                                    <% } %>
+                                                                                                                                <% } %>
                                                                                                                             <% } %>
                                                                                                                         <% } %>
                                                                                                                     </select>
@@ -2949,14 +3084,22 @@
                                                                                                             <div class="col-sm-3">
                                                                                                                 <div class="form-group">
                                                                                                                     <label for="" class="control-label">Trip Param</label>
-                                                                                                                    <select class="form-control" id="" name="devTripParam">
-                                                                                                                        <% let devTripParams = ["LI", "LSI", "LSIG"]; %>
-                                                                                                                        <option>Select</option>
-                                                                                                                        <% for (let devTripParam of devTripParams) { %>
-                                                                                                                            <% if (deviceData[i].devTripParam == devTripParam) { %>
-                                                                                                                            <option value="<%=devTripParam%>" selected="selected"><%=deviceData[i].devTripParam%></option>
-                                                                                                                            <% } else { %>
-                                                                                                                            <option value="<%=devTripParam%>"><%=devTripParam%></option>
+                                                                                                                    <select class="form-control" id="devTripParam-<%=currentBrk%>" name="devTripParam">
+                                                                                                                        <option value="" id="NONE">Select</option>
+                                                                                                                        <% let optsTripParam = brkDropdownOpts.filter(e => e.type == 'devTripParam'); %>
+                                                                                                                        <% for (let opt of optsTripParam) { %>
+                                                                                                                            <% for (let platform of platformArray) { %>
+                                                                                                                                <% if (opt.platform == platform.name) { %>
+                                                                                                                                    <% if (deviceData[i].platform == opt.platform) { %>
+                                                                                                                                        <% if (deviceData[i].devTripParam == opt.value) { %>
+                                                                                                                                        <option value="<%=opt.value%>" id="<%=platform.shorthand%>" selected="selected"><%=opt.value%></option>
+                                                                                                                                        <% } else { %>
+                                                                                                                                        <option value="<%=opt.value%>" id="<%=platform.shorthand%>" ><%=opt.value%></option>
+                                                                                                                                        <% } %>
+                                                                                                                                    <% } else { %>
+                                                                                                                                        <option value="<%=opt.value%>" id="<%=platform.shorthand%>" hidden="hidden"><%=opt.value%></option>
+                                                                                                                                    <% } %>
+                                                                                                                                <% } %>
                                                                                                                             <% } %>
                                                                                                                         <% } %>
                                                                                                                     </select>
@@ -2965,14 +3108,22 @@
                                                                                                             <div class="col-sm-3">
                                                                                                                 <div class="form-group">
                                                                                                                     <label for="" class="control-label">Trip Unit</label>
-                                                                                                                    <select class="form-control" id="" name="devTripUnit">
-                                                                                                                        <% let devTripUnits = ["Micrologic 3.0", "Micrologic 5.0", "Micrologic 5.0A", "Micrologic 6.0A", "Micrologic 6.0P", "Micrologic 6.0H"]; %>
-                                                                                                                        <option>Select</option>
-                                                                                                                        <% for (let devTripUnit of devTripUnits) { %>
-                                                                                                                            <% if (deviceData[i].devTripUnit == devTripUnit) { %>
-                                                                                                                            <option value="<%=devTripUnit%>" selected="selected"><%=deviceData[i].devTripUnit%></option>
-                                                                                                                            <% } else { %>
-                                                                                                                            <option value="<%=devTripUnit%>"><%=devTripUnit%></option>
+                                                                                                                    <select class="form-control" id="devTripUnit-<%=currentBrk%>" name="devTripUnit">
+                                                                                                                        <option value="" id="NONE">Select</option>
+                                                                                                                        <% let optsTripUnit = brkDropdownOpts.filter(e => e.type == 'devTripUnit'); %>
+                                                                                                                        <% for (let opt of optsTripUnit) { %>
+                                                                                                                            <% for (let platform of platformArray) { %>
+                                                                                                                                <% if (opt.platform == platform.name) { %>
+                                                                                                                                    <% if (deviceData[i].platform == opt.platform) { %>
+                                                                                                                                        <% if (deviceData[i].devTripUnit == opt.value) { %>
+                                                                                                                                        <option value="<%=opt.value%>" id="<%=platform.shorthand%>" selected="selected"><%=opt.value%></option>
+                                                                                                                                        <% } else { %>
+                                                                                                                                        <option value="<%=opt.value%>" id="<%=platform.shorthand%>"><%=opt.value%></option>
+                                                                                                                                        <% } %>
+                                                                                                                                    <% } else { %>
+                                                                                                                                        <option value="<%=opt.value%>" id="<%=platform.shorthand%>" hidden="hidden"><%=opt.value%></option>
+                                                                                                                                    <% } %>
+                                                                                                                                <% } %>
                                                                                                                             <% } %>
                                                                                                                         <% } %>
                                                                                                                     </select>
@@ -3045,7 +3196,8 @@
                                                                                                                         </li>
                                                                                                                         <% } %>
                                                                                                                     <% } %>
-                                                                                                            <% } %>
+                                                                                                                <% } %>
+
                                                                                                         </ul>
                                                                                                     </div>
                                                                                                 </div>

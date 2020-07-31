@@ -260,6 +260,193 @@ function getBreakerType(breakerSelect) {
     breakerType =  breakerSelect.value;
 }
 
+let platform = '';
+function getBreakerPlatform(platformSelect) {
+    platform = platformSelect.value;
+    let selectNameArray = ['devUL', 'devMount', 'rearAdaptType', 'devOperation', 'devPoles', 'devMaxVolt', 'devKAIC', 'devCtrlVolt', 'devFrameSet', 'devSensorSet', 'devLevel', 'devTripParam', 'devTripUnit'];
+    if (platform == 'SQUARE D MASTERPACT NW') {
+        for (let selectName of selectNameArray) {
+            let select = document.getElementsByName(selectName);
+            let selectOpts = select[0].children;
+            for (let opt of selectOpts) {
+                opt.hidden = !(opt.id == 'NW' || opt.id == 'NONE');
+            }
+        }
+    } else if (platform == 'SQUARE D POWERPACT') {
+        for (let selectName of selectNameArray) {
+            let select = document.getElementsByName(selectName);
+            let selectOpts = select[0].children;
+            for (let opt of selectOpts) {
+                opt.hidden = !(opt.id == 'POWERPACT' || opt.id == 'NONE');
+            }
+        }
+
+    } else if (platform == 'ABB EMAX2') {
+        for (let selectName of selectNameArray) {
+            let select = document.getElementsByName(selectName);
+            let selectOpts = select[0].children;
+            for (let opt of selectOpts) {
+                opt.hidden = !(opt.id == 'EMAX2' || opt.id == 'NONE');
+            }
+        }
+    } else if (platform == 'ABB TMAX') {
+        for (let selectName of selectNameArray) {
+            let select = document.getElementsByName(selectName);
+            let selectOpts = select[0].children;
+            for (let opt of selectOpts) {
+                opt.hidden = !(opt.id == 'TMAX' || opt.id == 'NONE');
+            }
+        }
+    }
+}
+
+let editPlatform = '';
+function setBreakerPlatformInitial(currentBrk) {
+    let iccbPlatform = document.getElementById('iccbPlatform-'+currentBrk.toString());
+    let iccbOpts = iccbPlatform.children;
+    let mccbPlatform = document.getElementById('mccbPlatform-'+currentBrk.toString());
+    let mccbOpts = mccbPlatform.children;
+    let vcbPlatform = document.getElementById('vcbPlatform-'+currentBrk.toString());
+    let vcbOpts = vcbPlatform.children;
+    for (let opt of iccbOpts) {
+        if (opt.selected == true) {
+            if (opt.value.length != 0) {
+                editPlatform = opt.value;
+            }
+        }
+    }
+    for (let opt of mccbOpts) {
+        if (opt.selected == true) {
+            if (opt.value.length != 0) {
+                editPlatform = opt.value;
+            }
+        }
+    }
+    for (let opt of vcbOpts) {
+        if (opt.selected == true) {
+            if (opt.value.length != 0) {
+                editPlatform = opt.value;
+            }
+        }
+    }
+
+    let selectNameArray = ['devUL', 'devMount', 'rearAdaptType', 'devOperation', 'devPoles', 'devMaxVolt', 'devKAIC', 'devCtrlVolt', 'devFrameSet', 'devSensorSet', 'devLevel', 'devTripParam', 'devTripUnit'];
+    if (editPlatform == 'SQUARE D MASTERPACT NW') {
+        for (let selectName of selectNameArray) {
+            let select = document.getElementById(selectName+"-"+currentBrk);
+            let selectOpts = select.children;
+            for (let opt of selectOpts) {
+                opt.hidden = !(opt.id == 'NW' || opt.id == 'NONE');
+            }
+        }
+    } else if (platform == 'SQUARE D POWERPACT') {
+        for (let selectName of selectNameArray) {
+            let select = document.getElementById(selectName+"-"+currentBrk);
+            let selectOpts = select.children;
+            for (let opt of selectOpts) {
+                opt.hidden = !(opt.id == 'POWERPACT' || opt.id == 'NONE');
+            }
+        }
+
+    } else if (platform == 'ABB EMAX2') {
+        for (let selectName of selectNameArray) {
+            let select = document.getElementById(selectName+"-"+currentBrk);
+            let selectOpts = select.children;
+            for (let opt of selectOpts) {
+                opt.hidden = !(opt.id == 'EMAX2' || opt.id == 'NONE');
+            }
+        }
+    } else if (platform == 'ABB TMAX') {
+        for (let selectName of selectNameArray) {
+            let select = document.getElementById(selectName+"-"+currentBrk);
+            let selectOpts = select.children;
+            for (let opt of selectOpts) {
+                opt.hidden = !(opt.id == 'TMAX' || opt.id == 'NONE');
+            }
+        }
+    }
+}
+
+function getBreakerPlatformEdit(platformSelect) {
+    let currentBrk = platformSelect.id.split('-')[1];
+    editPlatform = platformSelect.value;
+    let selectNameArray = ['devUL', 'devMount', 'rearAdaptType', 'devOperation', 'devPoles', 'devMaxVolt', 'devKAIC', 'devCtrlVolt', 'devFrameSet', 'devSensorSet', 'devLevel', 'devTripParam', 'devTripUnit'];
+    if (editPlatform == 'SQUARE D MASTERPACT NW') {
+        for (let selectName of selectNameArray) {
+            let chosenValue;
+            let select = document.getElementById(selectName+"-"+currentBrk);
+            let selectOpts = select.children;
+            for (let opt of selectOpts) {
+                if (opt.selected == true) {
+                    chosenValue = opt.value;
+                }
+                opt.hidden = true;
+            }
+            for (let opt of selectOpts) {
+                opt.hidden = !(opt.id == 'NW' || opt.id == 'NONE');
+                if (opt.value == chosenValue) {
+                    opt.selected = true;
+                }
+            }
+        }
+    } else if (editPlatform == 'SQUARE D POWERPACT') {
+        for (let selectName of selectNameArray) {
+            let chosenValue;
+            let select = document.getElementById(selectName+"-"+currentBrk);
+            let selectOpts = select.children;
+            for (let opt of selectOpts) {
+                if (opt.selected == true) {
+                    chosenValue = opt.value;
+                }
+                opt.hidden = true;
+            }
+            for (let opt of selectOpts) {
+                opt.hidden = !(opt.id == 'POWERPACT' || opt.id == 'NONE');
+                if (opt.value == chosenValue) {
+                    opt.selected = true;
+                }
+            }
+        }
+
+    } else if (editPlatform == 'ABB EMAX2') {
+        for (let selectName of selectNameArray) {
+            let chosenValue;
+            let select = document.getElementById(selectName+"-"+currentBrk);
+            let selectOpts = select.children;
+            for (let opt of selectOpts) {
+                if (opt.selected == true) {
+                    chosenValue = opt.value;
+                }
+                opt.hidden = true;
+            }
+            for (let opt of selectOpts) {
+                opt.hidden = !(opt.id == 'EMAX2' || opt.id == 'NONE');
+                if (opt.value == chosenValue) {
+                    opt.selected = true;
+                }
+            }
+        }
+    } else if (editPlatform == 'ABB TMAX') {
+        for (let selectName of selectNameArray) {
+            let chosenValue;
+            let select = document.getElementById(selectName+"-"+currentBrk);
+            let selectOpts = select.children;
+            for (let opt of selectOpts) {
+                if (opt.selected == true) {
+                    chosenValue = opt.value;
+                }
+                opt.hidden = true;
+            }
+            for (let opt of selectOpts) {
+                opt.hidden = !(opt.id == 'TMAX' || opt.id == 'NONE');
+                if (opt.value == chosenValue) {
+                    opt.selected = true;
+                }
+            }
+        }
+    }
+}
+
 function showPB(checkbox){
     let checkboxes = document.getElementsByName('pbCheck');
     let noChecks = true;
