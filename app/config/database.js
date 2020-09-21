@@ -25,7 +25,10 @@ module.exports = {
             }
         },
     },
-   /* 'connection': {
+
+
+
+    /*'connection': {
         'host': 'localhost',
         'user': 'root',
         'port' : 3306,
@@ -35,7 +38,7 @@ module.exports = {
     },*/
 
     //Database
-    'database': 'saidb',
+    'database': 'sai_test',
     /*'creoDatabase': 'creoDB',
     'database2': 'quotePricing',
     'masterDatabase': 'saidb',*/
@@ -61,6 +64,106 @@ module.exports = {
     'quote_system_type': 'quoteSystemType',
     'panelboard_width_3W': 'panelboardWidth3W',
     'panelboard_width_4W': 'panelboardWidth4W',
+
+    //Product Catalog Tables
+    'prod_productFamily_table': 'productFamily_prod',
+    'prod_productLine_table': 'productLine_prod',
+    'prod_systemVoltage_LV_table': 'systemVoltageLV_prod',
+    'prod_systemVoltage_MV_table': 'systemVoltageMV_prod',
+    'prod_currentRating_table': 'currentRating_prod',
+    'prod_interruptingRating_LV_table': 'interruptingRatingLV_prod',
+    'prod_interruptingRating_MV_table': 'interruptingRatingMV_prod',
+    'prod_enclosure_table': 'enclosure_prod',
+    'prod_finish_table': 'finish_prod',
+    'prod_accessibility_table': 'accessibility_prod',
+    'prod_controlVoltage_table': 'controlVoltage_prod',
+
+    //SlimVAC Section Catalog Tables
+    'secSV_productLine_table': 'productLine_secSV',
+    'secSV_sectionType_table': 'sectionType_secSV',
+    'secSV_brkMfg_table': 'brkMfg_secSV',
+    'secSV_upperComp_table': 'upperComp_secSV',
+    'secSV_lowerComp_table': 'lowerComp_secSV',
+    'secSV_kaRating_table': 'kaRating_secSV',
+    'secSV_mainBusRating_table': 'mainBusRating_secSV',
+    'secSV_enclosureWidth_table': 'enclosureWidth_secSV',
+    'secSV_enclosureType_table': 'enclosureType_secSV',
+    'secSV_cableEntry_table': 'cableEntry_secSV',
+
+
+    //SlimVAC AR Section Catalog Tables
+    'secSVAR_productLine_table': 'productLine_secSVAR',
+    'secSVAR_sectionType_table': 'sectionType_secSVAR',
+    'secSVAR_brkMfg_table': 'brkMfg_secSVAR',
+    'secSVAR_upperComp_table': 'upperComp_secSVAR',
+    'secSVAR_lowerComp_table': 'lowerComp_secSVAR',
+    'secSVAR_kaRating_table': 'kaRating_secSVAR',
+    'secSVAR_mainBusRating_table': 'mainBusRating_secSVAR',
+    'secSVAR_enclosureWidth_table': 'enclosureWidth_secSVAR',
+    'secSVAR_enclosureType_table': 'enclosureType_secSVAR',
+    'secSVAR_cableEntry_table': 'cableEntry_secSVAR',
+
+
+    //Series 1 Section Catalog Tables
+    'secS1_productLine_table': 'productLine_secS1',
+    'secS1_brkMfg_table': 'brkMfg_secS1',
+    'secS1_busLams_table': 'busLams_secS1',
+    'secS1_chassisType_table': 'chassisType_secS1',
+    'secS1_tieRacks_table': 'tieRacks_secS1',
+    'secS1_mainBusRating_table': 'mainBusRating_secS1',
+    'secS1_interiorHeight_table': 'interiorHeight_secS1',
+    'secS1_enclosureType_table': 'enclosureType_secS1',
+    'secS1_accessibility_table': 'accessibility_secS1',
+    'secS1_cabHeight_table': 'cabHeight_secS1',
+    'secS1_cabWidth_table': 'cabWidth_secS1',
+    'secS1_cabDepth_table': 'cabDepth_secS1',
+    'secS1_ctrlBoxSize_table': 'ctrlBoxSize_secS1',
+    'secS1_cableEntry_table': 'cableEntry_secS1',
+
+
+    //Series 2 Section Catalog Tables
+    'secS2_productLine_table': 'productLine_secS2',
+    'secS2_brkMfg_table': 'brkMfg_secS2',
+    'secS2_secBusRating_table': 'secBusRating_secS2',
+    'secS2_mainBusRating_table': 'mainBusRating_secS2',
+    'secS2_enclosureType_table': 'enclosureType_secS2',
+    'secS2_accessibility_table': 'accessibility_secS2',
+    'secS2_cabHeight_table': 'cabHeight_secS2',
+    'secS2_cabWidth_table': 'cabWidth_secS2',
+    'secS2_cabDepth_table': 'cabDepth_secS2',
+    'secS2_cableEntry_table': 'cableEntry_secS2',
+
+
+    //Series 3 Section Catalog Tables
+    'secS3_productLine_table': 'productLine_secS3',
+    'secS3_brkMfg_table': 'brkMfg_secS3',
+    'secS3_secBusRating_table': 'secBusRating_secS3',
+    'secS3_mainBusRating_table': 'mainBusRating_secS3',
+    'secS3_enclosureType_table': 'enclosureType_secS3',
+    'secS3_accessibility_table': 'accessibility_secS3',
+    'secS3_compA_table': 'compA_secS3',
+    'secS3_compB_table': 'compB_secS3',
+    'secS3_compC_table': 'compC_secS3',
+    'secS3_compD_table': 'compD_secS3',
+    'secS3_cabHeight_table': 'cabHeight_secS3',
+    'secS3_cabWidth_table': 'cabWidth_secS3',
+    'secS3_cabDepth_table': 'cabDepth_secS3',
+    'secS3_cableEntry_table': 'cableEntry_secS3',
+
+
+    //ANSI Std. Section Catalog Tables
+    'secANSI_productLine_table': 'productLine_secANSI',
+    'secANSI_sectionType_table': 'sectionType_secANSI',
+    'secANSI_brkMfg_table': 'brkMfg_secANSI',
+    'secANSI_upperComp_table': 'upperComp_secANSI',
+    'secANSI_lowerComp_table': 'lowerComp_secANSI',
+    'secANSI_systemVolt_table': 'systemVolt_secANSI',
+    'secANSI_kaRating_table': 'kaRating_secANSI',
+    'secANSI_mainBusRating_table': 'mainBusRating_secANSI',
+    'secANSI_enclosureWidth_table': 'enclosureWidth_secANSI',
+    'secANSI_enclosureType_table': 'enclosureType_secANSI',
+    'secANSI_cableEntry_table': 'cableEntry_secANSI',
+
 
     //Creo Tables
     'baseFrame_table': 'baseFrames',

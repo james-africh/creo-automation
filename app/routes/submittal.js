@@ -11,6 +11,8 @@ module.exports = function(app) {
 
     app.post('/editSubmittal/', submittalController.editSubmittal);
 
+    app.post('/reverseEngineerLayout/', submittalController.reverseEngineerLayout);
+
     app.post('/addLayout/', submittalController.addLayout);
 
     app.post('/editLayout/', submittalController.editLayout);

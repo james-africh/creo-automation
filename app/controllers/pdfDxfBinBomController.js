@@ -203,15 +203,14 @@ exports.setWD = function(req, res) {
 
     cdAndCreateOutputDir()
         .then(async function() {
-            return await creo(sessionId, {
+            const listAsms = await creo(sessionId, {
                 command: "creo",
                 function: "list_files",
                 data: {
                     "filename":"*asm"
                 }
             });
-        })
-        .then(async function(listAsms) {
+
             let asmList = listAsms.data.filelist;
             for (let i = 0; i < asmList.length; i++) {
                 if (asmList[i].slice(7,11) == '0000') {
@@ -628,7 +627,7 @@ exports.loadDesign = function(req, res) {
                         "name": "WEIGHT"
                     }
                 });
-                console.log(part);
+                //console.log(part);
                 if (weightParam.data.paramlist[0].value.length != 0) {
                     WEIGHT = weightParam.data.paramlist[0].value.toFixed(2);
                 }
@@ -1090,25 +1089,28 @@ exports.loadDesign = function(req, res) {
                         }
                     }
                 }
-                binBoms.push({
-                    section: secPartData[m].section.slice(12,15),
-                    PUR: PUR,
-                    STR: STR,
-                    PNL: PNL,
-                    CTL: CTL,
-                    INT: INT,
-                    EXT: EXT,
-                    SCL: SCL
-                });
 
-                sectionMatBoms.push({
-                    section: secPartData[m].section.slice(12,15),
-                    SS: SS,
-                    AL: AL,
-                    GA_7: GA_7,
-                    LEXAN: LEXAN,
-                    NP: NP
-                });
+                if (binBoms.filter(e => e.section == secPartData[m].section.slice(12,15)).length == 0) {
+                    binBoms.push({
+                        section: secPartData[m].section.slice(12,15),
+                        PUR: PUR,
+                        STR: STR,
+                        PNL: PNL,
+                        CTL: CTL,
+                        INT: INT,
+                        EXT: EXT,
+                        SCL: SCL
+                    });
+
+                    sectionMatBoms.push({
+                        section: secPartData[m].section.slice(12,15),
+                        SS: SS,
+                        AL: AL,
+                        GA_7: GA_7,
+                        LEXAN: LEXAN,
+                        NP: NP
+                    });
+                }
             }
 
             for (let binBom of binBoms) {
@@ -1283,6 +1285,9 @@ exports.loadDesign = function(req, res) {
                 jsonArray1 = new Set(jsonArray1.map(ser));
                 return jsonArray2.every( o => jsonArray1.has(ser(o)) );
             }
+
+            console.log(binBoms);
+
             for (let binBom of binBoms) {
                 sections.push(binBom.section);
                 purBOMS.push(binBom.PUR);
@@ -1293,6 +1298,11 @@ exports.loadDesign = function(req, res) {
                 extBOMS.push(binBom.EXT);
                 sclBOMS.push(binBom.SCL);
             }
+
+            console.log(sections);
+
+
+
             for (let i = 0; i < sections.length; i++) {
                 let currentPurBom = purBOMS[i];
                 let currentStrBom = strBOMS[i];
@@ -1414,6 +1424,8 @@ exports.loadDesign = function(req, res) {
                     }
                 }
             }
+
+
             for (let similarPUR of similarPURs) {
                 let parent = similarPUR.parent;
                 for (let child of similarPUR.children) {

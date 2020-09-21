@@ -22,7 +22,6 @@ function onlyOneD(checkbox) {
         if (item !== checkbox) item.checked = false
     })
 }
-
 function flyingOrDriving(checkbox) {
     var checkboxes = document.getElementsByName('flyOrDrive');
     checkboxes.forEach((item) => {
@@ -38,7 +37,6 @@ function flyingOrDriving(checkbox) {
         }
     })
 }
-
 /*function editFlyingOrDriving(checkbox) {
 
         var checkboxes = document.getElementsByName('editFlyOrDrive');
@@ -67,7 +65,6 @@ function flyingOrDriving(checkbox) {
             }
         });
 }*/
-
 function editFlyingOrDriving(checkbox) {
     var currentSlide = $('#carouselExampleIndicators div.active').index() + 1;
     var checkboxes = document.getElementsByName('editFlyOrDrive');
@@ -93,7 +90,6 @@ function editFlyingOrDriving(checkbox) {
         }
     });
 }
-
 //Add Freight
 function typeOfTruck(checkbox) {
     var checkboxes = document.getElementsByName('truckType');
@@ -101,14 +97,12 @@ function typeOfTruck(checkbox) {
         if (item !== checkbox) item.checked = false
     })
 }
-
 function freightDestination(checkbox) {
     var checkboxes = document.getElementsByName('destinationType');
     checkboxes.forEach((item) => {
         if (item !== checkbox)item.checked = false
     })
 }
-
 //Edit Freight
 function editTypeOfTruck(checkbox) {
     var checkboxes = document.getElementsByName('editTruckType');
@@ -118,7 +112,6 @@ function editTypeOfTruck(checkbox) {
         }
     })
 }
-
 function editFreightDestination(checkbox) {
     var checkboxes = document.getElementsByName('editDestinationType');
     checkboxes.forEach((item) => {
@@ -127,6 +120,9 @@ function editFreightDestination(checkbox) {
         }
     })
 }
+
+
+
 
 function devMfg(selectObj) {
     let mfg = selectObj.value;
@@ -174,64 +170,6 @@ function accBrkEdit(checkbox) {
         }
     }
 }
-/*
-function accBrkOpt(checkbox) {
-    let anyChecked = false;
-    let parent = checkbox.value.split('_')[0] + '_' + checkbox.value.split('_')[1] + 'Opt';
-    for(let el of document.getElementById(parent).getElementsByTagName('li')){
-        console.log(el.children[0].checked);
-        if(el.children[0].checked == true){
-            anyChecked = true;
-        }
-    }
-    console.log(anyChecked);
-    if(anyChecked == false){
-        document.getElementById(parent).style.display = "none";
-        document.getElementById(checkbox.value.split('_')[0] + '_' + checkbox.value.split('_')[1]).checked = false;
-    }
-}*/
-
-//Section properties panelboard detail button
-/*function compAdetails(selectObj) {
-    console.log(selectObj);
-    let pb = selectObj.value.split('_')[0];
-    let div = 'details_' + selectObj.value.split('_')[1] + '_A';
-    if(pb == 'panelboard'){
-        document.getElementById(div).style.display = "flex";
-    } else {
-        document.getElementById(div).style.display = "none";
-    }
-}
-
-function compBdetails(selectObj) {
-    let pb = selectObj.value.split('_')[0];
-    let div = 'details_' + selectObj.value.split('_')[1] + '_B';
-    if(pb == 'panelboard'){
-        document.getElementById(div).style.display = "flex";
-    } else {
-        document.getElementById(div).style.display = "none";
-    }
-}
-
-function compCdetails(selectObj) {
-    let pb = selectObj.value.split('_')[0];
-    let div = 'details_' + selectObj.value.split('_')[1] + '_C';
-    if(pb == 'panelboard'){
-        document.getElementById(div).style.display = "flex";
-    } else {
-        document.getElementById(div).style.display = "none";
-    }
-}
-
-function compDdetails(selectObj) {
-    let pb = selectObj.value.split('_')[0];
-    let div = 'details_' + selectObj.value.split('_')[1] + '_D';
-    if(pb == 'panelboard'){
-        document.getElementById(div).style.display = "flex";
-    } else {
-        document.getElementById(div).style.display = "none";
-    }
-}*/
 
 function showComp(secNum){
     let element = document.getElementById('compA' + secNum);
@@ -1165,4 +1103,5 @@ function removeLastRowExisting(secNum, currentTotalRows) {
     }
     document.getElementById("pbRow"+secNum+"_"+(count+1)).remove();
 }
+
 

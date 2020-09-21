@@ -318,6 +318,9 @@ CREATE TABLE IF NOT EXISTS ' + database + '.' + dbConfig.panel_enclosureRules_ta
     ENGINE = InnoDB;', function(err,rows) { if(err) throw err; });
 
 
+// ********************************************************************************** //
+// ****************** MECHANICAL ENGINEERING SUBMITTAL TABLES *********************** //
+// ********************************************************************************** //
 
 // submittalSum
 connection.query('\
@@ -358,6 +361,9 @@ CREATE TABLE IF NOT EXISTS ' + database + '.' + dbConfig.submittal_layout_table 
     layoutID INT UNSIGNED NOT NULL AUTO_INCREMENT, \
     subID INT UNSIGNED NOT NULL, \
     layoutName VARCHAR(100) NULL, \
+    layoutCatalogPN VARCHAR(100) NULL, \
+    productFamily VARCHAR(100) NULL, \
+    productLine VARCHAR(100) NULL, \
     ulListing VARCHAR(100) NULL, \
     systemType VARCHAR(100) NULL, \
     systemAmp VARCHAR(100) NULL, \
@@ -393,6 +399,7 @@ CREATE TABLE IF NOT EXISTS ' + database + '.' + dbConfig.submittal_sections_tabl
     secID INT UNSIGNED NOT NULL AUTO_INCREMENT, \
     layoutID INT UNSIGNED NULL, \
     sectionNum VARCHAR(100) NULL, \
+    sectionCatalogPN VARCHAR(100) NULL, \
     compType JSON NULL, \
     controlAsmID VARCHAR(100) NULL, \
     secType VARCHAR(100) NULL, \
@@ -420,7 +427,7 @@ CREATE TABLE IF NOT EXISTS ' + database + '.' + dbConfig.submittal_breaker_table
     comp VARCHAR(100) NULL, \
     devDesignation VARCHAR(100) NULL, \
     devFunction VARCHAR(100) NOT NULL, \
-    unitOfIssue VARCHAR(2) NULL, \
+    unitOfIssue VARCHAR(2)  DEFAULT "EA", \
     catCode VARCHAR(100) NULL, \
     platform VARCHAR(100) NULL, \
     brkPN VARCHAR(100) NULL, \
@@ -501,10 +508,6 @@ CREATE TABLE IF NOT EXISTS ' + database + '.' + dbConfig.submittal_panel_breaker
         ON UPDATE CASCADE, \
     UNIQUE INDEX panelBrkID_UNIQUE (panelBrkID ASC))\
     ENGINE = InnoDB;', function(err) { if(err) throw err; });
-
-
-
-
 
 
 console.log("createCreoSchema successful");

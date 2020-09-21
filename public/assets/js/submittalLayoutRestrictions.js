@@ -419,6 +419,29 @@ $('#enclosure_edit').change(function() {
 
 });
 
+$('#paint').change(function() {
+    $('#paint option').each(function() {
+        if (this.selected == true) {
+            if (this.value == 'OTHER') {
+              $('#paintCustom').css("display", "block")
+            } else {
+            $('#paintCustom').attr('value', '');
+            $('#paintCustom').css("display", "none")
+            }
+        }
+    });
+});
 
 
-
+$('#paint_edit').change(function() {
+    $('#paint_edit option').each(function() {
+        if (this.selected == true) {
+            if (this.value == 'OTHER') {
+                $('#paintCustom_edit').css("display", "block")
+            } else {
+                $('#paintCustom_edit').attr('value', '');
+                $('#paintCustom_edit').css("display", "none")
+            }
+        }
+    });
+});

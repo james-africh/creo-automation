@@ -14,16 +14,8 @@ let connection = mysql.createConnection({
     multipleStatements: true,
 });
 
-
-connection.query('DROP SCHEMA IF EXISTS ' + dbConfig.database, function(err,rows) { if(err) throw err; }); // DROPS RESIDUAL DATABASE/TABLES
-
-connection.query('CREATE DATABASE ' + dbConfig.database, function(err,rows) { if(err) throw err; }); // CREATES mechSubDB SCHEMA
-
 connection.query('USE ' + database, function(err,rows) { if(err) throw err; });
-
-// ********************************************************************************** //
-// ******************** PRE-LOADED STATIC TABLES (SHARED B/W APPS) ****************** //
-// ********************************************************************************** //
+/*
 // layoutParamTypes
 connection.query('\
 CREATE TABLE IF NOT EXISTS ' + database + '.' + dbConfig.layout_paramTypes_table + ' ( \
@@ -191,221 +183,8 @@ connection.query("INSERT INTO "+database+"."+dbConfig.layout_paramTypes_table+" 
     "('keyInterlocks', 'SCHEME 40'), " +
     "('keyInterlocks', 'OTHER'), " +
     "('keyInterlocks', 'N/A'); ", function (err, result) { if(err) throw err; });
+*/
 
-
-// layoutParamRestrictions
-connection.query('\
-CREATE TABLE IF NOT EXISTS ' + database + '.' + dbConfig.layout_paramType_restrictions + ' ( \
-    dropdownID INT UNSIGNED NOT NULL AUTO_INCREMENT,\
-    dropdownType VARCHAR(100) NULL,\
-    dropdownValue VARCHAR(100) NULL,\
-    dropdownRestrictions JSON NULL,\
-    PRIMARY KEY (dropdownID), \
-    UNIQUE INDEX dropdownID_UNIQUE (dropdownID ASC)) \
-    ENGINE = InnoDB;', function(err,rows) { if(err) throw err; });
-connection.query("INSERT INTO "+database+"."+dbConfig.layout_paramType_restrictions+" (dropdownType, dropdownValue, dropdownRestrictions) VALUES " +
-
-    //Restrictions due to 891 UL Listing
-    "('ulListing', 'UL891', '{" +
-        "\"systemType\": [\"208Y/120VAC - 3PH, 4W\", \"240VAC - 3PH, 3W\", \"380Y/220VAC - 3PH, 4W\", " +
-            "\"400Y/230VAC - 3PH, 4W\", \"415Y/240VAC - 3PH, 4W\", \"480VAC - 3PH, 3W\", \"480Y/277VAC - 3PH, 4W\", " +
-            "\"600VAC - 3PH, 3W\", \"600Y/347VAC - 3PH, 4W\", \"125VDC - 2W\", \"250VDC - 2W\", \"500VDC - 2W\", \"600VDC - 2W\"], " +
-        "\"systemAmp\": [\"800A\", \"1200A\", \"1600A\", \"2000A\", \"2500A\", \"3000A\", \"3200A\", \"4000A\", \"5000A\", \"6000A\", \"10000A\"], " +
-        "\"mainBusAmp\": [\"800A\", \"1200A\", \"1600A\", \"2000A\", \"2500A\", \"3000A\", \"3200A\", \"4000A\", \"5000A\", \"6000A\", \"10000A\"], " +
-        "\"busBracing\": [\"65kA\", \"100kA\"], " +
-        "\"interruptRating\": [\"42kAIC\", \"65kAIC\", \"85kAIC\", \"100kAIC\"], " +
-        "\"enclosure\": [\"NEMA 1 INDOOR\", \"NEMA 3R OUTDOOR\", \"OUTDOOR WALK-IN\", \"CUSTOM ENCLOSURE\"], " +
-        "\"accessibility\": [\"FRONT AND REAR\", \"FRONT AND SIDE\", \"FRONT ONLY\"], " +
-        "\"cableEntry\": [\"TOP\", \"BOTTOM\", \"TOP OR BOTTOM\"], " +
-        "\"iccbPlatform\": [\"SQUARE D MASTERPACT NW\", \"SIEMENS WL\", \"EATON MAGNUM DS\", \"EATON MAGNUM SB\", \"EATON NRX\", \"ABB EMAX2\", \"LSIS SUSOL\"], " +
-        "\"mccbPlatform\": [\"SQUARE D POWERPACT\", \"SIEMENS VL\", \"EATON POWER DEFENSE\", \"ABB TMAX\", \"LSIS SUSOL\"], " +
-        "\"vcbPlatform\": [] " +
-    "}'), " +
-
-    //Restrictions due to 1558 UL Listing
-    "('ulListing', 'UL1558', '{" +
-        "\"systemType\": [\"208Y/120VAC - 3PH, 4W\", \"240VAC - 3PH, 3W\", \"380Y/220VAC - 3PH, 4W\", " +
-            "\"400Y/230VAC - 3PH, 4W\", \"415Y/240VAC - 3PH, 4W\", \"480VAC - 3PH, 3W\", \"480Y/277VAC - 3PH, 4W\", " +
-            "\"600VAC - 3PH, 3W\", \"600Y/347VAC - 3PH, 4W\", \"125VDC - 2W\", \"250VDC - 2W\", \"500VDC - 2W\", \"600VDC - 2W\"], " +
-        "\"systemAmp\": [\"800A\", \"1200A\", \"1600A\", \"2000A\", \"2500A\", \"3000A\", \"3200A\", \"4000A\", \"5000A\", \"6000A\", \"10000A\"], " +
-        "\"mainBusAmp\": [\"800A\", \"1200A\", \"1600A\", \"2000A\", \"2500A\", \"3000A\", \"3200A\", \"4000A\", \"5000A\", \"6000A\", \"10000A\"], " +
-        "\"busBracing\": [\"65kA\", \"100kA\"], " +
-        "\"interruptRating\": [\"42kAIC\", \"65kAIC\", \"85kAIC\", \"100kAIC\"], " +
-        "\"enclosure\": [\"NEMA 1 INDOOR\"], " +
-        "\"accessibility\": [\"FRONT AND REAR\"], " +
-        "\"cableEntry\": [\"TOP\", \"BOTTOM\", \"TOP OR BOTTOM\"], " +
-        "\"iccbPlatform\": [\"SQUARE D MASTERPACT NW\", \"SIEMENS WL\", \"EATON MAGNUM DS\", \"ABB EMAX2\", \"LSIS SUSOL\"], " +
-        "\"mccbPlatform\": [], " +
-        "\"vcbPlatform\": [] " +
-    "}'), " +
-
-
-    //Restrictions due to UL/ANSI (MV) UL Listing
-    "('ulListing', 'UL/ANSI', '{" +
-        "\"systemType\": [\"4160VAC - 3PH, 3W\", \"12470VAC - 3PH, 3W\", \"13200VAC - 3PH, 3W\", \"13800VAC - 3PH, 3W\"], " +
-        "\"systemAmp\": [\"1200A\", \"2000A\"], " +
-        "\"mainBusAmp\": [\"1200A\", \"2000A\"], " +
-        "\"busBracing\": [\"31.5kA\"], " +
-        "\"interruptRating\": [\"31.5kAIC\"], " +
-        "\"enclosure\": [\"NEMA 1 INDOOR\"], " +
-        "\"accessibility\": [\"FRONT AND REAR\"], " +
-        "\"cableEntry\": [\"TOP\", \"BOTTOM\"], " +
-        "\"iccbPlatform\": [], " +
-        "\"mccbPlatform\": [], " +
-        "\"vcbPlatform\": [\"ABB VD4\"] " +
-    "}'), " +
-
-
-
-    //Restrictions due to NEMA 3R Enclosure (only in UL891)
-    "('enclosure', 'NEMA 1 INDOOR', '{" +
-        "\"systemAmp\": [\"800A\", \"1200A\", \"1600A\", \"2000A\", \"2500A\", \"3000A\", \"3200A\", \"4000A\", \"5000A\", \"6000A\", \"10000A\"], " +
-        "\"mainBusAmp\": [\"800A\", \"1200A\", \"1600A\", \"2000A\", \"2500A\", \"3000A\", \"3200A\", \"4000A\", \"5000A\", \"6000A\", \"10000A\"] " +
-    "}'), " +
-    "('enclosure', 'NEMA 3R OUTDOOR', '{" +
-        "\"systemAmp\": [\"800A\", \"1200A\", \"1600A\", \"2000A\", \"2500A\", \"3000A\", \"3200A\", \"4000A\"], " +
-        "\"mainBusAmp\": [\"800A\", \"1200A\", \"1600A\", \"2000A\", \"2500A\", \"3000A\", \"3200A\", \"4000A\"] " +
-    "}') "
-
-
-    , function (err, result) {
-        if (err)
-            console.log("Error inserting : %s ", err);
-    }
-);
-
-
-
-// sectionType
-connection.query('\
-CREATE TABLE IF NOT EXISTS ' + database + '.' + dbConfig.secType_table + ' ( \
-    secTypeID INT UNSIGNED NOT NULL AUTO_INCREMENT, \
-    type VARCHAR(100) NULL, \
-    PRIMARY KEY (secTypeID), \
-    UNIQUE INDEX secTypeID_UNIQUE (secTypeID ASC))\
-    ENGINE = InnoDB;', function(err) { if(err) throw err; });
-
-
-connection.query("INSERT INTO "+database+"."+dbConfig.secType_table+" (type) VALUES " +
-    "('SWITCHGEAR - UL1558'), " +
-    "('SWITCHBOARD - UL891'), " +
-    "('PANELBOARD - MAIN LUG (T)'), " +
-    "('PANELBOARD - MAIN LUG (B)'), " +
-    "('PANELBOARD - NO MAIN LUG'), " +
-    "('CONTROL'), " +
-    "('PASSTHROUGH'), " +
-    "('XFMR'), " +
-    "('BOLTSWITCH'), " +
-    "('DC DISCONNECT'), " +
-    "('UTILITY METERING'); ", function (err, result) { if(err) throw err; });
-
-
-// brkType
-connection.query('\
-CREATE TABLE IF NOT EXISTS ' + database + '.' + dbConfig.brkType_table + ' ( \
-    brkTypeID INT UNSIGNED NOT NULL AUTO_INCREMENT, \
-    type VARCHAR(100) NULL, \
-    PRIMARY KEY (brkTypeID), \
-    UNIQUE INDEX brkTypeID_UNIQUE (brkTypeID ASC))\
-    ENGINE = InnoDB;', function(err) { if(err) throw err; });
-
-
-connection.query("INSERT INTO "+database+"."+dbConfig.brkType_table+" (type) VALUES " +
-    "('MASTERPACT NW (SQUARE D) - FIXED'), " +
-    "('MASTERPACT NW (SQUARE D) - DRAWOUT'), " +
-    "('POWERPACT (SQUARE D)'), " +
-    "('TMAX (ABB)'); ", function (err, result) { if(err) throw err; });
-
-
-
-// brkAccOptions
-connection.query('\
-CREATE TABLE IF NOT EXISTS ' + database + '.' + dbConfig.brkAcc_options_table + ' (\
-        brkAccDropdownID INT UNSIGNED NOT NULL AUTO_INCREMENT, \
-        brkAcc VARCHAR(100) NULL, \
-        brkAccName VARCHAR(100) NULL, \
-        brkAccOpt VARCHAR(100) NULL, \
-        brkAccNameCode VARCHAR(100) NULL, \
-        brkAccOptCode VARCHAR(100) NULL, \
-        PRIMARY KEY (brkAccDropdownID), \
-        UNIQUE INDEX brkAccDropdownID_UNIQUE (brkAccDropdownID ASC))\
-        ENGINE = InnoDB;', function(err){ if(err) throw err; });
-
-let quoteBrkAccData = [
-    {brkAcc: "shuntTrip", brkAccName: "Shunt Trip", brkAccOpt: ["110-127VAC/DC 100% DUTY", "24VDC 100% DUTY", "48VDC 100% DUTY"], brkAccNameCode: "ST", brkAccOptCode: ["120VAC/DC", "24VDC", "48VDC"]},
-    {brkAcc: "motor", brkAccName: "Spring Charge Motor",  brkAccOpt: ["110-125VAC 3s" , "110-125VDC 3s" , "24VDC 3s" , "48VDC 3s"], brkAccNameCode: "SCM", brkAccOptCode: ["120VAC", "120VDC", "24VDC", "48VDC"]},
-    {brkAcc: "springReleaseDevice", brkAccName: "Closing Coil",  brkAccOpt: ["110-127VAC/DC" , "24VDC" , "48VDC"], brkAccNameCode: "CC", brkAccOptCode: ["120VAC/DC", "24VDC", "48VDC"]},
-    {brkAcc: "undervoltageTrip", brkAccName: "UV Trip",  brkAccOpt: ["110-127VAC/DC 100% DUTY", "24VDC 100% DUTY", "48VDC 100% DUTY"], brkAccNameCode: "UVR", brkAccOptCode: ["120VAC/DC", "24VDC", "48VDC"]},
-    {brkAcc: "secondShuntTrip", brkAccName: "2nd Shunt Trip",  brkAccOpt: ["110-127VAC/DC 100% DUTY", "24VDC 100% DUTY", "48VDC 100% DUTY"], brkAccNameCode: "SST", brkAccOptCode: ["120VAC/DC", "24VDC", "48VDC"]},
-    {brkAcc: "auxSwitch", brkAccName: "Aux Switch",  brkAccOpt: ["1", "2" , "4" , "6" , "8" , "10" , "12"], brkAccNameCode: "AUX", brkAccOptCode: ["1", "2", "4", "6", "8", "10", "12"]},
-    {brkAcc: "cradleContacts", brkAccName: "Cradle Contacts",  brkAccOpt: ["3C,3T,3D" , "6C,3T,0D" , "9C,0T,0D" , "3C,0T,6D"], brkAccNameCode: "CRC", brkAccOptCode: ["3C,3T,3D" , "6C,3T,0D" , "9C,0T,0D" , "3C,0T,6D"]},
-    {brkAcc: "bellAlarm", brkAccName: "Bell Alarm",  brkAccOpt: [], brkAccNameCode: "BA", brkAccOptCode: []},
-    {brkAcc: "padlock", brkAccName: "Padlock Provision",  brkAccOpt: [], brkAccNameCode: "PD", brkAccOptCode: []},
-    {brkAcc: "comms", brkAccName: "Communications",  brkAccOpt: [], brkAccNameCode: "COM", brkAccOptCode: []},
-    {brkAcc: "maintenanceMode", brkAccName: "Maintenance Mode", brkAccOpt: [], brkAccNameCode: "MM", brkAccOptCode: []},
-    {brkAcc: "kirkKeyProvisions", brkAccName: "Kirk Key Provision",  brkAccOpt: [], brkAccNameCode: "KK", brkAccOptCode: []},
-    {brkAcc: "safetyShutters", brkAccName: "Safety Shutters",  brkAccOpt: [], brkAccNameCode: "SS", brkAccOptCode: []},
-    {brkAcc: "pushButtonCover", brkAccName: "Push-button Cover",  brkAccOpt: [], brkAccNameCode: "PB", brkAccOptCode: []},
-    {brkAcc: "operationsCounter", brkAccName: "Operations Counter",  brkAccOpt: [], brkAccNameCode: "OC", brkAccOptCode: []},
-    {brkAcc: "mechTripIndicator", brkAccName: "Mechanical Trip Indicator",  brkAccOpt: [], brkAccNameCode: "MTI", brkAccOptCode: []},
-    {brkAcc: "mechInterlock", brkAccName: "Mechanical Interlock",  brkAccOpt: [], brkAccNameCode: "MI", brkAccOptCode: []},
-    {brkAcc: "remoteReset", brkAccName: "Remote Reset",  brkAccOpt: [], brkAccNameCode: "RR", brkAccOptCode: []},
-    {brkAcc: "breakerReadyToClose", brkAccName: "Ready to Close",  brkAccOpt: [], brkAccNameCode: "RC", brkAccOptCode: []},
-    {brkAcc: "meteringForTripUnit", brkAccName: "Trip Unit Metering",  brkAccOpt: [], brkAccNameCode: "TUM", brkAccOptCode: []},
-    {brkAcc: "latchCheck", brkAccName: "Latch Check Switch",  brkAccOpt: [], brkAccNameCode: "LCS", brkAccOptCode: []},
-    {brkAcc: "secondaryTerminalBlocks", brkAccName: "Secondary Terminal Blocks",  brkAccOpt: [], brkAccNameCode: "STB", brkAccOptCode: []}
-];
-
-for (let i = 0; i < quoteBrkAccData.length; i++) {
-    if (quoteBrkAccData[i].brkAccOpt.length != 0) {
-        for (let j = 0; j < quoteBrkAccData[i].brkAccOpt.length; j++) {
-            connection.query("INSERT INTO " + database + '.' + dbConfig.brkAcc_options_table + " (brkAcc, brkAccName, brkAccOpt, brkAccNameCode, brkAccOptCode) VALUES (?,?,?,?,?)", [quoteBrkAccData[i].brkAcc, quoteBrkAccData[i].brkAccName, quoteBrkAccData[i].brkAccOpt[j], quoteBrkAccData[i].brkAccNameCode, quoteBrkAccData[i].brkAccOptCode[j]]);
-        }
-    } else {
-        connection.query("INSERT INTO " + database + '.' + dbConfig.brkAcc_options_table + " (brkAcc, brkAccName, brkAccOpt, brkAccNameCode, brkAccOptCode) VALUES (?,?,?,?,?)", [quoteBrkAccData[i].brkAcc, quoteBrkAccData[i].brkAccName, null, quoteBrkAccData[i].brkAccNameCode, null]);
-    }
-}
-
-
-//controlAsmSum
-connection.query('\
-CREATE TABLE IF NOT EXISTS ' + database + '.' + dbConfig.control_assemblies_table + ' ( \
-    cktID INT UNSIGNED NOT NULL AUTO_INCREMENT, \
-    cktName VARCHAR(100) NULL, \
-    extCost DOUBLE NULL, \
-    hrsEE DOUBLE NULL, \
-    hrsTEST DOUBLE NULL, \
-    hrsPROG DOUBLE NULL, \
-    numWires INT NULL, \
-    PRIMARY KEY (cktID), \
-    UNIQUE INDEX cktID_UNIQUE (cktID ASC))\
-    ENGINE = InnoDB;', function(err) { if(err) throw err; });
-
-
-//controlItemSum
-connection.query('\
-CREATE TABLE IF NOT EXISTS ' + database + '.' + dbConfig.control_items_table + ' ( \
-    ctlItemID INT UNSIGNED NOT NULL AUTO_INCREMENT, \
-    cktID INT UNSIGNED NULL, \
-    itemDesc VARCHAR(100) NULL, \
-    itemPN VARCHAR(100) NULL, \
-    unitCost DOUBLE UNSIGNED NULL, \
-    qty INT UNSIGNED NULL,\
-    catCode VARCHAR(100), \
-    PRIMARY KEY (ctlItemID), \
-    CONSTRAINT fk_controlAsmItem \
-    FOREIGN KEY (cktID) \
-        REFERENCES controlAsmSum(cktID) \
-        ON DELETE CASCADE \
-        ON UPDATE CASCADE, \
-    CONSTRAINT fk_controlItemCatCode \
-    UNIQUE INDEX ctlItemID_UNIQUE (ctlItemID ASC))\
-    ENGINE = InnoDB;', function(err) { if(err) throw err; });
-
-
-// ********************************************************************************** //
-// ****************** MECHANICAL ENGINEERING SUBMITTAL TABLES *********************** //
-// ********************************************************************************** //
 
 // submittalSum
 connection.query('\
@@ -593,7 +372,6 @@ CREATE TABLE IF NOT EXISTS ' + database + '.' + dbConfig.submittal_panel_breaker
         ON UPDATE CASCADE, \
     UNIQUE INDEX panelBrkID_UNIQUE (panelBrkID ASC))\
     ENGINE = InnoDB;', function(err) { if(err) throw err; });
-
 
 console.log("createSubSchema successful");
 

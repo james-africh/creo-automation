@@ -168,6 +168,24 @@ async function revLookup(revData, lookupArray) {
     return null
 }
 
+async function getProductCatalogData(productCatalogData) {
+    const prodFam = await querySql("SELECT * FROM " + database + "." + dbConfig.prod_productFamily_table);
+    const prodLine = await querySql("SELECT * FROM " + database + "." + dbConfig.prod_productLine_table);
+    const prodVoltLV = await querySql("SELECT * FROM " + database + "." + dbConfig.prod_systemVoltage_LV_table);
+    const prodVoltMV = await querySql("SELECT * FROM " + database + "." + dbConfig.prod_systemVoltage_MV_table);
+    const prodCurrent = await querySql("SELECT * FROM " + database + "." + dbConfig.prod_currentRating_table);
+    const prodInterruptLV = await querySql("SELECT * FROM " + database + "." + dbConfig.prod_interruptingRating_LV_table);
+    const prodInterruptMV = await querySql("SELECT * FROM " + database + "." + dbConfig.prod_interruptingRating_MV_table);
+    const prodEnclosure = await querySql("SELECT * FROM " + database + "." + dbConfig.prod_enclosure_table);
+    const prodFinish = await querySql("SELECT * FROM " + database + "." + dbConfig.prod_enclosure_table);
+    const prodAccess = await querySql("SELECT * FROM " + database + "." + dbConfig.prod_accessibility_table);
+    const prodControlVolt = await querySql("SELECT * FROM " + database + "." + dbConfig.prod_controlVoltage_table);
+
+
+
+
+}
+
 async function getCreoData(subData, revData, creoData) {
     let jobNum = subData[0].jobNum;
     let releaseNum = subData[0].releaseNum;
@@ -236,6 +254,9 @@ async function getLayoutData(subData, layoutData) {
                 subID: layout.subID,
                 layoutID: layout.layoutID,
                 layoutName: layout.layoutName,
+                layoutCatalogPN: layout.layoutCatalogPN,
+                productFamily: layout.productFamily,
+                productLine: layout.productLine,
                 ulListing: layout.ulListing,
                 systemType: layout.systemType,
                 systemAmp: layout.systemAmp,
@@ -388,7 +409,7 @@ async function getSectionData(layoutData, sectionData) {
     return null
 }
 
-async function getTypeAndRestrictionData(sectionTypeData, brkTypeData, restrictionData) {
+async function getTypeData(sectionTypeData, brkTypeData) {
     const secTypes = await querySql("SELECT * FROM " + database + "." + dbConfig.secType_table);
     for (let secType of secTypes) {
         sectionTypeData.push({
@@ -403,14 +424,14 @@ async function getTypeAndRestrictionData(sectionTypeData, brkTypeData, restricti
         })
     }
 
-    const layoutParamRestrictions = await querySql("SELECT * FROM " + database + "." + dbConfig.layout_paramType_restrictions);
+   /* const layoutParamRestrictions = await querySql("SELECT * FROM " + database + "." + dbConfig.layout_paramType_restrictions);
     for (let restriction of layoutParamRestrictions) {
         restrictionData.push({
             type: restriction.dropdownType,
             value: restriction.dropdownValue,
             restrictions: JSON.parse(restriction.dropdownRestrictions)
         });
-    }
+    }*/
 
     return null
 }
@@ -443,7 +464,7 @@ async function getMfgBreakerDropdownData(brkDropdownOpts) {
 return null
 }
 
-async function searchSubmittalRoutine(subID, res, message) {
+async function searchSubmittalRoutine(subID, res, message, revEngineerData) {
     let subData = [];
     let revData = [];
     let creoData = [];
@@ -481,7 +502,7 @@ async function searchSubmittalRoutine(subID, res, message) {
             return await getSectionData(layoutData, sectionData);
         })
         .then(async function() {
-            return await getTypeAndRestrictionData(sectionTypeData, brkTypeData, restrictionData);
+            return await getTypeData(sectionTypeData, brkTypeData);
         })
         .then(async function() {
             return await getPbRowData(sectionData, pbRowData);
@@ -514,6 +535,7 @@ async function searchSubmittalRoutine(subID, res, message) {
                 restrictionData: restrictionData,
                 pbRowData: pbRowData,
                 brkDropdownOpts: brkDropdownOpts,
+                revEngineerData: revEngineerData,
                 currentSlide: 1
             })
         })
@@ -673,6 +695,7 @@ exports.searchSubmittal = function(req, res) {
     let revData = [];
     let creoData = [];
     let layoutData = [];
+    let productCatalogData = [];
     let layoutDropdownData = [];
     let brkAccDropdownData = [];
     let deviceData = [];
@@ -706,7 +729,7 @@ exports.searchSubmittal = function(req, res) {
             return await getSectionData(layoutData, sectionData);
         })
         .then(async function() {
-            return await getTypeAndRestrictionData(sectionTypeData, brkTypeData, restrictionData);
+            return await getTypeData(sectionTypeData, brkTypeData);
         })
         .then(async function() {
             return await getPbRowData(sectionData, pbRowData);
@@ -717,7 +740,7 @@ exports.searchSubmittal = function(req, res) {
         .then(() => {
             res.locals = {title: 'Submittal'};
             res.render('Submittal/searchSubmittal', {
-                message: null,
+                message: [],
                 subData: subData,
                 revData: revData,
                 creoData: creoData,
@@ -739,6 +762,7 @@ exports.searchSubmittal = function(req, res) {
                 restrictionData: restrictionData,
                 pbRowData: pbRowData,
                 brkDropdownOpts: brkDropdownOpts,
+                revEngineerData: [],
                 currentSlide: 1
             })
         })
@@ -750,6 +774,90 @@ exports.searchSubmittal = function(req, res) {
 /***********************************************
  LAYOUTS IN SUBMITTAL
  ***********************************************/
+
+exports.reverseEngineerLayout = function(req, res) {
+    let urlObj = url.parse(req.originalUrl);
+    urlObj.protocol = req.protocol;
+    urlObj.host = req.get('host');
+    let qs = queryString.parse(urlObj.search);
+    let jobNumReleaseNum = qs.subID.split('_')[0];
+    let subID = qs.subID.split('_')[1];
+    let layoutCatalogPN = req.body.layoutCatalogPN;
+    let message = [];
+
+    let familyCode = layoutCatalogPN.slice(1,3);
+    let lookupData = {
+        instanceID: layoutCatalogPN.split('-')[1],
+        familyCode: layoutCatalogPN.slice(1,3),
+        lineCode: layoutCatalogPN.slice(3,4),
+        systemVoltCode: layoutCatalogPN.slice(4,6),
+        currentRatingCode: layoutCatalogPN.slice(6,8),
+        interruptingRatingCode: layoutCatalogPN.slice(8,9),
+        enclosureCode:  layoutCatalogPN.slice(9,10),
+        finishCode: layoutCatalogPN.slice(10,11),
+        accessibilityCode: layoutCatalogPN.slice(11,12),
+        controlVoltCode: layoutCatalogPN.slice(12,13),
+    };
+
+    async function lookupLayoutPN() {
+        const productFamily = await querySql("SELECT * FROM " + database + "." + dbConfig.prod_productFamily_table + " WHERE code = ?", lookupData.familyCode);
+        const productLine = await querySql("SELECT * FROM " + database + "." + dbConfig.prod_productLine_table + " WHERE code = ?", lookupData.lineCode);
+        const currentRating = await querySql("SELECT * FROM " + database + "." + dbConfig.prod_currentRating_table + " WHERE code = ?", lookupData.currentRatingCode);
+        const enclosure = await querySql("SELECT * FROM " + database + "." + dbConfig.prod_enclosure_table + " WHERE code = ?", lookupData.enclosureCode);
+        const finish = await querySql("SELECT * FROM " + database + "." + dbConfig.prod_finish_table + " WHERE code = ?", lookupData.finishCode);
+        const accessibility = await querySql("SELECT * FROM " + database + "." + dbConfig.prod_accessibility_table + " WHERE code = ?", lookupData.accessibilityCode);
+        const controlVoltage = await querySql("SELECT * FROM " + database + "." + dbConfig.prod_controlVoltage_table + " WHERE code = ?", lookupData.controlVoltCode);
+
+        if (familyCode == 'SV' || familyCode == 'SA' || familyCode == 'AS') {
+            const systemVoltageMV = await querySql("SELECT * FROM " + database + "." + dbConfig.prod_systemVoltage_MV_table + " WHERE code = ?", lookupData.systemVoltCode);
+            const interruptingRatingMV = await querySql("SELECT * FROM " + database + "." + dbConfig.prod_interruptingRating_MV_table + " WHERE code = ?", lookupData.interruptingRatingCode);
+            return {
+                layoutCatalogPN: layoutCatalogPN,
+                ulListing: 'UL/ANSI',
+                productFamily: productFamily[0].description,
+                productLine: productLine[0].description,
+                systemVoltage: systemVoltageMV[0].description,
+                currentRating: currentRating[0].description,
+                interruptingRating: interruptingRatingMV[0].description,
+                enclosure: enclosure[0].description,
+                finish: finish[0].description,
+                accessibility: accessibility[0].description,
+                controlVoltage: controlVoltage[0].description,
+            };
+        } else if (familyCode == 'S1' || familyCode == 'S2' || familyCode == 'S3' || familyCode == 'PD' || familyCode == 'SG') {
+            const systemVoltageLV = await querySql("SELECT * FROM " + database + "." + dbConfig.prod_systemVoltage_LV_table + " WHERE code = ?", lookupData.systemVoltCode);
+            const interruptingRatingLV = await querySql("SELECT * FROM " + database + "." + dbConfig.prod_interruptingRating_LV_table + " WHERE code = ?", lookupData.interruptingRatingCode);
+            let ulListing;
+            if (familyCode == 'SG') {
+                ulListing = 'UL1558';
+            } else {
+                ulListing = 'UL891';
+            }
+            return {
+                layoutCatalogPN: layoutCatalogPN,
+                ulListing: ulListing,
+                productFamily: productFamily[0].description,
+                productLine: productLine[0].description,
+                systemVoltage: systemVoltageLV[0].description,
+                currentRating: currentRating[0].description,
+                interruptingRating: interruptingRatingLV[0].description,
+                enclosure: enclosure[0].description,
+                finish: finish[0].description,
+                accessibility: accessibility[0].description,
+                controlVoltage: controlVoltage[0].description,
+            };
+        }
+    }
+
+    lookupLayoutPN()
+        .then(async function(lookupResult) {
+            await searchSubmittalRoutine(subID, res, message, [lookupResult]);
+            return null
+        })
+        .catch(err => {
+            console.log(err);
+        });
+};
 
 exports.addLayout = function(req, res) {
     let urlObj = url.parse(req.originalUrl);
@@ -767,9 +875,21 @@ exports.addLayout = function(req, res) {
             checkArray.push("N");
         }
     }
-    let newLayoutData = {
+    let paintColor;
+    if (req.body.paintCustom.length != 0) {
+        paintColor = req.body.paintCustom;
+    } else {
+        paintColor = req.body.paint;
+    }
+
+    let layoutCatalogPN = req.body.layoutCatalogPN;
+
+    let userLayoutData = {
         subID: subID,
         layoutName: req.body.layoutName,
+        layoutCatalogPN: layoutCatalogPN,
+        productFamily: req.body.productFamily,
+        productLine: req.body.productLine,
         ulListing: req.body.ulListing,
         systemType: req.body.systemType,
         systemAmp: req.body.systemAmp,
@@ -777,7 +897,7 @@ exports.addLayout = function(req, res) {
         enclosure: req.body.enclosure,
         accessibility: req.body.accessibility,
         cableAccess: req.body.cableAccess,
-        paint: req.body.paint,
+        paint: paintColor,
         interruptRating: req.body.interruptRating,
         busBracing: req.body.busBracing,
         busType: req.body.busType,
@@ -792,13 +912,47 @@ exports.addLayout = function(req, res) {
         numSections: 0
     };
 
+    async function createLayoutPN() {
+        const productFamily = await querySql("SELECT * FROM " + database + "." + dbConfig.prod_productFamily_table + " WHERE description = ?", userLayoutData.productFamily);
+        const productLine = await querySql("SELECT * FROM " + database + "." + dbConfig.prod_productLine_table + " WHERE description = ?", userLayoutData.productLine);
+        const currentRating = await querySql("SELECT * FROM " + database + "." + dbConfig.prod_currentRating_table + " WHERE description = ?", userLayoutData.systemAmp);
+        const enclosure = await querySql("SELECT * FROM " + database + "." + dbConfig.prod_enclosure_table + " WHERE description = ?", userLayoutData.enclosure);
+        const finish = await querySql("SELECT * FROM " + database + "." + dbConfig.prod_finish_table + " WHERE description = ?", userLayoutData.paint);
+        const accessibility = await querySql("SELECT * FROM " + database + "." + dbConfig.prod_accessibility_table + " WHERE description = ?", userLayoutData.accessibility);
+
+        let pnResult;
+
+        if (productFamily[0].description == '15kV SLIMVAC' || productFamily[0].description == '15kV SLIMVAC AR' || productFamily[0].description == 'ANSI STD. SWITCHGEAR CLASS') {
+            const systemVoltageMV = await querySql("SELECT * FROM " + database + "." + dbConfig.prod_systemVoltage_MV_table + " WHERE description = ?", userLayoutData.systemType);
+            const interruptingRatingMV = await querySql("SELECT * FROM " + database + "." + dbConfig.prod_interruptingRating_MV_table + " WHERE description = ?", userLayoutData.interruptRating);
+            pnResult = 'P' + productFamily[0].code + productLine[0].code + systemVoltageMV[0].code + currentRating[0].code + interruptingRatingMV[0].code + enclosure[0].code + finish[0].code + accessibility[0].code;
+        } else if (productFamily[0].description == 'SERIES 1 SWITCHBOARD' || productFamily[0].description == 'SERIES 2 SWITCHBOARD' || productFamily[0].description == 'SERIES 3 SWITCHBOARD' || productFamily[0].description == 'POWER DISTRIBUTION UNIT' || productFamily[0].description == 'SERIES 1 SWITCHGEAR') {
+            const systemVoltageLV = await querySql("SELECT * FROM " + database + "." + dbConfig.prod_systemVoltage_LV_table + " WHERE description = ?", userLayoutData.systemType);
+            const interruptingRatingLV = await querySql("SELECT * FROM " + database + "." + dbConfig.prod_interruptingRating_LV_table + " WHERE description = ?", userLayoutData.interruptRating);
+            pnResult = 'P' + productFamily[0].code + productLine[0].code + systemVoltageLV[0].code + currentRating[0].code + interruptingRatingLV[0].code + enclosure[0].code + finish[0].code + accessibility[0].code;
+        }
+
+        return pnResult
+    }
+
     async function createLayout(layoutData) {
         return await querySql("INSERT INTO " + database + "." + dbConfig.submittal_layout_table + " SET ?", layoutData);
     }
 
-    createLayout(newLayoutData)
-        .then(() => {
-            res.redirect('../searchSubmittal/?subID='+jobNumReleaseNum+"_"+subID);
+    createLayoutPN()
+        .then(async function (pnResult) {
+            console.log(pnResult);
+            if (pnResult != layoutCatalogPN.slice(0,12)) {
+                userLayoutData.layoutCatalogPN = pnResult + layoutCatalogPN.slice(12, layoutCatalogPN.length);
+            }
+        })
+        .then(async function() {
+            await createLayout(userLayoutData);
+            return null;
+        })
+        .then(async function () {
+            await searchSubmittalRoutine(subID, res, [], []);
+            return null;
         })
         .catch(err => {
             console.log(err);
@@ -822,6 +976,12 @@ exports.editLayout = function(req, res) {
             checkArray.push("N");
         }
     }
+    let paintColor_edit;
+    if (req.body.paintCustom_edit.length != 0) {
+        paintColor_edit = req.body.paintCustom_edit;
+    } else {
+        paintColor_edit = req.body.paint_edit;
+    }
     let newLayoutData = {
         layoutName: req.body.layoutName,
         ulListing: req.body.ulListing_edit,
@@ -831,7 +991,7 @@ exports.editLayout = function(req, res) {
         enclosure: req.body.enclosure_edit,
         accessibility: req.body.accessibility_edit,
         cableAccess: req.body.cableAccess_edit,
-        paint: req.body.paint_edit,
+        paint: paintColor_edit,
         interruptRating: req.body.interruptRating_edit,
         busBracing: req.body.busBracing_edit,
         busType: req.body.busType_edit,
@@ -1690,14 +1850,16 @@ exports.generateSubmittal = function(req, res) {
     let creoData = [];
     let breakerData = [];
     let creoPanelData = [];
-    let message = null;
+    let message = [];
 
     async function checkWorkingDirAndStandardLib() {
         if (creoWorkingDir == null || creoStandardLib == null) {
-            message = {
+            message.push({
                 location: 2,
+                section: null,
+                breaker: null,
                 text: 'Please set the location of the Working Directory as well as the Standard Library'
-            };
+            });
             await searchSubmittalRoutine(subID, res, message);
             return 'STOP';
         } else {
@@ -2317,17 +2479,11 @@ exports.generateSubmittal = function(req, res) {
                             provision = 'Y';
                         }
 
-                        if (parseInt(breakerData[i].devFrameSet.slice(0,breakerData[i].devFrameSet.length - 1)) < 6000) {
-                            if (parseInt(breakerData[i].devFrameSet.slice(0,breakerData[i].devFrameSet.length - 1)) < 3200) {
-                                if (parseInt(breakerData[i].devFrameSet.slice(0,breakerData[i].devFrameSet.length - 1)) < 2500) {
-                                    frame = 'E2.2';
-                                } else {
-                                    frame = 'E4.2';
-                                }
-                            } else {
-                                frame = 'E4.2';
-                            }
-                        } else {
+                        if (parseInt(breakerData[i].devFrameSet.slice(0,breakerData[i].devFrameSet.length - 1)) <= 2000) {
+                            frame = 'E2.2';
+                        } else if (parseInt(breakerData[i].devFrameSet.slice(0,breakerData[i].devFrameSet.length - 1)) > 2000 && parseInt(breakerData[i].devFrameSet.slice(0,breakerData[i].devFrameSet.length - 1)) <= 3200) {
+                            frame = 'E4.2';
+                        } else if (parseInt(breakerData[i].devFrameSet.slice(0,breakerData[i].devFrameSet.length - 1)) > 3200 && parseInt(breakerData[i].devFrameSet.slice(0,breakerData[i].devFrameSet.length - 1)) <= 4000) {
                             frame = 'E6.2';
                         }
                         compartment = breakerData[i].comp;
@@ -3436,7 +3592,10 @@ exports.generateSubmittal = function(req, res) {
                 }
             }
             for (let creoRow of creoRowData) {
-                totalUnitSpace += parseInt(creoRow[0].unitSpaceQty);
+                if (creoRow.length != 0) {
+                    totalUnitSpace += parseInt(creoRow[0].unitSpaceQty);
+                }
+
             }
             totalUnitSpace += lugSpace;
             let chosenSpacing;
@@ -3661,514 +3820,516 @@ exports.generateSubmittal = function(req, res) {
 
 
         for (let row of creoRowData) {
-            let mccbRight, mccbLeft, mccbCenterRight, mccbCenterLeft, frame, panelWires;
-            currentUnitSpace += row[0].unitSpaceQty;
-            let CS = "ACS"+currentUnitSpace.toString();
-            await creo(sessionId, {
-                command: "file",
-                function: "assemble",
-                data: {
-                    file: row[0].instanceAsm+".asm",
-                    generic: row[0].genericAsm,
-                    into_asm: newPanelAsm+".asm",
-                    constraints: [{
-                        asmref: CS,
-                        compref: row[0].asmCsys,
-                        type: "CSYS"
-                    }]
-                }
-            });
-            if (row[0].mount == 'SINGLE') {
-                if (row[0].cbRightFrame == null) {
-                    mccbRight = 'N';
-                    mccbCenterRight = 'N';
-                    switch (row[0].cbLeftFrame) {
-                        case 'P':
-                            mccbLeft = 'N';
-                            mccbCenterLeft = 'Y';
-                            frame = 'P';
-                            panelWires = null;
-                            break;
-                        case 'P-PROV':
-                            mccbLeft = 'N';
-                            mccbCenterLeft = 'Y';
-                            frame = 'P';
-                            panelWires = null;
-                            break;
-                        case 'L':
-                           if (row[0].cbLeftMaxAmps == 400) {
-                               mccbLeft = 'Y';
-                               mccbCenterLeft = 'N';
-                               frame = 'L';
-                               panelWires = null;
-                           } else {
-                               mccbLeft = 'N';
-                               mccbCenterLeft = 'Y';
-                               frame = 'L';
-                               panelWires = row[0].panelWires;
-                           }
-                            break;
-                        case 'L-PROV':
-                            if (row[0].cbLeftMaxAmps == 400) {
-                                mccbLeft = 'Y';
-                                mccbCenterLeft = 'N';
-                                frame = 'L';
-                                panelWires = null;
-                            } else {
+            if (row.length != 0) {
+                let mccbRight, mccbLeft, mccbCenterRight, mccbCenterLeft, frame, panelWires;
+                currentUnitSpace += row[0].unitSpaceQty;
+                let CS = "ACS" + currentUnitSpace.toString();
+                await creo(sessionId, {
+                    command: "file",
+                    function: "assemble",
+                    data: {
+                        file: row[0].instanceAsm + ".asm",
+                        generic: row[0].genericAsm,
+                        into_asm: newPanelAsm + ".asm",
+                        constraints: [{
+                            asmref: CS,
+                            compref: row[0].asmCsys,
+                            type: "CSYS"
+                        }]
+                    }
+                });
+                if (row[0].mount == 'SINGLE') {
+                    if (row[0].cbRightFrame == null) {
+                        mccbRight = 'N';
+                        mccbCenterRight = 'N';
+                        switch (row[0].cbLeftFrame) {
+                            case 'P':
                                 mccbLeft = 'N';
                                 mccbCenterLeft = 'Y';
-                                frame = 'L';
-                                panelWires = row[0].panelWires;
-                            }
-                            break;
-                        case 'J':
-                            mccbLeft = 'Y';
-                            mccbCenterLeft = 'N';
-                            frame = 'H/J';
-                            panelWires = null;
-                            break;
-                        case 'J-PROV':
-                            mccbLeft = 'Y';
-                            mccbCenterLeft = 'N';
-                            frame = 'H/J';
-                            panelWires = null;
-                            break;
-                        case 'H':
-                            mccbLeft = 'Y';
-                            mccbCenterLeft = 'N';
-                            frame = 'H/J';
-                            panelWires = null;
-                            break;
-                        case 'H-PROV':
-                            mccbLeft = 'Y';
-                            mccbCenterLeft = 'N';
-                            frame = 'H/J';
-                            panelWires = null;
-                            break;
+                                frame = 'P';
+                                panelWires = null;
+                                break;
+                            case 'P-PROV':
+                                mccbLeft = 'N';
+                                mccbCenterLeft = 'Y';
+                                frame = 'P';
+                                panelWires = null;
+                                break;
+                            case 'L':
+                                if (row[0].cbLeftMaxAmps == 400) {
+                                    mccbLeft = 'Y';
+                                    mccbCenterLeft = 'N';
+                                    frame = 'L';
+                                    panelWires = null;
+                                } else {
+                                    mccbLeft = 'N';
+                                    mccbCenterLeft = 'Y';
+                                    frame = 'L';
+                                    panelWires = row[0].panelWires;
+                                }
+                                break;
+                            case 'L-PROV':
+                                if (row[0].cbLeftMaxAmps == 400) {
+                                    mccbLeft = 'Y';
+                                    mccbCenterLeft = 'N';
+                                    frame = 'L';
+                                    panelWires = null;
+                                } else {
+                                    mccbLeft = 'N';
+                                    mccbCenterLeft = 'Y';
+                                    frame = 'L';
+                                    panelWires = row[0].panelWires;
+                                }
+                                break;
+                            case 'J':
+                                mccbLeft = 'Y';
+                                mccbCenterLeft = 'N';
+                                frame = 'H/J';
+                                panelWires = null;
+                                break;
+                            case 'J-PROV':
+                                mccbLeft = 'Y';
+                                mccbCenterLeft = 'N';
+                                frame = 'H/J';
+                                panelWires = null;
+                                break;
+                            case 'H':
+                                mccbLeft = 'Y';
+                                mccbCenterLeft = 'N';
+                                frame = 'H/J';
+                                panelWires = null;
+                                break;
+                            case 'H-PROV':
+                                mccbLeft = 'Y';
+                                mccbCenterLeft = 'N';
+                                frame = 'H/J';
+                                panelWires = null;
+                                break;
 
-                        case 'XT7':
-                            mccbLeft = 'N';
-                            mccbCenterLeft = 'Y';
-                            frame = 'XT7';
-                            panelWires = null;
-                            break;
-                        case 'XT7-PROV':
-                            mccbLeft = 'N';
-                            mccbCenterLeft = 'Y';
-                            frame = 'XT7';
-                            panelWires = null;
-                            break;
-                        case 'XT6':
-                            mccbLeft = 'N';
-                            mccbCenterLeft = 'Y';
-                            frame = 'XT7';
-                            panelWires = null;
-                            break;
-                        case 'XT6-PROV':
-                            mccbLeft = 'N';
-                            mccbCenterLeft = 'Y';
-                            frame = 'XT7';
-                            panelWires = null;
-                            break;
-                        case 'XT5':
-                            if (row[0].cbLeftMaxAmps == 400) {
+                            case 'XT7':
+                                mccbLeft = 'N';
+                                mccbCenterLeft = 'Y';
+                                frame = 'XT7';
+                                panelWires = null;
+                                break;
+                            case 'XT7-PROV':
+                                mccbLeft = 'N';
+                                mccbCenterLeft = 'Y';
+                                frame = 'XT7';
+                                panelWires = null;
+                                break;
+                            case 'XT6':
+                                mccbLeft = 'N';
+                                mccbCenterLeft = 'Y';
+                                frame = 'XT7';
+                                panelWires = null;
+                                break;
+                            case 'XT6-PROV':
+                                mccbLeft = 'N';
+                                mccbCenterLeft = 'Y';
+                                frame = 'XT7';
+                                panelWires = null;
+                                break;
+                            case 'XT5':
+                                if (row[0].cbLeftMaxAmps == 400) {
+                                    mccbLeft = 'Y';
+                                    mccbCenterLeft = 'N';
+                                    frame = 'XT5';
+                                    panelWires = null;
+                                } else {
+                                    mccbLeft = 'N';
+                                    mccbCenterLeft = 'Y';
+                                    frame = 'XT5';
+                                    panelWires = null;
+                                }
+                                break;
+                            case 'XT5-PROV':
+                                if (row[0].cbLeftMaxAmps == 400) {
+                                    mccbLeft = 'Y';
+                                    mccbCenterLeft = 'N';
+                                    frame = 'XT5';
+                                    panelWires = null;
+                                } else {
+                                    mccbLeft = 'N';
+                                    mccbCenterLeft = 'Y';
+                                    frame = 'XT5';
+                                    panelWires = null;
+                                }
+                                break;
+                            case 'XT4':
+                                mccbLeft = 'Y';
+                                mccbCenterLeft = 'N';
+                                frame = 'XT4';
+                                panelWires = null;
+                                break;
+                            case 'XT4-PROV':
+                                mccbLeft = 'Y';
+                                mccbCenterLeft = 'N';
+                                frame = 'XT4';
+                                panelWires = null;
+                                break;
+                            case 'XT2':
+                                mccbLeft = 'Y';
+                                mccbCenterLeft = 'N';
+                                frame = 'XT2';
+                                panelWires = null;
+                                break;
+                            case 'XT2-PROV':
+                                mccbLeft = 'Y';
+                                mccbCenterLeft = 'N';
+                                frame = 'XT2';
+                                panelWires = null;
+                                break;
+                        }
+                    } else {
+                        mccbLeft = 'N';
+                        mccbCenterLeft = 'N';
+                        switch (row[0].cbRightFrame) {
+                            case 'P':
+                                mccbRight = 'N';
+                                mccbCenterRight = 'Y';
+                                frame = 'P';
+                                panelWires = null;
+                                break;
+                            case 'P-PROV':
+                                mccbRight = 'N';
+                                mccbCenterRight = 'Y';
+                                frame = 'P';
+                                panelWires = null;
+                                break;
+                            case 'L':
+                                if (row[0].cbRightMaxAmps == 400) {
+                                    mccbRight = 'Y';
+                                    mccbCenterRight = 'N';
+                                    frame = 'L';
+                                    panelWires = null;
+                                } else {
+                                    mccbRight = 'N';
+                                    mccbCenterRight = 'Y';
+                                    frame = 'L';
+                                    panelWires = row[0].panelWires;
+                                }
+                                break;
+                            case 'L-PROV':
+                                if (row[0].cbRightMaxAmps == 400) {
+                                    mccbRight = 'Y';
+                                    mccbCenterRight = 'N';
+                                    frame = 'L';
+                                    panelWires = null;
+                                } else {
+                                    mccbRight = 'N';
+                                    mccbCenterRight = 'Y';
+                                    frame = 'L';
+                                    panelWires = row[0].panelWires;
+                                }
+                                break;
+                            case 'J':
+                                mccbRight = 'Y';
+                                mccbCenterRight = 'N';
+                                frame = 'H/J';
+                                panelWires = null;
+                                break;
+                            case 'J-PROV':
+                                mccbRight = 'Y';
+                                mccbCenterRight = 'N';
+                                frame = 'H/J';
+                                panelWires = null;
+                                break;
+                            case 'H':
+                                mccbRight = 'Y';
+                                mccbCenterRight = 'N';
+                                frame = 'H/J';
+                                panelWires = null;
+                                break;
+                            case 'H-PROV':
+                                mccbRight = 'Y';
+                                mccbCenterRight = 'N';
+                                frame = 'H/J';
+                                panelWires = null;
+                                break;
+                            case 'XT7':
+                                mccbRight = 'N';
+                                mccbCenterRight = 'Y';
+                                frame = 'XT7';
+                                panelWires = null;
+                                break;
+                            case 'XT7-PROV':
+                                mccbRight = 'N';
+                                mccbCenterRight = 'Y';
+                                frame = 'XT7';
+                                panelWires = null;
+                                break;
+                            case 'XT6':
+                                mccbRight = 'N';
+                                mccbCenterRight = 'Y';
+                                frame = 'XT6';
+                                panelWires = null;
+                                break;
+                            case 'XT6-PROV':
+                                mccbRight = 'N';
+                                mccbCenterRight = 'Y';
+                                frame = 'XT6';
+                                panelWires = null;
+                                break;
+                            case 'XT5':
+                                if (row[0].cbRightMaxAmps == 400) {
+                                    mccbRight = 'Y';
+                                    mccbCenterRight = 'N';
+                                    frame = 'XT5';
+                                    panelWires = null;
+                                } else {
+                                    mccbRight = 'N';
+                                    mccbCenterRight = 'Y';
+                                    frame = 'XT5';
+                                    panelWires = null;
+                                }
+                                break;
+                            case 'XT5-PROV':
+                                if (row[0].cbRightMaxAmps == 400) {
+                                    mccbRight = 'Y';
+                                    mccbCenterRight = 'N';
+                                    frame = 'XT5';
+                                    panelWires = null;
+                                } else {
+                                    mccbRight = 'N';
+                                    mccbCenterRight = 'Y';
+                                    frame = 'XT5';
+                                    panelWires = null;
+                                }
+                                break;
+                            case 'XT4':
+                                mccbRight = 'Y';
+                                mccbCenterRight = 'N';
+                                frame = 'XT4';
+                                panelWires = null;
+                                break;
+                            case 'XT4-PROV':
+                                mccbRight = 'Y';
+                                mccbCenterRight = 'N';
+                                frame = 'XT4';
+                                panelWires = null;
+                                break;
+                            case 'XT2':
+                                mccbRight = 'Y';
+                                mccbCenterRight = 'N';
+                                frame = 'XT2';
+                                panelWires = null;
+                                break;
+                            case 'XT2-PROV':
+                                mccbRight = 'Y';
+                                mccbCenterRight = 'N';
+                                frame = 'XT2';
+                                panelWires = null;
+                                break;
+                        }
+                    }
+                } else if (row[0].mount == 'TWIN') {
+                    panelWires = null;
+                    if (row[0].cbRightFrame == null) {
+                        mccbRight = 'N';
+                        mccbCenterRight = 'N';
+                        switch (row[0].cbLeftFrame) {
+                            case 'L':
+                                mccbLeft = 'Y';
+                                mccbCenterLeft = 'N';
+                                frame = 'L';
+                                break;
+                            case 'L-PROV':
+                                mccbLeft = 'Y';
+                                mccbCenterLeft = 'N';
+                                frame = 'L';
+                                break;
+                            case 'J':
+                                mccbLeft = 'Y';
+                                mccbCenterLeft = 'N';
+                                frame = 'H/J';
+                                break;
+                            case 'J-PROV':
+                                mccbLeft = 'Y';
+                                mccbCenterLeft = 'N';
+                                frame = 'H/J';
+                                break;
+                            case 'H':
+                                mccbLeft = 'Y';
+                                mccbCenterLeft = 'N';
+                                frame = 'H/J';
+                                break;
+                            case 'H-PROV':
+                                mccbLeft = 'Y';
+                                mccbCenterLeft = 'N';
+                                frame = 'H/J';
+                                break;
+                            case 'XT5':
                                 mccbLeft = 'Y';
                                 mccbCenterLeft = 'N';
                                 frame = 'XT5';
-                                panelWires = null;
-                            } else {
-                                mccbLeft = 'N';
-                                mccbCenterLeft = 'Y';
-                                frame = 'XT5';
-                                panelWires = null;
-                            }
-                            break;
-                        case 'XT5-PROV':
-                            if (row[0].cbLeftMaxAmps == 400) {
+                                break;
+                            case 'XT5-PROV':
                                 mccbLeft = 'Y';
                                 mccbCenterLeft = 'N';
                                 frame = 'XT5';
-                                panelWires = null;
-                            } else {
-                                mccbLeft = 'N';
-                                mccbCenterLeft = 'Y';
+                                break;
+                            case 'XT4':
+                                mccbLeft = 'Y';
+                                mccbCenterLeft = 'N';
+                                frame = 'XT4';
+                                break;
+                            case 'XT4-PROV':
+                                mccbLeft = 'Y';
+                                mccbCenterLeft = 'N';
+                                frame = 'XT4';
+                                break;
+                            case 'XT2':
+                                mccbLeft = 'Y';
+                                mccbCenterLeft = 'N';
+                                frame = 'XT2';
+                                break;
+                            case 'XT2-PROV':
+                                mccbLeft = 'Y';
+                                mccbCenterLeft = 'N';
+                                frame = 'XT2';
+                                break;
+                        }
+                    } else if (row[0].cbLeftFrame == null) {
+                        mccbLeft = 'N';
+                        mccbCenterLeft = 'N';
+                        switch (row[0].cbRightFrame) {
+                            case 'L':
+                                mccbRight = 'Y';
+                                mccbCenterRight = 'N';
+                                frame = 'L';
+                                break;
+                            case 'L-PROV':
+                                mccbRight = 'Y';
+                                mccbCenterRight = 'N';
+                                frame = 'L';
+                                break;
+                            case 'J':
+                                mccbRight = 'Y';
+                                mccbCenterRight = 'N';
+                                frame = 'H/J';
+                                break;
+                            case 'J-PROV':
+                                mccbRight = 'Y';
+                                mccbCenterRight = 'N';
+                                frame = 'H/J';
+                                break;
+                            case 'H':
+                                mccbRight = 'Y';
+                                mccbCenterRight = 'N';
+                                frame = 'H/J';
+                                break;
+                            case 'H-PROV':
+                                mccbRight = 'Y';
+                                mccbCenterRight = 'N';
+                                frame = 'H/J';
+                                break;
+                            case 'XT5':
+                                mccbRight = 'Y';
+                                mccbCenterRight = 'N';
                                 frame = 'XT5';
-                                panelWires = null;
-                            }
-                            break;
-                        case 'XT4':
-                            mccbLeft = 'Y';
-                            mccbCenterLeft = 'N';
-                            frame = 'XT4';
-                            panelWires = null;
-                            break;
-                        case 'XT4-PROV':
-                            mccbLeft = 'Y';
-                            mccbCenterLeft = 'N';
-                            frame = 'XT4';
-                            panelWires = null;
-                            break;
-                        case 'XT2':
-                            mccbLeft = 'Y';
-                            mccbCenterLeft = 'N';
-                            frame = 'XT2';
-                            panelWires = null;
-                            break;
-                        case 'XT2-PROV':
-                            mccbLeft = 'Y';
-                            mccbCenterLeft = 'N';
-                            frame = 'XT2';
-                            panelWires = null;
-                            break;
+                                break;
+                            case 'XT5-PROV':
+                                mccbRight = 'Y';
+                                mccbCenterRight = 'N';
+                                frame = 'XT5';
+                                break;
+                            case 'XT4':
+                                mccbRight = 'Y';
+                                mccbCenterRight = 'N';
+                                frame = 'XT4';
+                                break;
+                            case 'XT4-PROV':
+                                mccbRight = 'Y';
+                                mccbCenterRight = 'N';
+                                frame = 'XT4';
+                                break;
+                            case 'XT2':
+                                mccbRight = 'Y';
+                                mccbCenterRight = 'N';
+                                frame = 'XT2';
+                                break;
+                            case 'XT2-PROV':
+                                mccbRight = 'Y';
+                                mccbCenterRight = 'N';
+                                frame = 'XT2';
+                                break;
+                        }
+                    } else {
+                        mccbLeft = 'Y';
+                        mccbCenterLeft = 'N';
+                        mccbRight = 'Y';
+                        mccbCenterRight = 'N';
+                        switch (row[0].cbLeftFrame) {
+                            case 'L':
+                                frame = 'L';
+                                break;
+                            case 'L-PROV':
+                                frame = 'L';
+                                break;
+                            case 'J':
+                                frame = 'H/J';
+                                break;
+                            case 'J-PROV':
+                                frame = 'H/J';
+                                break;
+                            case 'H':
+                                frame = 'H/J';
+                                break;
+                            case 'H-PROV':
+                                frame = 'H/J';
+                                break;
+                            case 'XT5':
+                                frame = 'XT5';
+                                break;
+                            case 'XT5-PROV':
+                                frame = 'XT5';
+                                break;
+                            case 'XT4':
+                                frame = 'XT4';
+                                break;
+                            case 'XT4-PROV':
+                                frame = 'XT4';
+                                break;
+                            case 'XT2':
+                                frame = 'XT2';
+                                break;
+                            case 'XT2-PROV':
+                                frame = 'XT2';
+                                break;
+                        }
                     }
-                } else {
-                    mccbLeft = 'N';
-                    mccbCenterLeft = 'N';
-                    switch (row[0].cbRightFrame) {
-                        case 'P':
-                            mccbRight = 'N';
-                            mccbCenterRight = 'Y';
-                            frame = 'P';
-                            panelWires = null;
-                            break;
-                        case 'P-PROV':
-                            mccbRight = 'N';
-                            mccbCenterRight = 'Y';
-                            frame = 'P';
-                            panelWires = null;
-                            break;
-                        case 'L':
-                            if (row[0].cbRightMaxAmps == 400) {
-                                mccbRight = 'Y';
-                                mccbCenterRight = 'N';
-                                frame = 'L';
-                                panelWires = null;
-                            } else {
-                                mccbRight = 'N';
-                                mccbCenterRight = 'Y';
-                                frame = 'L';
-                                panelWires = row[0].panelWires;
-                            }
-                            break;
-                        case 'L-PROV':
-                            if (row[0].cbRightMaxAmps == 400) {
-                                mccbRight = 'Y';
-                                mccbCenterRight = 'N';
-                                frame = 'L';
-                                panelWires = null;
-                            } else {
-                                mccbRight = 'N';
-                                mccbCenterRight = 'Y';
-                                frame = 'L';
-                                panelWires = row[0].panelWires;
-                            }
-                            break;
-                        case 'J':
-                            mccbRight = 'Y';
-                            mccbCenterRight = 'N';
-                            frame = 'H/J';
-                            panelWires = null;
-                            break;
-                        case 'J-PROV':
-                            mccbRight = 'Y';
-                            mccbCenterRight = 'N';
-                            frame = 'H/J';
-                            panelWires = null;
-                            break;
-                        case 'H':
-                            mccbRight = 'Y';
-                            mccbCenterRight = 'N';
-                            frame = 'H/J';
-                            panelWires = null;
-                            break;
-                        case 'H-PROV':
-                            mccbRight = 'Y';
-                            mccbCenterRight = 'N';
-                            frame = 'H/J';
-                            panelWires = null;
-                            break;
-                        case 'XT7':
-                            mccbRight = 'N';
-                            mccbCenterRight = 'Y';
-                            frame = 'XT7';
-                            panelWires = null;
-                            break;
-                        case 'XT7-PROV':
-                            mccbRight = 'N';
-                            mccbCenterRight = 'Y';
-                            frame = 'XT7';
-                            panelWires = null;
-                            break;
-                        case 'XT6':
-                            mccbRight = 'N';
-                            mccbCenterRight = 'Y';
-                            frame = 'XT6';
-                            panelWires = null;
-                            break;
-                        case 'XT6-PROV':
-                            mccbRight = 'N';
-                            mccbCenterRight = 'Y';
-                            frame = 'XT6';
-                            panelWires = null;
-                            break;
-                        case 'XT5':
-                            if (row[0].cbRightMaxAmps == 400) {
-                                mccbRight = 'Y';
-                                mccbCenterRight = 'N';
-                                frame = 'XT5';
-                                panelWires = null;
-                            } else {
-                                mccbRight = 'N';
-                                mccbCenterRight = 'Y';
-                                frame = 'XT5';
-                                panelWires = null;
-                            }
-                            break;
-                        case 'XT5-PROV':
-                            if (row[0].cbRightMaxAmps == 400) {
-                                mccbRight = 'Y';
-                                mccbCenterRight = 'N';
-                                frame = 'XT5';
-                                panelWires = null;
-                            } else {
-                                mccbRight = 'N';
-                                mccbCenterRight = 'Y';
-                                frame = 'XT5';
-                                panelWires = null;
-                            }
-                            break;
-                        case 'XT4':
-                            mccbRight = 'Y';
-                            mccbCenterRight = 'N';
-                            frame = 'XT4';
-                            panelWires = null;
-                            break;
-                        case 'XT4-PROV':
-                            mccbRight = 'Y';
-                            mccbCenterRight = 'N';
-                            frame = 'XT4';
-                            panelWires = null;
-                            break;
-                        case 'XT2':
-                            mccbRight = 'Y';
-                            mccbCenterRight = 'N';
-                            frame = 'XT2';
-                            panelWires = null;
-                            break;
-                        case 'XT2-PROV':
-                            mccbRight = 'Y';
-                            mccbCenterRight = 'N';
-                            frame = 'XT2';
-                            panelWires = null;
-                            break;
-                    }
+
                 }
-            } else if (row[0].mount == 'TWIN') {
-                panelWires = null;
-                if (row[0].cbRightFrame == null) {
-                    mccbRight = 'N';
-                    mccbCenterRight = 'N';
-                    switch (row[0].cbLeftFrame) {
-                        case 'L':
-                            mccbLeft = 'Y';
-                            mccbCenterLeft = 'N';
-                            frame = 'L';
-                            break;
-                        case 'L-PROV':
-                            mccbLeft = 'Y';
-                            mccbCenterLeft = 'N';
-                            frame = 'L';
-                            break;
-                        case 'J':
-                            mccbLeft = 'Y';
-                            mccbCenterLeft = 'N';
-                            frame = 'H/J';
-                            break;
-                        case 'J-PROV':
-                            mccbLeft = 'Y';
-                            mccbCenterLeft = 'N';
-                            frame = 'H/J';
-                            break;
-                        case 'H':
-                            mccbLeft = 'Y';
-                            mccbCenterLeft = 'N';
-                            frame = 'H/J';
-                            break;
-                        case 'H-PROV':
-                            mccbLeft = 'Y';
-                            mccbCenterLeft = 'N';
-                            frame = 'H/J';
-                            break;
-                        case 'XT5':
-                            mccbLeft = 'Y';
-                            mccbCenterLeft = 'N';
-                            frame = 'XT5';
-                            break;
-                        case 'XT5-PROV':
-                            mccbLeft = 'Y';
-                            mccbCenterLeft = 'N';
-                            frame = 'XT5';
-                            break;
-                        case 'XT4':
-                            mccbLeft = 'Y';
-                            mccbCenterLeft = 'N';
-                            frame = 'XT4';
-                            break;
-                        case 'XT4-PROV':
-                            mccbLeft = 'Y';
-                            mccbCenterLeft = 'N';
-                            frame = 'XT4';
-                            break;
-                        case 'XT2':
-                            mccbLeft = 'Y';
-                            mccbCenterLeft = 'N';
-                            frame = 'XT2';
-                            break;
-                        case 'XT2-PROV':
-                            mccbLeft = 'Y';
-                            mccbCenterLeft = 'N';
-                            frame = 'XT2';
-                            break;
+                let fillerLookup = {
+                    mfgProductLine: row[0].mfgProductLine,
+                    frame: frame,
+                    poles: row[0].poles,
+                    panelWires: panelWires,
+                    mccbRight: mccbRight,
+                    mccbLeft: mccbLeft,
+                    mccbCenterRight: mccbCenterRight,
+                    mccbCenterLeft: mccbCenterLeft,
+                    skru: 'N',
+                    mimicLevel: 0
+                };
+                let chosenFiller = fillerData.filter(e => e.mfgProductLine == fillerLookup.mfgProductLine && e.frame == fillerLookup.frame && e.poles == fillerLookup.poles && e.panelWires == fillerLookup.panelWires && e.mccbRight == fillerLookup.mccbRight && e.mccbLeft == fillerLookup.mccbLeft && e.mccbCenterRight == fillerLookup.mccbCenterRight && e.mccbCenterLeft == fillerLookup.mccbCenterLeft && e.skru == 'N' && e.mimicLevel == 0);
+                await creo(sessionId, {
+                    command: "file",
+                    function: "assemble",
+                    data: {
+                        file: chosenFiller[0].fillerAsm + ".asm",
+                        into_asm: jobNum + "-0100-" + sectionNum + ".asm",
+                        constraints: [{
+                            asmref: CS,
+                            compref: chosenFiller[0].csys,
+                            type: "CSYS"
+                        }]
                     }
-                } else if (row[0].cbLeftFrame == null) {
-                    mccbLeft = 'N';
-                    mccbCenterLeft = 'N';
-                    switch (row[0].cbRightFrame) {
-                        case 'L':
-                            mccbRight = 'Y';
-                            mccbCenterRight = 'N';
-                            frame = 'L';
-                            break;
-                        case 'L-PROV':
-                            mccbRight = 'Y';
-                            mccbCenterRight = 'N';
-                            frame = 'L';
-                            break;
-                        case 'J':
-                            mccbRight = 'Y';
-                            mccbCenterRight = 'N';
-                            frame = 'H/J';
-                            break;
-                        case 'J-PROV':
-                            mccbRight = 'Y';
-                            mccbCenterRight = 'N';
-                            frame = 'H/J';
-                            break;
-                        case 'H':
-                            mccbRight = 'Y';
-                            mccbCenterRight = 'N';
-                            frame = 'H/J';
-                            break;
-                        case 'H-PROV':
-                            mccbRight = 'Y';
-                            mccbCenterRight = 'N';
-                            frame = 'H/J';
-                            break;
-                        case 'XT5':
-                            mccbRight = 'Y';
-                            mccbCenterRight = 'N';
-                            frame = 'XT5';
-                            break;
-                        case 'XT5-PROV':
-                            mccbRight = 'Y';
-                            mccbCenterRight = 'N';
-                            frame = 'XT5';
-                            break;
-                        case 'XT4':
-                            mccbRight = 'Y';
-                            mccbCenterRight = 'N';
-                            frame = 'XT4';
-                            break;
-                        case 'XT4-PROV':
-                            mccbRight = 'Y';
-                            mccbCenterRight = 'N';
-                            frame = 'XT4';
-                            break;
-                        case 'XT2':
-                            mccbRight = 'Y';
-                            mccbCenterRight = 'N';
-                            frame = 'XT2';
-                            break;
-                        case 'XT2-PROV':
-                            mccbRight = 'Y';
-                            mccbCenterRight = 'N';
-                            frame = 'XT2';
-                            break;
-                    }
-                } else {
-                    mccbLeft = 'Y';
-                    mccbCenterLeft = 'N';
-                    mccbRight = 'Y';
-                    mccbCenterRight = 'N';
-                    switch (row[0].cbLeftFrame) {
-                        case 'L':
-                            frame = 'L';
-                            break;
-                        case 'L-PROV':
-                            frame = 'L';
-                            break;
-                        case 'J':
-                            frame = 'H/J';
-                            break;
-                        case 'J-PROV':
-                            frame = 'H/J';
-                            break;
-                        case 'H':
-                            frame = 'H/J';
-                            break;
-                        case 'H-PROV':
-                            frame = 'H/J';
-                            break;
-                        case 'XT5':
-                            frame = 'XT5';
-                            break;
-                        case 'XT5-PROV':
-                            frame = 'XT5';
-                            break;
-                        case 'XT4':
-                            frame = 'XT4';
-                            break;
-                        case 'XT4-PROV':
-                            frame = 'XT4';
-                            break;
-                        case 'XT2':
-                            frame = 'XT2';
-                            break;
-                        case 'XT2-PROV':
-                            frame = 'XT2';
-                            break;
-                    }
-                }
+                });
+
 
             }
-            let fillerLookup = {
-                mfgProductLine: row[0].mfgProductLine,
-                frame: frame,
-                poles: row[0].poles,
-                panelWires: panelWires,
-                mccbRight: mccbRight,
-                mccbLeft: mccbLeft,
-                mccbCenterRight: mccbCenterRight,
-                mccbCenterLeft: mccbCenterLeft,
-                skru: 'N',
-                mimicLevel: 0
-            };
-            let chosenFiller = fillerData.filter(e => e.mfgProductLine == fillerLookup.mfgProductLine && e.frame == fillerLookup.frame && e.poles == fillerLookup.poles && e.panelWires == fillerLookup.panelWires && e.mccbRight == fillerLookup.mccbRight && e.mccbLeft == fillerLookup.mccbLeft && e.mccbCenterRight == fillerLookup.mccbCenterRight && e.mccbCenterLeft == fillerLookup.mccbCenterLeft && e.skru == 'N' && e.mimicLevel == 0);
-            await creo(sessionId, {
-                command: "file",
-                function: "assemble",
-                data: {
-                    file: chosenFiller[0].fillerAsm+".asm",
-                    into_asm: jobNum+"-0100-"+sectionNum+".asm",
-                    constraints: [{
-                        asmref: CS,
-                        compref: chosenFiller[0].csys,
-                        type: "CSYS"
-                    }]
-                }
-            });
-
-
         }
 
         await regenSaveAndClose(sessionId, newPanelAsm+".asm");
@@ -6125,8 +6286,6 @@ exports.generateSubmittal = function(req, res) {
         return null;
     }
 
-
-
     checkWorkingDirAndStandardLib()
         .then((response) => {
             if (response == null) {
@@ -6248,6 +6407,7 @@ exports.verifySubmittal = function(req, res) {
     let subID = qs.subID.split('_')[1];
     let secData = [];
     let layoutID;
+    let message = [];
 
     let sectionNum = req.body.sectionNum;
     let comp = req.body.comp;
@@ -6259,7 +6419,6 @@ exports.verifySubmittal = function(req, res) {
     let panelConfigArr = req.body.panel_configuration;
     let panelMountArr = req.body.panel_mounting;
     let panelArr = [];
-
 
     if (panelSectionNumArr != undefined) {
         for (let i = 0; i < panelSectionNumArr.length; i++) {
@@ -6305,6 +6464,110 @@ exports.verifySubmittal = function(req, res) {
             mccbQueueArr.push({
                 devID: parseInt(queueMCCB.slice(1,queueMCCB.length))
             });
+        }
+    }
+
+    async function getSectionData() {
+        const layouts = await querySql("SELECT * FROM " + database + "." + dbConfig.submittal_layout_table + " WHERE layoutID = ?", subID);
+        const sections = await querySql("SELECT * FROM " + database + "." + dbConfig.submittal_sections_table + " WHERE layoutID = ?", layouts[0].layoutID);
+
+        let ul, systemType, systemAmp, mainBusAmp, enclosure, kaic, busBracing;
+
+        if (layouts.length != 0) {
+            ul = layouts[0].ulListing;
+            systemType = layouts[0].systemType;
+            systemAmp = layouts[0].systemAmp;
+            mainBusAmp = layouts[0].mainBusAmp;
+            enclosure = layouts[0].enclosure;
+            kaic = layouts[0].interruptRating;
+            busBracing = layouts[0].busBracing;
+        }
+        for (let section of sections) {
+            let breakers = [];
+            let panelBreakers = [];
+            breakers = await querySql("SELECT * FROM " + database + "." + dbConfig.submittal_breaker_table + " WHERE secID = ?", section.secID);
+
+            //CHECKS THAT SECTION AMPERAGE DOES NOT EXCEED MAX MAIN BUS AMPERAGE
+            if (parseInt(section.secAmp) > parseInt(mainBusAmp.slice(0, mainBusAmp.length - 1))) {
+                message.push({
+                    location: 4,
+                    section: section.sectionNum,
+                    breaker: null,
+                    text: "Section Amp: Cannot exceed the max system/main bus amperage."
+                })
+            }
+            //CHECKS THAT THE SECTION TYPE CORRESPONDS WITH THE LAYOUT UL
+            if (ul == 'UL1558') {
+                if (section.secType.includes('UL1558') == true) {
+                    let ul1558SecAmps = [2000, 3200, 4000, 5000];
+                    if (ul1558SecAmps.includes(parseInt(section.secAmp)) != true) {
+                        message.push({
+                            location: 4,
+                            section: section.sectionNum,
+                            breaker: null,
+                            text: "Section Amp: " + section.secAmp + "A is not available in UL1558. Please change to one of the following: 2000A, 3200A, 4000A, 5000A."
+                        })
+                    }
+                } else if (section.secType.includes('UL891') == true) {
+                    message.push({
+                        location: 4,
+                        section: section.sectionNum,
+                        breaker: null,
+                        text: "Section Type: UL891 sections not available in UL1558"
+                    });
+                } else if (section.secType.includes('PANELBOARD') == true) {
+                    message.push({
+                        location: 4,
+                        section: section.sectionNum,
+                        breaker: null,
+                        text: "Section Type: Panelboard sections not available in UL1558"
+                    });
+                }
+            } else if (ul == 'UL891') {
+                if (section.secType.includes('UL1558') == true) {
+                    let ul1558SecAmps = [2000, 3200, 4000, 5000];
+                    if (ul1558SecAmps.includes(parseInt(section.secAmp)) != true) {
+                        message.push({
+                            location: 4,
+                            section: section.sectionNum,
+                            breaker: null,
+                            text: "Section Amp: " + section.secAmp + "A is not available in UL1558. Please change to one of the following: 2000A, 3200A, 4000A, 5000A."
+                        })
+                    }
+                } else if (section.secType.includes('PANELBOARD') == true) {
+                    panelBreakers = await querySql("SELECT * FROM " + database + "." + dbConfig.submittal_panel_breakers + " WHERE secID = ?", section.secID);
+                    if (panelBreakers.length != 0) {
+                        //console.log(panelBreakers);
+                    }
+                }
+            }
+
+            //CHECKS THAT THE SUM OF DIST BREAKER AMPERAGES DO NOT EXCEED THE SECTION AMPERAGE
+            if (breakers.length != 0) {
+                let sumDistBrks = 0;
+                if (section.secType.includes('PANELBOARD') == false) {
+                    for (let breaker of breakers) {
+                        if (breaker.devFunction.includes('DIST') == true) {
+                            sumDistBrks += parseInt(breaker.devFrameSet.slice(0, breaker.devFrameSet.length - 1));
+                        }
+                    }
+                }
+                if (sumDistBrks > parseInt(section.secAmp)) {
+                    message.push({
+                        location: 4,
+                        section: section.sectionNum,
+                        breaker: null,
+                        text: "Section Amp: Sum of DIST breakers cannot exceed the Section Amperage."
+                    })
+                }
+            }
+        }
+        if (message.length > 0) {
+            //console.log(message);
+            await searchSubmittalRoutine(subID, res, message, []);
+            return 'STOP';
+        } else {
+            return null
         }
     }
 
@@ -6367,9 +6630,15 @@ exports.verifySubmittal = function(req, res) {
             }
             return null
         })
-        .then(() => {
-            res.locals = {title: 'Submittal'};
-            res.redirect('../searchSubmittal/?subID='+jobRelease+"_"+subID);
+        .then(async function() {
+            await getSectionData()
+                .then((response) => {
+                if (response == null) {
+                    res.locals = {title: 'Submittal'};
+                    res.redirect('../searchSubmittal/?subID='+jobRelease+"_"+subID);
+                    return null
+                }
+            });
             return null
         })
         .catch((err) => {
