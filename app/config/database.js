@@ -38,7 +38,7 @@ module.exports = {
     },*/
 
     //Database
-    'database': 'sai_test',
+    'database': 'saidb',
     /*'creoDatabase': 'creoDB',
     'database2': 'quotePricing',
     'masterDatabase': 'saidb',*/
