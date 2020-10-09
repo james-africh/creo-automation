@@ -2016,6 +2016,7 @@ exports.generateMBOM = function (req, res) {
             return null;
         })
         .then(() => {
+            console.log(mbomBrkAccSum);
             mbomSecSumData.sort(function(a,b) {
                 let intA = parseInt(a.sectionNum);
                 let intB = parseInt(b.sectionNum);
@@ -2036,7 +2037,9 @@ exports.generateMBOM = function (req, res) {
                  if (i < 9)
                      pre = '10';
                  else
-                     pre = '1';*/
+                     pre = '1';
+                     */
+
                 let assemblyNum = mbomData.jobNum + mbomData.releaseNum + '-MBOM-' + sectionNumber;
                 mbomAssemNumArr.push(assemblyNum);
                 let count = 1;
@@ -2302,6 +2305,21 @@ exports.generateMBOM = function (req, res) {
                             deviceDes: devDes
                         });
                     }
+
+                    let totalBrkAccQty = [];
+                    let objBrkAcc = null;
+                    for (let f = 0; f < brkAccArr.length; f++) {
+                        objBrkAcc = brkAccArr[f];
+                        if (!totalBrkAccQty[objBrkAcc.brkAccPN]) {
+                            totalBrkAccQty[objBrkAcc.brkAccPN] = objBrkAcc;
+                        } else {
+                            totalBrkAccQty[objBrkAcc.brkAccPN].brkAccQty += objBrkAcc.brkAccQty;
+                            //totalBrkAccQty[objBrkAcc.brkAccPN].idDev += ', ' + objBrkAcc.idDev;
+                        }
+                    }
+                    let totalBrkAccQtyResults = [];
+                    for (let prop in totalBrkAccQty)
+                        totalBrkAccQtyResults.push(totalBrkAccQty[prop]);
 
                     //FOR BRK ACC
                     for (let el of brkAccArr) {
