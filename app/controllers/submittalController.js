@@ -2054,20 +2054,39 @@ exports.generateSubmittal = function(req, res) {
                 }
             } else if (uniqueSection.secData.secType == 'CONTROL') {
                 if (uniqueSection.secData.brkType == 'N/A') {
-                    for (let cornerPost of cornerPosts) {
-                        if (cornerPost.CPostHeight == uniqueSection.secData.secHeight && cornerPost.CPostType == 'NW DRAWOUT' ) {
-                            uniqueFrontCPost = {
-                                generic: cornerPost.partGeneric,
-                                instance: cornerPost.partInstance
+                    console.log(uniqueSection.secData);
+                    if (uniqueSection.secData.secDepth > 20) {
+                        for (let cornerPost of cornerPosts) {
+                            if (cornerPost.CPostHeight == uniqueSection.secData.secHeight && cornerPost.CPostType == 'NW DRAWOUT' ) {
+                                uniqueFrontCPost = {
+                                    generic: cornerPost.partGeneric,
+                                    instance: cornerPost.partInstance
+                                }
+                            }
+                            if (cornerPost.CPostHeight == uniqueSection.secData.secHeight && cornerPost.CPostType == 'SHORT' ) {
+                                uniqueRearCPost = {
+                                    generic: cornerPost.partGeneric,
+                                    instance: cornerPost.partInstance
+                                }
                             }
                         }
-                        if (cornerPost.CPostHeight == uniqueSection.secData.secHeight && cornerPost.CPostType == 'SHORT' ) {
-                            uniqueRearCPost = {
-                                generic: cornerPost.partGeneric,
-                                instance: cornerPost.partInstance
+                    } else {
+                        for (let cornerPost of cornerPosts) {
+                            if (cornerPost.CPostHeight == uniqueSection.secData.secHeight && cornerPost.CPostType == 'NW FIXED' ) {
+                                uniqueFrontCPost = {
+                                    generic: cornerPost.partGeneric,
+                                    instance: cornerPost.partInstance
+                                }
+                            }
+                            if (cornerPost.CPostHeight == uniqueSection.secData.secHeight && cornerPost.CPostType == 'SHORT' ) {
+                                uniqueRearCPost = {
+                                    generic: cornerPost.partGeneric,
+                                    instance: cornerPost.partInstance
+                                }
                             }
                         }
                     }
+
                 }
             }
 
@@ -5070,81 +5089,110 @@ exports.generateSubmittal = function(req, res) {
 
         let kaicVoltage;
 
-        switch (layoutParams[0].systemType.split(' - ')[0]) {
-            case '208Y/120VAC':
-                kaicVoltage = '208VAC';
-                break;
+        if (layoutParams[0].systemType == 'N/A') {
+            jobData = {
+                PROJECT_NUMBER: submittalParams[0].jobNum,
+                SO_NO: jobRelease,
+                REV_1_NO: 'A',
+                REV_1_DATE: moment(submittalParams[0].drawnDate).utc().format("MM/DD/YYYY"),
+                REV_1_BY: submittalParams[0].drawnBy,
+                PROJECT_NAME: submittalParams[0].jobName,
+                CUSTOMER_NAME: submittalParams[0].customer,
+                PROJECT_DESC_1: submittalParams[0].layoutName,
+                PROJECT_DESC_2: layoutParams[0].ulListing + ", " + layoutParams[0].systemAmp + ", " + "N/A" + ", " + "N/A" + ", " + "N/A",
+                DRAWN_BY: submittalParams[0].drawnBy,
+                DRAWN_DATE:  moment(submittalParams[0].drawnDate).utc().format("MM/DD/YYYY"),
+                CHECKED_BY: submittalParams[0].checkedBy,
+                CHECKED_DATE: moment(submittalParams[0].checkedDate).utc().format("MM/DD/YYYY"),
+                UL_LISTING: layoutParams[0].ulListing,
+                SYSTEM_VOLTAGE: "N/A",
+                SYSTEM_PHASING: "N/A",
+                SYSTEM_AMPERAGE: layoutParams[0].systemAmp,
+                ENCLOSURE_TYPE: layoutParams[0].enclosure,
+                CABLING_ACCESSIBILITY: layoutParams[0].cableAccess,
+                BUS_BRACING: layoutParams[0].busBracing,
+                FINISH:  layoutParams[0].paint,
+                INTERRUPTING_RATING: "N/A",
+                BUSSING: layoutParams[0].busType,
+                KEY_INTERLOCKS: layoutParams[0].keyInterlocks
+            };
+        } else {
+            switch (layoutParams[0].systemType.split(' - ')[0]) {
+                case '208Y/120VAC':
+                    kaicVoltage = '208VAC';
+                    break;
 
-            case '240VAC':
-                kaicVoltage = '240VAC';
-                break;
+                case '240VAC':
+                    kaicVoltage = '240VAC';
+                    break;
 
-            case '380Y/220VAC':
-                kaicVoltage = '380VAC';
-                break;
+                case '380Y/220VAC':
+                    kaicVoltage = '380VAC';
+                    break;
 
-            case '400Y/230VAC':
-                kaicVoltage = '400VAC';
-                break;
+                case '400Y/230VAC':
+                    kaicVoltage = '400VAC';
+                    break;
 
-            case '415Y/240VAC':
-                kaicVoltage = '415VAC';
-                break;
+                case '415Y/240VAC':
+                    kaicVoltage = '415VAC';
+                    break;
 
-            case '480VAC':
-                kaicVoltage = '480VAC';
-                break;
+                case '480VAC':
+                    kaicVoltage = '480VAC';
+                    break;
 
-            case '480Y/277VAC':
-                kaicVoltage = '480VAC';
-                break;
+                case '480Y/277VAC':
+                    kaicVoltage = '480VAC';
+                    break;
 
-            case '600VAC':
-                kaicVoltage = '600VAC';
-                break;
+                case '600VAC':
+                    kaicVoltage = '600VAC';
+                    break;
 
-            case '600Y/347VAC':
-                kaicVoltage = '600VAC';
-                break;
+                case '600Y/347VAC':
+                    kaicVoltage = '600VAC';
+                    break;
 
-            case '500VDC':
-                kaicVoltage = '500VDC';
-                break;
+                case '500VDC':
+                    kaicVoltage = '500VDC';
+                    break;
 
-            case '600VDC':
-                kaicVoltage = '600VDC';
-                break;
+                case '600VDC':
+                    kaicVoltage = '600VDC';
+                    break;
 
-            default:
-                break;
+                default:
+                    break;
+            }
+
+            jobData = {
+                PROJECT_NUMBER: submittalParams[0].jobNum,
+                SO_NO: jobRelease,
+                REV_1_NO: 'A',
+                REV_1_DATE: moment(submittalParams[0].drawnDate).utc().format("MM/DD/YYYY"),
+                REV_1_BY: submittalParams[0].drawnBy,
+                PROJECT_NAME: submittalParams[0].jobName,
+                CUSTOMER_NAME: submittalParams[0].customer,
+                PROJECT_DESC_1: submittalParams[0].layoutName,
+                PROJECT_DESC_2: layoutParams[0].ulListing + ", " + layoutParams[0].systemAmp + ", " + layoutParams[0].systemType.split(' - ')[1] + ", " + layoutParams[0].systemType.split(' - ')[0] + ", " + layoutParams[0].interruptRating + "@" + kaicVoltage,
+                DRAWN_BY: submittalParams[0].drawnBy,
+                DRAWN_DATE:  moment(submittalParams[0].drawnDate).utc().format("MM/DD/YYYY"),
+                CHECKED_BY: submittalParams[0].checkedBy,
+                CHECKED_DATE: moment(submittalParams[0].checkedDate).utc().format("MM/DD/YYYY"),
+                UL_LISTING: layoutParams[0].ulListing,
+                SYSTEM_VOLTAGE: layoutParams[0].systemType.split(' - ')[0],
+                SYSTEM_PHASING: layoutParams[0].systemType.split(' - ')[1],
+                SYSTEM_AMPERAGE: layoutParams[0].systemAmp,
+                ENCLOSURE_TYPE: layoutParams[0].enclosure,
+                CABLING_ACCESSIBILITY: layoutParams[0].cableAccess,
+                BUS_BRACING: layoutParams[0].busBracing,
+                FINISH:  layoutParams[0].paint,
+                INTERRUPTING_RATING: layoutParams[0].interruptRating + "@" + kaicVoltage,
+                BUSSING: layoutParams[0].busType,
+                KEY_INTERLOCKS: layoutParams[0].keyInterlocks
+            };
         }
-
-        jobData = {
-            PROJECT_NUMBER: submittalParams[0].jobNum,
-            SO_NO: jobRelease,
-            REV_1_NO: 'A',
-            REV_1_DATE: moment(submittalParams[0].drawnDate).utc().format("MM/DD/YYYY"),
-            REV_1_BY: submittalParams[0].drawnBy,
-            PROJECT_NAME: submittalParams[0].jobName,
-            CUSTOMER_NAME: submittalParams[0].customer,
-            PROJECT_DESC_1: submittalParams[0].layoutName,
-            PROJECT_DESC_2: layoutParams[0].ulListing + ", " + layoutParams[0].systemAmp + ", " + layoutParams[0].systemType.split(' - ')[1] + ", " + layoutParams[0].systemType.split(' - ')[0] + ", " + layoutParams[0].interruptRating + "@" + kaicVoltage,
-            DRAWN_BY: submittalParams[0].drawnBy,
-            DRAWN_DATE:  moment(submittalParams[0].drawnDate).utc().format("MM/DD/YYYY"),
-            CHECKED_BY: submittalParams[0].checkedBy,
-            CHECKED_DATE: moment(submittalParams[0].checkedDate).utc().format("MM/DD/YYYY"),
-            UL_LISTING: layoutParams[0].ulListing,
-            SYSTEM_VOLTAGE: layoutParams[0].systemType.split(' - ')[0],
-            SYSTEM_PHASING: layoutParams[0].systemType.split(' - ')[1],
-            SYSTEM_AMPERAGE: layoutParams[0].systemAmp,
-            ENCLOSURE_TYPE: layoutParams[0].enclosure,
-            CABLING_ACCESSIBILITY: layoutParams[0].cableAccess,
-            BUS_BRACING: layoutParams[0].busBracing,
-            FINISH:  layoutParams[0].paint,
-            INTERRUPTING_RATING: layoutParams[0].interruptRating + "@" + kaicVoltage,
-            BUSSING: layoutParams[0].busType,
-            KEY_INTERLOCKS: layoutParams[0].keyInterlocks
-        };
 
         await creo(sessionId, {
             command: "file",
@@ -5186,7 +5234,11 @@ exports.generateSubmittal = function(req, res) {
         let ulListing;
         const layouts = await querySql("SELECT * FROM " + database + "." + dbConfig.submittal_layout_table + " WHERE subID = ?", subID);
         for (let layout of layouts) {
-            maxSupplyAmp = parseInt(layout.systemAmp.slice(0, layout.systemAmp.length - 1));
+            if (layout.systemAmp != 'N/A') {
+                maxSupplyAmp = 0;
+            } else {
+                maxSupplyAmp = parseInt(layout.systemAmp.slice(0, layout.systemAmp.length - 1));
+            }
             ulListing = layout.ulListing
         }
         let sectionAndSupplyArr = [];
@@ -5196,6 +5248,14 @@ exports.generateSubmittal = function(req, res) {
             let tieOnly = false;
             let supplyAmperage = 0;
             if (section.secType.includes('PANELBOARD') == false) {
+                if (section.secType == 'CONTROL') {
+                    sectionAndSupplyArr.push({
+                        secID: section.secID,
+                        supplyAmperage: 0,
+                        sectionAmperage: 0,
+                        tieOnly: false
+                    });
+                }
                 let sumCompartmentAmps = 0;
                 let numDistBreakers = 0;
                 let sectionBrks = breakerData.filter(e => e.secID == section.secID);

@@ -15,7 +15,7 @@ let connection = mysql.createConnection({
 });
 
 connection.query('USE ' + database, function(err,rows) { if(err) throw err; });
-/*
+
 // layoutParamTypes
 connection.query('\
 CREATE TABLE IF NOT EXISTS ' + database + '.' + dbConfig.layout_paramTypes_table + ' ( \
@@ -50,6 +50,7 @@ connection.query("INSERT INTO "+database+"."+dbConfig.layout_paramTypes_table+" 
     "('ulListing', 'UL891'), " +
     "('ulListing', 'UL1558'), " +
     "('ulListing', 'UL/ANSI'), " +
+    "('ulListing', 'UL508A'), " +
 
     //systemType
     "('systemType', '208Y/120VAC - 3PH, 4W'), " +
@@ -72,6 +73,7 @@ connection.query("INSERT INTO "+database+"."+dbConfig.layout_paramTypes_table+" 
     "('systemType', '27kV - 3PH, 3W'), " +
     "('systemType', '33kV - 3PH, 3W'), " +
     "('systemType', '38kV - 3PH, 3W'), " +
+    "('systemType', 'N/A'), " +
 
     //enclosure
     "('enclosure', 'NEMA 1 INDOOR'), " +
@@ -121,6 +123,7 @@ connection.query("INSERT INTO "+database+"."+dbConfig.layout_paramTypes_table+" 
     "('systemAmp', '5000A'), " +
     "('systemAmp', '6000A'), " +
     "('systemAmp', '10000A'), " +
+    "('systemAmp', 'N/A'), " +
 
     //mainBusAmp
     "('mainBusAmp', '800A'), " +
@@ -134,11 +137,13 @@ connection.query("INSERT INTO "+database+"."+dbConfig.layout_paramTypes_table+" 
     "('mainBusAmp', '5000A'), " +
     "('mainBusAmp', '6000A'), " +
     "('mainBusAmp', '10000A'), " +
+    "('mainBusAmp', 'N/A'), " +
 
     //Bus Bracing
     "('busBracing', '65kA'), " +
     "('busBracing', '100kA'), " +
     "('busBracing', '31.5kA'), " +
+    "('busBracing', 'N/A'), " +
 
     //interruptRating
     "('interruptRating', '35kA'), " +
@@ -152,10 +157,12 @@ connection.query("INSERT INTO "+database+"."+dbConfig.layout_paramTypes_table+" 
     "('interruptRating', '40kA'), " +
     "('interruptRating', '50kA'), " +
     "('interruptRating', '63kA'), " +
+    "('interruptRating', 'N/A'), " +
 
     //busType
     "('busType', 'SILVER PLATED COPPER'), " +
     "('busType', 'TIN PLATED COPPER'), " +
+    "('busType', 'N/A'), " +
 
     //iccbPlatform
     "('iccbPlatform', 'SQUARE D MASTERPACT NW'), " +
@@ -165,6 +172,7 @@ connection.query("INSERT INTO "+database+"."+dbConfig.layout_paramTypes_table+" 
     "('iccbPlatform', 'EATON NRX'), " +
     "('iccbPlatform', 'ABB EMAX2'), " +
     "('iccbPlatform', 'LSIS SUSOL'), " +
+    "('iccbPlatform', 'N/A'), " +
 
     //mccbPlatform
     "('mccbPlatform', 'SQUARE D POWERPACT'), " +
@@ -172,9 +180,11 @@ connection.query("INSERT INTO "+database+"."+dbConfig.layout_paramTypes_table+" 
     "('mccbPlatform', 'EATON POWER DEFENSE'), " +
     "('mccbPlatform', 'ABB TMAX'), " +
     "('mccbPlatform', 'LSIS SUSOL'), " +
+    "('mccbPlatform', 'N/A'), " +
 
     //vcbPlatform
     "('vcbPlatform', 'ABB VD4'), " +
+    "('vcbPlatform', 'N/A'), " +
 
     //keyInterlocks
     "('keyInterlocks', 'SCHEME 29'), " +
@@ -183,9 +193,111 @@ connection.query("INSERT INTO "+database+"."+dbConfig.layout_paramTypes_table+" 
     "('keyInterlocks', 'SCHEME 40'), " +
     "('keyInterlocks', 'OTHER'), " +
     "('keyInterlocks', 'N/A'); ", function (err, result) { if(err) throw err; });
-*/
 
 
+// layoutParamRestrictions
+connection.query('\
+CREATE TABLE IF NOT EXISTS ' + database + '.' + dbConfig.layout_paramType_restrictions + ' ( \
+    dropdownID INT UNSIGNED NOT NULL AUTO_INCREMENT,\
+    dropdownType VARCHAR(100) NULL,\
+    dropdownValue VARCHAR(100) NULL,\
+    dropdownRestrictions JSON NULL,\
+    PRIMARY KEY (dropdownID), \
+    UNIQUE INDEX dropdownID_UNIQUE (dropdownID ASC)) \
+    ENGINE = InnoDB;', function(err,rows) { if(err) throw err; });
+
+
+connection.query("INSERT INTO "+database+"."+dbConfig.layout_paramType_restrictions+" (dropdownType, dropdownValue, dropdownRestrictions) VALUES " +
+
+    //Restrictions due to 891 UL Listing
+    "('ulListing', 'UL891', '{" +
+    "\"systemType\": [\"208Y/120VAC - 3PH, 4W\", \"240VAC - 3PH, 3W\", \"380Y/220VAC - 3PH, 4W\", " +
+    "\"400Y/230VAC - 3PH, 4W\", \"415Y/240VAC - 3PH, 4W\", \"480VAC - 3PH, 3W\", \"480Y/277VAC - 3PH, 4W\", " +
+    "\"600VAC - 3PH, 3W\", \"600Y/347VAC - 3PH, 4W\", \"125VDC - 2W\", \"250VDC - 2W\", \"500VDC - 2W\", \"600VDC - 2W\", \"N/A\"], " +
+    "\"systemAmp\": [\"800A\", \"1200A\", \"1600A\", \"2000A\", \"2500A\", \"3000A\", \"3200A\", \"4000A\", \"5000A\", \"6000A\", \"10000A\", \"N/A\"], " +
+    "\"mainBusAmp\": [\"800A\", \"1200A\", \"1600A\", \"2000A\", \"2500A\", \"3000A\", \"3200A\", \"4000A\", \"5000A\", \"6000A\", \"10000A\", \"N/A\"], " +
+    "\"busBracing\": [\"65kA\", \"100kA\", \"N/A\"], " +
+    "\"interruptRating\": [\"42kAIC\", \"65kAIC\", \"85kAIC\", \"100kAIC\", \"N/A\"], " +
+    "\"enclosure\": [\"NEMA 1 INDOOR\", \"NEMA 3R OUTDOOR\", \"OUTDOOR WALK-IN\", \"CUSTOM ENCLOSURE\"], " +
+    "\"accessibility\": [\"FRONT AND REAR\", \"FRONT AND SIDE\", \"FRONT ONLY\"], " +
+    "\"cableEntry\": [\"TOP\", \"BOTTOM\", \"TOP OR BOTTOM\", \"N/A\"], " +
+    "\"iccbPlatform\": [\"SQUARE D MASTERPACT NW\", \"SIEMENS WL\", \"EATON MAGNUM DS\", \"EATON MAGNUM SB\", \"EATON NRX\", \"ABB EMAX2\", \"LSIS SUSOL\", \"N/A\"], " +
+    "\"mccbPlatform\": [\"SQUARE D POWERPACT\", \"SIEMENS VL\", \"EATON POWER DEFENSE\", \"ABB TMAX\", \"LSIS SUSOL\", \"N/A\"], " +
+    "\"vcbPlatform\": [] " +
+    "}'), " +
+
+    //Restrictions due to 1558 UL Listing
+    "('ulListing', 'UL1558', '{" +
+    "\"systemType\": [\"208Y/120VAC - 3PH, 4W\", \"240VAC - 3PH, 3W\", \"380Y/220VAC - 3PH, 4W\", " +
+    "\"400Y/230VAC - 3PH, 4W\", \"415Y/240VAC - 3PH, 4W\", \"480VAC - 3PH, 3W\", \"480Y/277VAC - 3PH, 4W\", " +
+    "\"600VAC - 3PH, 3W\", \"600Y/347VAC - 3PH, 4W\", \"125VDC - 2W\", \"250VDC - 2W\", \"500VDC - 2W\", \"600VDC - 2W\", \"N/A\"], " +
+    "\"systemAmp\": [\"800A\", \"1200A\", \"1600A\", \"2000A\", \"2500A\", \"3000A\", \"3200A\", \"4000A\", \"5000A\", \"6000A\", \"10000A\", \"N/A\"], " +
+    "\"mainBusAmp\": [\"800A\", \"1200A\", \"1600A\", \"2000A\", \"2500A\", \"3000A\", \"3200A\", \"4000A\", \"5000A\", \"6000A\", \"10000A\", \"N/A\"], " +
+    "\"busBracing\": [\"65kA\", \"100kA\", \"N/A\"], " +
+    "\"interruptRating\": [\"42kAIC\", \"65kAIC\", \"85kAIC\", \"100kAIC\", \"N/A\"], " +
+    "\"enclosure\": [\"NEMA 1 INDOOR\"], " +
+    "\"accessibility\": [\"FRONT AND REAR\"], " +
+    "\"cableEntry\": [\"TOP\", \"BOTTOM\", \"TOP OR BOTTOM\", \"N/A\"], " +
+    "\"iccbPlatform\": [\"SQUARE D MASTERPACT NW\", \"SIEMENS WL\", \"EATON MAGNUM DS\", \"ABB EMAX2\", \"LSIS SUSOL\", \"N/A\"], " +
+    "\"mccbPlatform\": [], " +
+    "\"vcbPlatform\": [] " +
+    "}'), " +
+
+
+    //Restrictions due to UL/ANSI (MV) UL Listing
+    "('ulListing', 'UL/ANSI', '{" +
+    "\"systemType\": [\"4160VAC - 3PH, 3W\", \"12470VAC - 3PH, 3W\", \"13200VAC - 3PH, 3W\", \"13800VAC - 3PH, 3W\", \"N/A\"], " +
+    "\"systemAmp\": [\"1200A\", \"2000A\", \"N/A\"], " +
+    "\"mainBusAmp\": [\"1200A\", \"2000A\", \"N/A\"], " +
+    "\"busBracing\": [\"31.5kA\", \"N/A\"], " +
+    "\"interruptRating\": [\"31.5kAIC\", \"N/A\"], " +
+    "\"enclosure\": [\"NEMA 1 INDOOR\"], " +
+    "\"accessibility\": [\"FRONT AND REAR\"], " +
+    "\"cableEntry\": [\"TOP\", \"BOTTOM\", \"N/A\"], " +
+    "\"iccbPlatform\": [], " +
+    "\"mccbPlatform\": [], " +
+    "\"vcbPlatform\": [\"ABB VD4\", \"N/A\"] " +
+    "}'), " +
+
+
+    //Restrictions due to UL/ANSI (MV) UL Listing
+    "('ulListing', 'UL508A', '{" +
+    "\"systemType\": [\"N/A\"], " +
+    "\"systemAmp\": [\"N/A\"], " +
+    "\"mainBusAmp\": [\"N/A\"], " +
+    "\"busBracing\": [\"N/A\"], " +
+    "\"interruptRating\": [\"N/A\"], " +
+    "\"enclosure\": [\"NEMA 1 INDOOR\"], " +
+    "\"accessibility\": [\"FRONT AND REAR\", \"FRONT AND SIDE\", \"FRONT ONLY\"], " +
+    "\"cableEntry\": [\"TOP\", \"BOTTOM\", \"N/A\"] " +
+    "}'), " +
+
+
+
+
+    //Restrictions due to NEMA 3R Enclosure (only in UL891)
+    "('enclosure', 'NEMA 1 INDOOR', '{" +
+    "\"systemAmp\": [\"800A\", \"1200A\", \"1600A\", \"2000A\", \"2500A\", \"3000A\", \"3200A\", \"4000A\", \"5000A\", \"6000A\", \"10000A\", \"N/A\"], " +
+    "\"mainBusAmp\": [\"800A\", \"1200A\", \"1600A\", \"2000A\", \"2500A\", \"3000A\", \"3200A\", \"4000A\", \"5000A\", \"6000A\", \"10000A\", \"N/A\"] " +
+    "}'), " +
+    "('enclosure', 'NEMA 3R OUTDOOR', '{" +
+    "\"systemAmp\": [\"800A\", \"1200A\", \"1600A\", \"2000A\", \"2500A\", \"3000A\", \"3200A\", \"4000A\", \"N/A\"], " +
+    "\"mainBusAmp\": [\"800A\", \"1200A\", \"1600A\", \"2000A\", \"2500A\", \"3000A\", \"3200A\", \"4000A\", \"N/A\"] " +
+    "}') "
+
+
+
+    , function (err, result) {
+        if (err)
+            console.log("Error inserting : %s ", err);
+    }
+);
+
+
+
+
+
+/*
 // submittalSum
 connection.query('\
 CREATE TABLE IF NOT EXISTS ' + database + '.' + dbConfig.submittal_summary_table + ' ( \
@@ -372,6 +484,9 @@ CREATE TABLE IF NOT EXISTS ' + database + '.' + dbConfig.submittal_panel_breaker
         ON UPDATE CASCADE, \
     UNIQUE INDEX panelBrkID_UNIQUE (panelBrkID ASC))\
     ENGINE = InnoDB;', function(err) { if(err) throw err; });
+
+
+ */
 
 console.log("createSubSchema successful");
 
